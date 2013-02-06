@@ -19,7 +19,11 @@ def eb = vertx.eventBus;
 container.deployModule('vert.x-busmod-redis-v1.0', config, 1) { res ->
     println("redis: " + res)
 
-    eb.send('test.my_redisclient', [command: 'select', index: 1]) { reply ->
+    eb.send('test.my_redisclient', [command: 'set', key: 'mykey', value: 'myvalue']) { reply ->
         println(reply.body)
+
+        eb.send('test.my_redisclient', [command: 'get', key: 'mykey']) { reply2 ->
+            println(reply2.body)
+        }
     }
 }

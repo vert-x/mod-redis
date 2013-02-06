@@ -57,7 +57,7 @@ class RedisClientBase {
         });
     }
 
-    public void send(Command command, Handler<Reply> replyHandler) {
+    void send(Command command, Handler<Reply> replyHandler) {
         // Serialize the buffer before writing it
         ChannelBuffer channelBuffer = ChannelBuffers.dynamicBuffer();
         try {
