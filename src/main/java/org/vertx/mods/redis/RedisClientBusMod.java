@@ -113,9 +113,9 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
 //            case "psetnx":
 //                redisPSetNX(message);
 //                break;
-//            case "set":
-//                redisSet(message);
-//                break;
+            case "set":
+                redisSet(message);
+                break;
 //            case "setbit":
 //                redisSetBit(message);
 //                break;
