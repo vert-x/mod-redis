@@ -48,440 +48,470 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
         }
 
         switch (command) {
-            // connection commands
-            case "auth":
-                redisAuth(message);
-                break;
-            case "echo":
-                redisEcho(message);
-                break;
+            // no argument
+            case "randomkey":
+            case "discard":
+            case "exec":
+            case "multi":
+            case "unwatch":
+            case "script flush":
+            case "script kill":
             case "ping":
-                redisPing(message);
-                break;
             case "quit":
-                redisQuit(message);
+            case "bgrewriteaof":
+            case "bgsave":
+            case "client list":
+            case "client getname":
+            case "config resetstat":
+            case "dbsize":
+            case "debug segfault":
+            case "flushall":
+            case "flushdb":
+            case "lastsave":
+            case "monitor":
+            case "save":
+            case "sync":
+            case "time":
+                redisExec(command, message);
                 break;
-            case "select":
-                redisSelect(message);
-                break;
-            // strings
-            case "append":
-                redisAppend(message);
-                break;
-            case "bitcount":
-                redisBitCount(message);
-                break;
-            case "bitop":
-                redisBitOp(message);
-                break;
+            // argument "key"
+            case "dump":
+            case "exists":
+            case "persist":
+            case "pttl":
+            case "ttl":
+            case "type":
             case "decr":
-                redisDecr(message);
-                break;
-            case "decrby":
-                redisDecrBy(message);
-                break;
             case "get":
-                redisGet(message);
+            case "incr":
+            case "strlen":
+            case "hgetall":
+            case "hkeys":
+            case "hlen":
+            case "hvals":
+            case "llen":
+            case "lpop":
+            case "rpop":
+            case "scard":
+            case "smembers":
+            case "spop":
+            case "zcard":
+            case "debug object":
+                redisExec(command, "key", message);
                 break;
-            case "getbit":
-                redisGetBit(message);
+            // argument "pattern"
+            case "keys":
+                redisExec(command, "pattern", message);
                 break;
-//            case "getrange":
-//                redisGetRange(message);
-//                break;
-//            case "getset":
-//                redisGetSet(message);
-//                break;
-//            case "incr":
-//                redisIncr(message);
-//                break;
-//            case "incrby":
-//                redisIncrBy(message);
-//                break;
-//            case "incrbyfloat":
-//                redisIncrByFloat(message);
-//                break;
-//            case "mget":
-//                redisMGet(message);
-//                break;
-//            case "mset":
-//                redisMSet(message);
-//                break;
-//            case "msetnx":
-//                redisMSetNX(message);
-//                break;
-//            case "psetnx":
-//                redisPSetNX(message);
-//                break;
+            // argument "password"
+            case "auth":
+                redisExec(command, "password", message);
+                break;
+            // argument "message"
+            case "echo":
+                redisExec(command, "message", message);
+                break;
+            // argument "index"
+            case "select":
+                redisExec(command, "index", message);
+                break;
+            // argument "connection-name"
+            case "client setname":
+                redisExec(command, "connection-name", message);
+                break;
+            // argument "parameter"
+            case "config get":
+                redisExec(command, "parameter", message);
+                break;
+            // argument "script"
+            case "script load":
+                redisExec(command, "script", message);
+                break;
+            // arguments "key" "value"
+            case "append":
+            case "getset":
             case "set":
-                redisSet(message);
+            case "setnx":
+            case "lpushx":
+            case "rpushx":
+                redisExec(command, "key", "value", message);
                 break;
-//            case "setbit":
-//                redisSetBit(message);
-//                break;
-//            case "setex":
-//                redisSetEX(message);
-//                break;
-//            case "setnx":
-//                redisSetNX(message);
-//                break;
-//            case "setrange":
-//                redisSetRange(message);
-//                break;
-//            case "strlen":
-//                redisStrLen(message);
-//                break;
+            // argumens "key" "seconds"
+            case "expire":
+                redisExec(command, "key", "seconds", message);
+                break;
+            // argumens "key" "timestamp"
+            case "expireat":
+                redisExec(command, "key", "timestamp", message);
+                break;
+            // argumens "key" "db"
+            case "move":
+                redisExec(command, "key", "db", message);
+                break;
+            // argumens "key" "milliseconds"
+            case "pexpire":
+                redisExec(command, "key", "milliseconds", message);
+                break;
+            // argumens "key" "milliseconds-timestamp"
+            case "pexpireat":
+                redisExec(command, "key", "milliseconds-timestamp", message);
+                break;
+            // argumens "key" "newkey"
+            case "rename":
+            case "renamenx":
+                redisExec(command, "key", "newkey", message);
+                break;
+            // arguments "key" "decrement"
+            case "decrby":
+                redisExec(command, "key", "decrement", message);
+                break;
+            // arguments "key" "offset"
+            case "getbit":
+                redisExec(command, "key", "offset", message);
+                break;
+            // arguments "key" "increment"
+            case "incrby":
+            case "incrbyfloat":
+                redisExec(command, "key", "increment", message);
+                break;
+            // arguments "key" "field"
+            case "hexists":
+            case "hget":
+                redisExec(command, "key", "field", message);
+                break;
+            // arguments "key" "index"
+            case "lindex":
+                redisExec(command, "key", "index", message);
+                break;
+            // arguments "key" "member"
+            case "sismember":
+            case "zrank":
+            case "zrevrank":
+            case "zscore":
+                redisExec(command, "key", "member", message);
+                break;
+            // arguments "source" "destination"
+            case "rpoplpush":
+                redisExec(command, "source", "destination", message);
+                break;
+            // arguments "channel" "message"
+            case "publish":
+                redisExec(command, "channel", "message", message);
+                break;
+            // arguments "host" "port"
+            case "slaveof":
+                redisExec(command, "host", "port", message);
+                break;
+            // arguments "ip" "port"
+            case "client kill":
+                redisExec(command, "ip", "port", message);
+                break;
+            // arguments "parameter" "value"
+            case "config set":
+                redisExec(command, "parameter", "value", message);
+                break;
+            // arguments "key" "ttl" "serialized-value"
+            case "restore":
+                redisExec(command, "key", "ttl", "serialized-value", message);
+                break;
+            // arguments "key" "start" "end"
+            case "getrange":
+                redisExec(command, "key", "start", "end", message);
+                break;
+            // arguments "key" "milliseconds" "value"
+            case "psetex":
+                redisExec(command, "key", "milliseconds", "value", message);
+                break;
+            // arguments "key" "offset" "value"
+            case "setbit":
+            case "setrange":
+                redisExec(command, "key", "offset", "value", message);
+                break;
+            // arguments "key" "seconds" "value"
+            case "setex":
+                redisExec(command, "key", "seconds", "value", message);
+                break;
+            // arguments "key" "field" "increment"
+            case "hincrby":
+            case "hincrbyfloat":
+                redisExec(command, "key", "field", "increment", message);
+                break;
+            // arguments "key" "field" "value"
+            case "hset":
+            case "hsetnx":
+                redisExec(command, "key", "field", "value", message);
+                break;
+            // arguments "source" "destination" "timeout"
+            case "brpoplpush":
+                redisExec(command, "source", "destination", "timeout", message);
+                break;
+            // arguments "key" "start" "stop"
+            case "lrange":
+            case "ltrim":
+            case "zremrangebyrank":
+                redisExec(command, "key", "start", "stop", message);
+                break;
+            // arguments "key" "count" "value"
+            case "lrem":
+                redisExec(command, "key", "count", "value", message);
+                break;
+            // arguments "key" "index" "value"
+            case "lset":
+                redisExec(command, "key", "index", "value", message);
+                break;
+            // arguments "source" "destination" "member"
+            case "smove":
+                redisExec(command, "source", "destination", "member", message);
+                break;
+            // arguments "key" "min" "max"
+            case "zcount":
+            case "zremrangebyscore":
+                redisExec(command, "key", "min", "max", message);
+                break;
+            // arguments "key" "increment" "member"
+            case "zincrby":
+                redisExec(command, "key", "increment", "member", message);
+                break;
+            // arguments "host" "port" "key" "destination-db" "timeout"
+            case "migrate":
+                redisExec(command, "host", "port", "key", "destination-db", "timeout", message);
+                break;
+
+            // keys
+            case "del":
+            case "object":
+            case "sort":
+            // strings
+            case "bitcount":
+            case "bitop":
+            case "mget":
+            case "mset":
+            case "msetnx":
+
+            // hashes
+            case "hdel":
+            case "hmget":
+            case "hmset":
+            // lists
+            case "blpop":
+            case "brpop":
+            case "linsert":
+            case "lpush":
+            case "rpush":
+            // sets
+            case "sadd":
+            case "sdiff":
+            case "sdiffstore":
+            case "sinter":
+            case "sinterstore":
+            case "srandmember":
+            case "srem":
+            case "sunion":
+            case "sunionstore":
+            // sorted sets
+            case "zadd":
+            case "zinterstore":
+            case "zrange":
+            case "zrangebyscore":
+            case "zrem":
+            case "zrevrange":
+            case "zrevrangebyscore":
+            case "zunionstore":
+            // pub/sub
+            case "psubscribe":
+            case "punsubscribe":
+            case "subscribe":
+            case "unsubscribe":
+            // transactions
+            case "watch":
+            // scripting
+            case "eval":
+            case "evalsha":
+            case "script exists":
+            // server
+            case "info":
+            case "shutdown":
+            case "slowlog":
+                sendError(message, "Not Implemented: " + command);
+                break;
             default:
                 sendError(message, "Invalid command: " + command);
         }
     }
 
-    /**
-     * @param message {key: String, offset: Number}
-     */
-    private void redisGetBit(final Message<JsonObject> message) {
-        String key = message.body.getString("key");
+    private void processReply(Message<JsonObject> message, Reply reply) {
+        JsonObject replyMessage;
 
-        if (key == null) {
-            sendError(message, "key cannot be null");
-        } else {
-            Number offset = message.body.getNumber("offset");
-            if (offset == null) {
-                sendError(message, "offset cannot be null");
-            } else {
-                redisClient.send(new Command("GETBIT", key, offset), new Handler<Reply>() {
-                    @Override
-                    public void handle(Reply reply) {
-                        if (reply.getType() == ReplyType.Error) {
-                            sendError(message, ((ErrorReply) reply).data());
-                        } else {
-                            JsonObject replyMessage = new JsonObject();
-                            replyMessage.putNumber("value", ((IntegerReply) reply).data());
-                            sendOK(message, replyMessage);
-                        }
-                    }
-                });
-            }
+        switch (reply.getType()) {
+            case Error:
+                sendError(message, ((ErrorReply) reply).data());
+                return;
+            case Status:
+                replyMessage = new JsonObject();
+                replyMessage.putString("value", ((StatusReply) reply).data());
+                sendOK(message, replyMessage);
+                return;
+            case Bulk:
+                replyMessage = new JsonObject();
+                // TODO: process bytes
+                replyMessage.putString("value", ((BulkReply) reply).asUTF8String());
+                sendOK(message, replyMessage);
+                return;
+            case MultiBulk:
+                replyMessage = new JsonObject();
+                // TODO: process array of bytes
+                replyMessage.putString("value", ((MultiBulkReply) reply).toString());
+                sendOK(message, replyMessage);
+                return;
+            case Integer:
+                replyMessage = new JsonObject();
+                replyMessage.putNumber("value", ((IntegerReply) reply).data());
+                sendOK(message, replyMessage);
+                return;
+            default:
+                sendError(message, "Unknown message type");
         }
     }
 
     /**
-     * @param message {key: String, decrement: Number}
+     * @param command Redis Command
+     * @param message {}
      */
-    private void redisDecrBy(final Message<JsonObject> message) {
-        String key = message.body.getString("key");
-
-        if (key == null) {
-            sendError(message, "key cannot be null");
-        } else {
-            Number decrement = message.body.getNumber("decrement");
-            if (decrement == null) {
-                sendError(message, "decrement cannot be null");
-            } else {
-                redisClient.send(new Command("DECRBY", key, decrement), new Handler<Reply>() {
-                    @Override
-                    public void handle(Reply reply) {
-                        if (reply.getType() == ReplyType.Error) {
-                            sendError(message, ((ErrorReply) reply).data());
-                        } else {
-                            JsonObject replyMessage = new JsonObject();
-                            replyMessage.putNumber("value", ((IntegerReply) reply).data());
-                            sendOK(message, replyMessage);
-                        }
-                    }
-                });
-            }
-        }
+    private void redisExec(final String command, final Message<JsonObject> message) {
+        redisClient.send(new Command(command), new Handler<Reply>() {
+            @Override
+            public void handle(Reply reply) {
+                processReply(message, reply);
+           }
+        });
     }
 
     /**
-     * @param message {key: String}
+     * @param command Redis Command
+     * @param argName0 first argument name
+     * @param message {argName0: String}
      */
-    private void redisDecr(final Message<JsonObject> message) {
-        String key = message.body.getString("key");
+    private void redisExec(final String command, final String argName0, final Message<JsonObject> message) {
+        final Object arg0 = message.body.getField(argName0);
 
-        if (key == null) {
-            sendError(message, "key cannot be null");
+        if (arg0 == null) {
+            sendError(message, arg0 + " cannot be null");
         } else {
-            redisClient.send(new Command("DECR", key), new Handler<Reply>() {
+            redisClient.send(new Command(command, arg0), new Handler<Reply>() {
                 @Override
                 public void handle(Reply reply) {
-                    if (reply.getType() == ReplyType.Error) {
-                        sendError(message, ((ErrorReply) reply).data());
-                    } else {
-                        JsonObject replyMessage = new JsonObject();
-                        replyMessage.putNumber("value", ((IntegerReply) reply).data());
-                        sendOK(message, replyMessage);
-                    }
+                    processReply(message, reply);
                 }
             });
         }
     }
 
     /**
-     * @param message {operation: String, destkey: String, key: String, key... String[]}
-     * @todo: [key...] is not implemented
+     * @param command Redis Command
+     * @param argName0 first argument name
+     * @param argName1 second argument name
+     * @param message {argName0: String, argName1: String}
      */
-    private void redisBitOp(final Message<JsonObject> message) {
-        String operation = message.body.getString("operation");
+    private void redisExec(final String command, final String argName0, final String argName1, final Message<JsonObject> message) {
+        final Object arg0 = message.body.getField(argName0);
 
-        if (operation == null) {
-            sendError(message, "operation cannot be null");
+        if (arg0 == null) {
+            sendError(message, arg0 + " cannot be null");
         } else {
-            if (operation.equals("AND") || operation.equals("OR") || operation.equals("XOR") || operation.equals("NOT")) {
-                String destkey = message.body.getString("destkey");
+            final Object arg1 = message.body.getField(argName1);
 
-                if (destkey == null) {
-                    sendError(message, "destkey cannot be null");
+            if (arg1 == null) {
+                sendError(message, arg1 + " cannot be null");
+            } else {
+                redisClient.send(new Command(command, arg0, arg1), new Handler<Reply>() {
+                    @Override
+                    public void handle(Reply reply) {
+                        processReply(message, reply);
+                    }
+                });
+            }
+        }
+    }
+
+    /**
+     * @param command Redis Command
+     * @param argName0 first argument name
+     * @param argName1 second argument name
+     * @param argName2 second argument name
+     * @param message {argName0: String, argName1: String, argName2: String}
+     */
+    private void redisExec(final String command, final String argName0, final String argName1, final String argName2, final Message<JsonObject> message) {
+        final Object arg0 = message.body.getField(argName0);
+
+        if (arg0 == null) {
+            sendError(message, arg0 + " cannot be null");
+        } else {
+            final Object arg1 = message.body.getField(argName1);
+
+            if (arg1 == null) {
+                sendError(message, arg1 + " cannot be null");
+            } else {
+                final Object arg2 = message.body.getField(argName2);
+
+                if (arg2 == null) {
+                    sendError(message, arg2 + " cannot be null");
                 } else {
-                    String key = message.body.getString("key");
+                    redisClient.send(new Command(command, arg0, arg1, arg2), new Handler<Reply>() {
+                        @Override
+                        public void handle(Reply reply) {
+                            processReply(message, reply);
+                        }
+                    });
+                }
+            }
+        }
+    }
 
-                    if (key == null) {
-                        sendError(message, "key cannot be null");
+    /**
+     * @param command Redis Command
+     * @param argName0 first argument name
+     * @param argName1 second argument name
+     * @param argName2 third argument name
+     * @param argName3 forth argument name
+     * @param argName4 fifth argument name
+     * @param message {argName0: String, argName1: String, argName2: String}
+     */
+    private void redisExec(final String command, final String argName0, final String argName1, final String argName2, final String argName3, final String argName4, final Message<JsonObject> message) {
+        final Object arg0 = message.body.getField(argName0);
+
+        if (arg0 == null) {
+            sendError(message, arg0 + " cannot be null");
+        } else {
+            final Object arg1 = message.body.getField(argName1);
+
+            if (arg1 == null) {
+                sendError(message, arg1 + " cannot be null");
+            } else {
+                final Object arg2 = message.body.getField(argName2);
+
+                if (arg2 == null) {
+                    sendError(message, arg2 + " cannot be null");
+                } else {
+                    final Object arg3 = message.body.getField(argName3);
+
+                    if (arg3 == null) {
+                        sendError(message, arg3 + " cannot be null");
                     } else {
-                        redisClient.send(new Command("BITOP", operation, destkey, key), new Handler<Reply>() {
-                            @Override
-                            public void handle(Reply reply) {
-                                if (reply.getType() == ReplyType.Error) {
-                                    sendError(message, ((ErrorReply) reply).data());
-                                } else {
-                                    JsonObject replyMessage = new JsonObject();
-                                    replyMessage.putNumber("value", ((IntegerReply) reply).data());
-                                    sendOK(message, replyMessage);
+                        final Object arg4 = message.body.getField(argName4);
+
+                        if (arg4 == null) {
+                            sendError(message, arg4 + " cannot be null");
+                        } else {
+                            redisClient.send(new Command(command, arg0, arg1, arg2, arg3, arg4), new Handler<Reply>() {
+                                @Override
+                                public void handle(Reply reply) {
+                                    processReply(message, reply);
                                 }
-                            }
-                        });
-
-                    }
-                }
-            } else {
-                sendError(message, "invalid operation: " + operation);
-            }
-        }
-    }
-
-    /**
-     * @param message {key: String, [start]: Number, [end]: Number}
-     */
-    private void redisBitCount(final Message<JsonObject> message) {
-        String key = message.body.getString("key");
-
-        if (key == null) {
-            sendError(message, "key cannot be null");
-        } else {
-            Integer start = message.body.getInteger("start");
-            Integer end = message.body.getInteger("end");
-
-            Command command;
-
-            if (start == null && end == null) {
-                command = new Command("BITCOUNT");
-            } else {
-                command = new Command("BITCOUNT", start, end);
-            }
-
-            redisClient.send(command, new Handler<Reply>() {
-                @Override
-                public void handle(Reply reply) {
-                    if (reply.getType() == ReplyType.Error) {
-                        sendError(message, ((ErrorReply) reply).data());
-                    } else {
-                        JsonObject replyMessage = new JsonObject();
-                        replyMessage.putNumber("value", ((IntegerReply) reply).data());
-                        sendOK(message, replyMessage);
-                    }
-                }
-            });
-        }
-    }
-
-    /**
-     * @param message {key: String, value: String}
-     */
-    private void redisAppend(final Message<JsonObject> message) {
-        String key = message.body.getString("key");
-
-        if (key == null) {
-            sendError(message, "key cannot be null");
-        } else {
-            String value = message.body.getString("value");
-            if (value == null) {
-                sendError(message, "value cannot be null");
-            } else {
-                redisClient.send(new Command("APPEND", key, value), new Handler<Reply>() {
-                    @Override
-                    public void handle(Reply reply) {
-                        if (reply.getType() == ReplyType.Error) {
-                            sendError(message, ((ErrorReply) reply).data());
-                        } else {
-                            JsonObject replyMessage = new JsonObject();
-                            replyMessage.putNumber("value", ((IntegerReply) reply).data());
-                            sendOK(message, replyMessage);
+                            });
                         }
                     }
-                });
-            }
-        }
-    }
-
-    /**
-     * @param message {index: Number}
-     */
-    private void redisSelect(final Message<JsonObject> message) {
-        Integer index = message.body.getInteger("index");
-
-        if (index == null) {
-            sendError(message, "index cannot be null");
-        } else {
-            redisClient.send(new Command("SELECT", index), new Handler<Reply>() {
-                @Override
-                public void handle(Reply reply) {
-                    if (reply.getType() == ReplyType.Error) {
-                        sendError(message, ((ErrorReply) reply).data());
-                    } else {
-                        JsonObject replyMessage = new JsonObject();
-                        replyMessage.putString("value", ((StatusReply) reply).data());
-                        sendOK(message, replyMessage);
-                    }
-                }
-            });
-        }
-    }
-
-    /**
-     * @param message {password: String}
-     */
-    private void redisAuth(final Message<JsonObject> message) {
-        String password = message.body.getString("password");
-
-        if (password == null) {
-            sendError(message, "password cannot be null");
-        } else {
-            redisClient.send(new Command("AUTH", password), new Handler<Reply>() {
-                @Override
-                public void handle(Reply reply) {
-                    if (reply.getType() == ReplyType.Error) {
-                        sendError(message, ((ErrorReply) reply).data());
-                    } else {
-                        JsonObject replyMessage = new JsonObject();
-                        replyMessage.putString("value", ((StatusReply) reply).data());
-                        sendOK(message, replyMessage);
-                    }
-                }
-            });
-        }
-    }
-
-    /**
-     * @param message {message: String}
-     */
-    private void redisEcho(final Message<JsonObject> message) {
-        String _message = message.body.getString("message");
-
-        if (_message == null) {
-            sendError(message, "message cannot be null");
-        } else {
-            redisClient.send(new Command("ECHO", _message), new Handler<Reply>() {
-                @Override
-                public void handle(Reply reply) {
-                    if (reply.getType() == ReplyType.Error) {
-                        sendError(message, ((ErrorReply) reply).data());
-                    } else {
-                        JsonObject replyMessage = new JsonObject();
-                        replyMessage.putString("value", ((BulkReply) reply).asUTF8String());
-                        sendOK(message, replyMessage);
-                    }
-                }
-            });
-        }
-    }
-
-    /**
-     * @param message {}
-     */
-    private void redisPing(final Message<JsonObject> message) {
-        redisClient.send(new Command("PING"), new Handler<Reply>() {
-            @Override
-            public void handle(Reply reply) {
-                if (reply.getType() == ReplyType.Error) {
-                    sendError(message, ((ErrorReply) reply).data());
-                } else {
-                    JsonObject replyMessage = new JsonObject();
-                    replyMessage.putString("value", ((StatusReply) reply).data());
-                    sendOK(message, replyMessage);
                 }
             }
-        });
-    }
-
-    /**
-     * @param message {}
-     */
-    private void redisQuit(final Message<JsonObject> message) {
-        redisClient.send(new Command("QUIT"), new Handler<Reply>() {
-            @Override
-            public void handle(Reply reply) {
-                if (reply.getType() == ReplyType.Error) {
-                    sendError(message, ((ErrorReply) reply).data());
-                } else {
-                    JsonObject replyMessage = new JsonObject();
-                    replyMessage.putString("value", ((StatusReply) reply).data());
-                    sendOK(message, replyMessage);
-                }
-            }
-        });
-    }
-
-    /**
-     * @param message {key: String, value: String}
-     */
-    private void redisSet(final Message<JsonObject> message) {
-        String key = message.body.getString("key");
-
-        if (key == null) {
-            sendError(message, "key cannot be null");
-        } else {
-            String value = message.body.getString("value");
-            if (value == null) {
-                sendError(message, "value cannot be null");
-            } else {
-                redisClient.send(new Command("SET", key, value), new Handler<Reply>() {
-                    @Override
-                    public void handle(Reply reply) {
-                        if (reply.getType() == ReplyType.Error) {
-                            sendError(message, ((ErrorReply) reply).data());
-                        } else {
-                            JsonObject replyMessage = new JsonObject();
-                            replyMessage.putString("value", ((StatusReply) reply).data());
-                            sendOK(message, replyMessage);
-                        }
-                    }
-                });
-            }
-        }
-    }
-
-    /**
-     * @param message {key: String}
-     */
-    private void redisGet(final Message<JsonObject> message) {
-        String key = message.body.getString("key");
-
-        if (key == null) {
-            sendError(message, "key cannot be null");
-        } else {
-            redisClient.send(new Command("GET", key), new Handler<Reply>() {
-                @Override
-                public void handle(Reply reply) {
-                    if (reply.getType() == ReplyType.Error) {
-                        sendError(message, ((ErrorReply) reply).data());
-                    } else {
-                        JsonObject replyMessage = new JsonObject();
-                        replyMessage.putString("value", ((BulkReply) reply).asUTF8String());
-                        sendOK(message, replyMessage);
-                    }
-                }
-            });
         }
     }
 }

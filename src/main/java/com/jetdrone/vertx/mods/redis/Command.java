@@ -20,56 +20,19 @@ public class Command {
 
     private final Object name;
     private final Object[] objects;
-    private final Object object1;
-    private final Object object2;
-    private final Object object3;
 
-    public Command(Object[] objects) {
-        this(null, null, null, null, objects);
-    }
-
-    public Command(Object name) {
-        this(name, null, null, null, null);
-    }
-
-    public Command(Object name, Object[] objects) {
-        this(name, null, null, null, objects);
-    }
-
-    public Command(Object name, Object object1) {
-        this(name, object1, null, null, null);
-    }
-
-    public Command(Object name, Object object1, Object object2) {
-        this(name, object1, object2, null, null);
-    }
-
-    public Command(Object name, Object object1, Object object2, Object object3) {
-        this(name, object1, object2, object3, null);
-    }
-
-    private Command(Object name, Object object1, Object object2, Object object3, Object[] objects) {
+    public Command(Object name, Object... objects) {
         this.name = name;
-        this.object1 = object1;
-        this.object2 = object2;
-        this.object3 = object3;
         this.objects = objects;
     }
 
     public void write(ChannelBuffer os) throws IOException {
-        writeDirect(os, name, object1, object2, object3, objects);
-    }
-
-    public static void writeDirect(ChannelBuffer os, Object name, Object object1, Object object2, Object object3, Object[] objects) throws IOException {
-        int others = (object1 == null ? 0 : 1) + (object2 == null ? 0 : 1) +
-                (object3 == null ? 0 : 1) + (name == null ? 0 : 1);
         int length = objects == null ? 0 : objects.length;
+
         os.writeBytes(ARGS_PREFIX);
-        os.writeBytes(numToBytes(length + others, true));
+        os.writeBytes(numToBytes(length + + (name == null ? 0 : 1), true));
+
         if (name != null) writeObject(os, name);
-        if (object1 != null) writeObject(os, object1);
-        if (object2 != null) writeObject(os, object2);
-        if (object3 != null) writeObject(os, object3);
         if (objects != null) {
             for (Object object : objects) {
                 writeObject(os, object);
