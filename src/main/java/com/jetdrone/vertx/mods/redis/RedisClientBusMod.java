@@ -3,6 +3,7 @@ package com.jetdrone.vertx.mods.redis;
 import org.vertx.java.busmods.BusModBase;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.eventbus.Message;
+import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.core.net.NetSocket;
 import com.jetdrone.vertx.mods.redis.netty.*;
@@ -97,10 +98,19 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
             case "spop":
             case "zcard":
             case "debug object":
+            // arguments "key" ["key"...]
+            case "del":
+            case "mget":
+            case "sdiff":
+            case "sinter":
+            case "sunion":
+            case "watch":
                 redisExec(command, "key", message);
                 break;
             // argument "pattern"
             case "keys":
+            // argument "pattern" ["pattern"...]
+            case "psubscribe":
                 redisExec(command, "pattern", message);
                 break;
             // argument "password"
@@ -125,7 +135,13 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
                 break;
             // argument "script"
             case "script load":
+            // argument "script" ["script"...]
+            case "script exists":
                 redisExec(command, "script", message);
+                break;
+            // argument "channel" ["channel"...]
+            case "subscribe":
+                redisExec(command, "channel", message);
                 break;
             // arguments "key" "value"
             case "append":
@@ -278,16 +294,13 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
                 break;
 
             // keys
-            case "del":
             case "object":
             case "sort":
             // strings
             case "bitcount":
             case "bitop":
-            case "mget":
             case "mset":
             case "msetnx":
-
             // hashes
             case "hdel":
             case "hmget":
@@ -300,13 +313,10 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
             case "rpush":
             // sets
             case "sadd":
-            case "sdiff":
             case "sdiffstore":
-            case "sinter":
             case "sinterstore":
             case "srandmember":
             case "srem":
-            case "sunion":
             case "sunionstore":
             // sorted sets
             case "zadd":
@@ -318,16 +328,12 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
             case "zrevrangebyscore":
             case "zunionstore":
             // pub/sub
-            case "psubscribe":
             case "punsubscribe":
-            case "subscribe":
             case "unsubscribe":
             // transactions
-            case "watch":
             // scripting
             case "eval":
             case "evalsha":
-            case "script exists":
             // server
             case "info":
             case "shutdown":
@@ -389,7 +395,7 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
     /**
      * @param command Redis Command
      * @param argName0 first argument name
-     * @param message {argName0: String}
+     * @param message {argName0: value}
      */
     private void redisExec(final String command, final String argName0, final Message<JsonObject> message) {
         final Object arg0 = message.body.getField(argName0);
@@ -397,7 +403,13 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
         if (arg0 == null) {
             sendError(message, arg0 + " cannot be null");
         } else {
-            redisClient.send(new Command(command, arg0), new Handler<Reply>() {
+            Command cmd;
+            if (arg0 instanceof JsonArray) {
+                cmd = new Command(command, ((JsonArray) arg0).toArray());
+            } else {
+                cmd = new Command(command, arg0);
+            }
+            redisClient.send(cmd, new Handler<Reply>() {
                 @Override
                 public void handle(Reply reply) {
                     processReply(message, reply);
@@ -410,7 +422,7 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
      * @param command Redis Command
      * @param argName0 first argument name
      * @param argName1 second argument name
-     * @param message {argName0: String, argName1: String}
+     * @param message {argName0: value, argName1: value}
      */
     private void redisExec(final String command, final String argName0, final String argName1, final Message<JsonObject> message) {
         final Object arg0 = message.body.getField(argName0);
@@ -438,7 +450,7 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
      * @param argName0 first argument name
      * @param argName1 second argument name
      * @param argName2 second argument name
-     * @param message {argName0: String, argName1: String, argName2: String}
+     * @param message {argName0: value, argName1: value, argName2: value}
      */
     private void redisExec(final String command, final String argName0, final String argName1, final String argName2, final Message<JsonObject> message) {
         final Object arg0 = message.body.getField(argName0);
@@ -474,7 +486,7 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
      * @param argName2 third argument name
      * @param argName3 forth argument name
      * @param argName4 fifth argument name
-     * @param message {argName0: String, argName1: String, argName2: String}
+     * @param message {argName0: value, argName1: value, argName2: value, argName3: value, argName4: value}
      */
     private void redisExec(final String command, final String argName0, final String argName1, final String argName2, final String argName3, final String argName4, final Message<JsonObject> message) {
         final Object arg0 = message.body.getField(argName0);

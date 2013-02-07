@@ -3,6 +3,7 @@ package com.jetdrone.vertx.mods.redis;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.eventbus.EventBus;
 import org.vertx.java.core.eventbus.Message;
+import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.testframework.TestClientBase;
 
@@ -33,6 +34,7 @@ public class TestClient extends TestClientBase {
         super.stop();
     }
 
+    @SuppressWarnings("unused")
     public void testPersistor() throws Exception {
 
         final String random = Long.toHexString(System.nanoTime());
