@@ -1,4 +1,4 @@
-package org.vertx.mods.redis.netty;
+package com.jetdrone.vertx.mods.redis.netty;
 
 import org.jboss.netty.buffer.ChannelBuffer;
 
@@ -6,8 +6,8 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.*;
 
-import static org.vertx.mods.redis.util.Encoding.NEG_ONE_WITH_CRLF;
-import static org.vertx.mods.redis.util.Encoding.numToBytes;
+import static com.jetdrone.vertx.mods.redis.util.Encoding.NEG_ONE_WITH_CRLF;
+import static com.jetdrone.vertx.mods.redis.util.Encoding.numToBytes;
 
 /**
  * Nested replies.

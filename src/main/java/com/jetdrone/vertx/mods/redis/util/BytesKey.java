@@ -1,4 +1,4 @@
-package org.vertx.mods.redis.util;
+package com.jetdrone.vertx.mods.redis.util;
 
 /**
 * A hashmap friendly key.

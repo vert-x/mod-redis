@@ -1,4 +1,4 @@
-package org.vertx.mods.redis.util;
+package com.jetdrone.vertx.mods.redis.util;
 
 /**
  * Doesn't precalculate the hashCode since it is a value and not a key.

@@ -1,4 +1,4 @@
-package org.vertx.mods.redis.netty;
+package com.jetdrone.vertx.mods.redis.netty;
 
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.buffer.ChannelBuffers;
@@ -6,7 +6,7 @@ import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.Channels;
 import org.jboss.netty.channel.MessageEvent;
 import org.jboss.netty.channel.SimpleChannelDownstreamHandler;
-import org.vertx.mods.redis.Command;
+import com.jetdrone.vertx.mods.redis.Command;
 
 public class RedisEncoder extends SimpleChannelDownstreamHandler {
 

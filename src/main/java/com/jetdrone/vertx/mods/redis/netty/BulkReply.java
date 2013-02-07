@@ -1,11 +1,11 @@
-package org.vertx.mods.redis.netty;
+package com.jetdrone.vertx.mods.redis.netty;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
 
 import org.jboss.netty.buffer.ChannelBuffer;
 
-import static org.vertx.mods.redis.util.Encoding.numToBytes;
+import static com.jetdrone.vertx.mods.redis.util.Encoding.numToBytes;
 
 public class BulkReply implements Reply<ChannelBuffer> {
     public static final char MARKER = '$';

@@ -1,11 +1,11 @@
-package org.vertx.mods.redis;
+package com.jetdrone.vertx.mods.redis;
 
 import org.vertx.java.busmods.BusModBase;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.core.net.NetSocket;
-import org.vertx.mods.redis.netty.*;
+import com.jetdrone.vertx.mods.redis.netty.*;
 
 public class RedisClientBusMod extends BusModBase implements Handler<Message<JsonObject>> {
 

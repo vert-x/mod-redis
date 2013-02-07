@@ -1,11 +1,11 @@
-package org.vertx.mods.redis;
+package com.jetdrone.vertx.mods.redis;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
 
 import org.jboss.netty.buffer.ChannelBuffer;
 
-import static org.vertx.mods.redis.util.Encoding.numToBytes;
+import static com.jetdrone.vertx.mods.redis.util.Encoding.numToBytes;
 
 /**
  * Command serialization.  We special case when there are few 4 or fewer parameters
