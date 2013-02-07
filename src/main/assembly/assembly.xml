@@ -5,17 +5,6 @@
     </formats>
     <baseDirectory>target</baseDirectory>
     <includeBaseDirectory>false</includeBaseDirectory>
-    <!--
-    <dependencySets>
-        <dependencySet>
-            <includes>
-                <include>com.lambdaworks:lettuce</include>
-            </includes>
-            <unpack>false</unpack>
-            <outputDirectory>${project.artifactId}-${project.version}/lib</outputDirectory>
-        </dependencySet>
-    </dependencySets>
-    -->
     <fileSets>
         <fileSet>
             <directory>${project.build.directory}</directory>

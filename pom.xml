@@ -34,45 +34,31 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <vertx.version>1.3.1.final</vertx.version>
+        <junit.version>4.11</junit.version>
     </properties>
 
     <dependencies>
         <dependency>
             <groupId>org.vert-x</groupId>
             <artifactId>vertx-core</artifactId>
-            <version>1.3.1.final</version>
+            <version>${vertx.version}</version>
         </dependency>
         <dependency>
             <groupId>org.vert-x</groupId>
             <artifactId>vertx-lang-java</artifactId>
-            <version>1.3.1.final</version>
-        </dependency>
-        <dependency>
-            <groupId>org.vert-x</groupId>
-            <artifactId>vertx-lang-groovy</artifactId>
-            <version>1.3.1.final</version>
-        </dependency>
-        <dependency>
-            <groupId>org.codehaus.groovy</groupId>
-            <artifactId>groovy</artifactId>
-            <version>2.0.6</version>
+            <version>${vertx.version}</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <version>4.11</version>
+            <version>${junit.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.vert-x</groupId>
             <artifactId>vertx-testframework</artifactId>
-            <version>1.3.1.final</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.vert-x</groupId>
-            <artifactId>vertx-junit-annotations</artifactId>
-            <version>1.3.0.final</version>
+            <version>${vertx.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -94,6 +80,37 @@
                 <configuration>
                     <source>1.7</source>
                     <target>1.7</target>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>1.7</version>
+                <executions>
+                    <execution>
+                        <id>prepare</id>
+                        <phase>generate-test-resources</phase>
+                        <configuration>
+                            <tasks>
+                                <mkdir dir="${project.build.directory}/mods/${project.artifactId}-DEV"/>
+                                <copy file= "src/main/conf/mod.json" tofile="${project.build.directory}/mods/${project.artifactId}-DEV/mod.json" />
+                                <copy todir="${project.build.directory}/mods/${project.artifactId}-DEV">
+                                    <fileset dir="${project.build.directory}/classes"/>
+                                </copy>
+                            </tasks>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.7.2</version>
+                <configuration>
+                    <workingDirectory>${project.build.directory}</workingDirectory>
                 </configuration>
             </plugin>
             <plugin>
