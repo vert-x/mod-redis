@@ -416,6 +416,30 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
         }
     }
 
+    private Object[] getMandatoryKVField(final JsonArray array, final KeyValue keyValue) throws RedisCommandError {
+        // flatten the json array
+        Object[] args = new Object[array.size() * 2];
+        for (int i = 0; i < array.size(); i++) {
+            Object entry = array.get(i);
+            if (entry instanceof JsonObject) {
+                JsonObject jsonEntry = (JsonObject) entry;
+                Object key = jsonEntry.getField(keyValue.keyName);
+                Object value = jsonEntry.getField(keyValue.valueName);
+                // kv cannot be null
+                if (key == null || value == null) {
+                    throw new RedisCommandError(keyValue.keyName + " or " + keyValue.valueName + " cannot be null");
+                }
+
+                args[2*i] = key;
+                args[2*i + 1] = value;
+            } else {
+                throw new RedisCommandError(keyValue.pairName + " expected to have JsonObjects");
+            }
+        }
+
+        return args;
+    }
+
     private Object getOptionalField(final Message<JsonObject> message, final String argName) {
         final Object arg = message.body.getField(argName);
         if (arg == null) {
@@ -443,8 +467,7 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
                 return;
             case Bulk:
                 replyMessage = new JsonObject();
-                // TODO: process bytes
-                replyMessage.putString("value", ((BulkReply) reply).asUTF8String());
+                replyMessage.putBinary("value", ((BulkReply) reply).data().array());
                 sendOK(message, replyMessage);
                 return;
             case MultiBulk:
@@ -511,25 +534,8 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
         } else {
             if (arg instanceof JsonArray) {
                 JsonArray array = (JsonArray) arg;
-                // flatten the json array
-                Object[] args = new Object[array.size() * 2];
-                for (int i = 0; i < array.size(); i++) {
-                    Object entry = array.get(i);
-                    if (entry instanceof JsonObject) {
-                        JsonObject jsonEntry = (JsonObject) entry;
-                        Object key = jsonEntry.getField(keyValue.keyName);
-                        Object value = jsonEntry.getField(keyValue.valueName);
-                        // kv cannot be null
-                        if (key == null || value == null) {
-                            throw new RedisCommandError(keyValue.keyName + " or " + keyValue.valueName + " cannot be null");
-                        }
+                Object[] args = getMandatoryKVField(array, keyValue);
 
-                        args[2*i] = key;
-                        args[2*i + 1] = value;
-                    } else {
-                        throw new RedisCommandError(keyValue.pairName + " expected to have JsonObjects");
-                    }
-                }
                 redisClient.send(new Command(command, args), new Handler<Reply>() {
                     @Override
                     public void handle(Reply reply) {
@@ -549,8 +555,34 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
      * @param message  {argName0: value}
      */
     private void redisExecKV(final String command, final String argName0, final KeyValue keyValue, final Message<JsonObject> message) throws RedisCommandError {
-        // TODO: process the KV
-        throw new RedisCommandError("not implemented yet");
+        final Object arg0 = getMandatoryField(message, argName0);
+        final Object arg = message.body.getField(keyValue.pairName);
+        if (arg == null) {
+            // process single pair
+            final Object arg1 = getMandatoryField(message, keyValue.keyName);
+            final Object arg2 = getMandatoryField(message, keyValue.valueName);
+            redisClient.send(new Command(command, arg0, arg1, arg2), new Handler<Reply>() {
+                @Override
+                public void handle(Reply reply) {
+                    processReply(message, reply);
+                }
+            });
+        } else {
+            if (arg instanceof JsonArray) {
+                JsonArray array = (JsonArray) arg;
+                Object[] args = getMandatoryKVField(array, keyValue);
+
+                redisClient.send(new Command(command, arg0,  args), new Handler<Reply>() {
+                    @Override
+                    public void handle(Reply reply) {
+                        processReply(message, reply);
+                    }
+                });
+            } else {
+                // error expected array of objects
+                sendError(message, keyValue.pairName + " must be an array");
+            }
+        }
     }
 
     /**
