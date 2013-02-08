@@ -377,13 +377,19 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
                 case "zadd":
                     redisExecKV(command, "key", SM, message);
                     break;
+                // arguments "key" ["start"] ["end"]
+                case "bitcount":
+                    redisExecLast2Optional(command, "key", "start", "end", message);
+                    break;
+                // arguments ["nosave"] ["save"]
+                case "shutdown":
+                    redisExecLast2Optional(command, "nosave", "save", message);
+                    break;
                 // keys
                 case "sort":
-                    // strings
-                case "bitcount":
-                    // lists
+                // lists
                 case "linsert":
-                    // sorted sets
+                // sorted sets
                 case "zinterstore":
                 case "zrangebyscore":
                 case "zrevrangebyscore":
@@ -391,8 +397,6 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
                     // scripting
                 case "eval":
                 case "evalsha":
-                    // server
-                case "shutdown":
                     sendError(message, "Not Implemented: " + command);
                     break;
                 default:
@@ -709,6 +713,64 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
         final Object arg3 = getMandatoryField(message, argName3);
         final Object arg4 = getMandatoryField(message, argName4);
         redisClient.send(new Command(command, arg0, arg1, arg2, arg3, arg4), new Handler<Reply>() {
+            @Override
+            public void handle(Reply reply) {
+                processReply(message, reply);
+            }
+        });
+    }
+
+    /**
+     * @param command  Redis Command
+     * @param argName0 first argument name
+     * @param argName1 second argument name
+     * @param message  {argName0: value, argName1: value} or {}
+     */
+    private void redisExecLast2Optional(final String command, final String argName0, final String argName1, final Message<JsonObject> message) throws RedisCommandError {
+        final Object arg0 = getOptionalField(message, argName0);
+        final Object arg1 = getOptionalField(message, argName1);
+        final Command cmd;
+
+        if (arg0 == null) {
+            cmd = new Command(command);
+        } else {
+            if (arg1 == null) {
+                cmd = new Command(command, arg0);
+            } else {
+                cmd = new Command(command, arg0, arg1);
+            }
+        }
+        redisClient.send(cmd, new Handler<Reply>() {
+            @Override
+            public void handle(Reply reply) {
+                processReply(message, reply);
+            }
+        });
+    }
+
+    /**
+     * @param command  Redis Command
+     * @param argName0 first argument name
+     * @param argName1 second argument name
+     * @param argName2 third argument name
+     * @param message  {argName0: value, argName1: value} or {}
+     */
+    private void redisExecLast2Optional(final String command, final String argName0, final String argName1, final String argName2, final Message<JsonObject> message) throws RedisCommandError {
+        final Object arg0 = getMandatoryField(message, argName0);
+        final Object arg1 = getOptionalField(message, argName1);
+        final Object arg2 = getOptionalField(message, argName2);
+        final Command cmd;
+
+        if (arg1 == null) {
+            cmd = new Command(command, arg0);
+        } else {
+            if (arg2 == null) {
+                cmd = new Command(command, arg0, arg1);
+            } else {
+                cmd = new Command(command, arg0, arg1, arg2);
+            }
+        }
+        redisClient.send(cmd, new Handler<Reply>() {
             @Override
             public void handle(Reply reply) {
                 processReply(message, reply);
