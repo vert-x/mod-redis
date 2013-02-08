@@ -8,6 +8,9 @@ import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.core.net.NetSocket;
 import com.jetdrone.vertx.mods.redis.netty.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class RedisClientBusMod extends BusModBase implements Handler<Message<JsonObject>> {
 
     private static final class KeyValue {
@@ -23,12 +26,25 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
         }
     }
 
+    private static final class Option {
+        final String name;
+
+        Option(String name) {
+            this.name = name;
+        }
+    }
+
     private NetSocket socket;
     private RedisClientBase redisClient;
 
     private static final KeyValue KV = new KeyValue("key", "value", "keyvalues");
     private static final KeyValue FV = new KeyValue("field", "value", "fieldvalues");
     private static final KeyValue SM = new KeyValue("score", "member", "scoremembers");
+
+    private static final Option WITHSCORES = new Option("withscores");
+    private static final Option ASC = new Option("asc");
+    private static final Option DESC = new Option("desc");
+    private static final Option ALPHA = new Option("alpha");
 
     @Override
     public void start() {
@@ -362,7 +378,7 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
                 // arguments "key" "start" "stop" ["withscores"]
                 case "zrange":
                 case "zrevrange":
-                    redisExecLastOptional(command, "key", "start", "stop", "withscores", message);
+                    redisExecLastOptional(command, "key", "start", "stop", WITHSCORES, message);
                     break;
                 // arguments KV: "key" "value" ["key" "value"...]
                 case "mset":
@@ -385,8 +401,11 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
                 case "shutdown":
                     redisExecLast2Optional(command, "nosave", "save", message);
                     break;
-                // keys
+                // complex non generic: key [BY pattern] [LIMIT offset count] [GET pattern [GET pattern ...]] [ASC|DESC] [ALPHA] [STORE destination]
                 case "sort":
+                    redisExecSort(command, message);
+                    break;
+                // keys
                 // lists
                 case "linsert":
                 // sorted sets
@@ -404,6 +423,19 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
             }
         } catch (RedisCommandError rce) {
             sendError(message, rce.getMessage());
+        }
+    }
+
+    private Object getMandatoryField(final JsonObject message, final String argName) throws RedisCommandError {
+        final Object arg = message.getField(argName);
+        if (arg == null) {
+            throw new RedisCommandError(argName + " cannot be null");
+        } else {
+            if (arg instanceof JsonArray) {
+                return ((JsonArray) arg).toArray();
+            } else {
+                return arg;
+            }
         }
     }
 
@@ -677,17 +709,18 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
      * @param argName1 second argument name
      * @param message  {argName0: value, argName1: value} or {}
      */
-    private void redisExecLastOptional(final String command, final String argName0, final String argName1, final String argName2, final String argName3, final Message<JsonObject> message) throws RedisCommandError {
+    private void redisExecLastOptional(final String command, final String argName0, final String argName1, final String argName2, final Option option, final Message<JsonObject> message) throws RedisCommandError {
         final Object arg0 = getMandatoryField(message, argName0);
         final Object arg1 = getMandatoryField(message, argName1);
         final Object arg2 = getMandatoryField(message, argName2);
-        final Object arg3 = getOptionalField(message, argName3);
+        final Object arg3 = getOptionalField(message, option.name);
+
         final Command cmd;
 
         if (arg3 == null) {
             cmd = new Command(command, arg0, arg1, arg2);
         } else {
-            cmd = new Command(command, arg0, arg1, arg2, arg3);
+            cmd = new Command(command, arg0, arg1, arg2, option.name);
         }
         redisClient.send(cmd, new Handler<Reply>() {
             @Override
@@ -776,5 +809,76 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
                 processReply(message, reply);
             }
         });
+    }
+
+    /**
+     * @param command  Redis Command
+     * @param message  key [BY pattern] [LIMIT offset count] [GET pattern [GET pattern ...]] [ASC|DESC] [ALPHA] [STORE destination]
+     * @throws RedisCommandError
+     */
+    private void redisExecSort(final String command, final Message<JsonObject> message) throws RedisCommandError {
+        final Object key = getMandatoryField(message, "key");
+        List<Object> args = new ArrayList<>();
+        args.add(key);
+
+        final Object by = getOptionalField(message, "by");
+        if (by != null) {
+            args.add("by");
+            args.add(by);
+        }
+
+        final Object limit = getOptionalField(message, "limit");
+        if (limit != null) {
+            if (limit instanceof JsonObject) {
+                args.add("limit");
+                args.add(getMandatoryField((JsonObject) limit, "offset"));
+                args.add(getMandatoryField((JsonObject) limit, "count"));
+            } else {
+                throw new RedisCommandError("limit must be a JsonObject");
+            }
+        }
+
+        final Object get = getOptionalField(message, "get");
+        if (get != null) {
+            if (get instanceof JsonArray) {
+                JsonArray array = (JsonArray) get;
+                for (int i = 0; i < array.size(); i++) {
+                    args.add("get");
+                    args.add(array.get(i));
+                }
+            } else {
+                args.add("get");
+                args.add(get);
+            }
+        }
+
+        final Object asc = getOptionalField(message, ASC.name);
+        if (asc != null) {
+            args.add(ASC.name);
+        }
+
+        final Object desc = getOptionalField(message, DESC.name);
+        if (desc != null) {
+            args.add(DESC.name);
+        }
+
+        final Object alpha = getOptionalField(message, ALPHA.name);
+        if (alpha != null) {
+            args.add(ALPHA.name);
+        }
+
+        final Object store = getOptionalField(message, "store");
+        if (store != null) {
+            args.add("store");
+            args.add(store);
+        }
+
+        redisClient.send(new Command(command, args.toArray()), new Handler<Reply>() {
+            @Override
+            public void handle(Reply reply) {
+                processReply(message, reply);
+            }
+        });
+
     }
 }

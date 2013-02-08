@@ -57,6 +57,7 @@ public class TestClient extends TestClientBase {
                     @Override
                     public void handle(Message<JsonObject> reply) {
                         tu.azzert("ok".equals(reply.body.getString("status")));
+                        System.out.println(reply.body.getField("value"));
                         tu.azzert(random.equals(reply.body.getString("value")));
                         tu.testComplete();
                     }
