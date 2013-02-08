@@ -127,7 +127,7 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
                     break;
                 // argument "pattern"
                 case "keys":
-                // argument "pattern" ["pattern"...]
+                    // argument "pattern" ["pattern"...]
                 case "psubscribe":
                     redisExec(command, "pattern", message);
                     break;
@@ -381,9 +381,9 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
                 case "sort":
                     // strings
                 case "bitcount":
-                // lists
+                    // lists
                 case "linsert":
-                // sorted sets
+                    // sorted sets
                 case "zinterstore":
                 case "zrangebyscore":
                 case "zrevrangebyscore":
@@ -472,14 +472,14 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
             @Override
             public void handle(Reply reply) {
                 processReply(message, reply);
-           }
+            }
         });
     }
 
     /**
-     * @param command Redis Command
+     * @param command  Redis Command
      * @param argName0 first argument name
-     * @param message {argName0: value}
+     * @param message  {argName0: value}
      */
     private void redisExec(final String command, final String argName0, final Message<JsonObject> message) throws RedisCommandError {
         final Object arg0 = getMandatoryField(message, argName0);
@@ -492,9 +492,9 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
     }
 
     /**
-     * @param command Redis Command
+     * @param command  Redis Command
      * @param keyValue key value config
-     * @param message {argName0: value}
+     * @param message  {argName0: value}
      */
     private void redisExecKV(final String command, final KeyValue keyValue, final Message<JsonObject> message) throws RedisCommandError {
         // TODO: process the KV
@@ -502,9 +502,9 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
     }
 
     /**
-     * @param command Redis Command
+     * @param command  Redis Command
      * @param keyValue key value config
-     * @param message {argName0: value}
+     * @param message  {argName0: value}
      */
     private void redisExecKV(final String command, final String argName0, final KeyValue keyValue, final Message<JsonObject> message) throws RedisCommandError {
         // TODO: process the KV
@@ -512,9 +512,9 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
     }
 
     /**
-     * @param command Redis Command
+     * @param command  Redis Command
      * @param argName0 first argument name
-     * @param message {argName0: value} or {}
+     * @param message  {argName0: value} or {}
      */
     private void redisExecLastOptional(final String command, final String argName0, final Message<JsonObject> message) throws RedisCommandError {
         final Object arg0 = getOptionalField(message, argName0);
@@ -534,10 +534,10 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
     }
 
     /**
-     * @param command Redis Command
+     * @param command  Redis Command
      * @param argName0 first argument name
      * @param argName1 second argument name
-     * @param message {argName0: value, argName1: value}
+     * @param message  {argName0: value, argName1: value}
      */
     private void redisExec(final String command, final String argName0, final String argName1, final Message<JsonObject> message) throws RedisCommandError {
         final Object arg0 = getMandatoryField(message, argName0);
@@ -551,10 +551,10 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
     }
 
     /**
-     * @param command Redis Command
+     * @param command  Redis Command
      * @param argName0 first argument name
      * @param argName1 second argument name
-     * @param message {argName0: value, argName1: value} or {}
+     * @param message  {argName0: value, argName1: value} or {}
      */
     private void redisExecLastOptional(final String command, final String argName0, final String argName1, final Message<JsonObject> message) throws RedisCommandError {
         final Object arg0 = getMandatoryField(message, argName0);
@@ -575,11 +575,11 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
     }
 
     /**
-     * @param command Redis Command
+     * @param command  Redis Command
      * @param argName0 first argument name
      * @param argName1 second argument name
      * @param argName2 second argument name
-     * @param message {argName0: value, argName1: value, argName2: value}
+     * @param message  {argName0: value, argName1: value, argName2: value}
      */
     private void redisExec(final String command, final String argName0, final String argName1, final String argName2, final Message<JsonObject> message) throws RedisCommandError {
         final Object arg0 = getMandatoryField(message, argName0);
@@ -594,10 +594,10 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
     }
 
     /**
-     * @param command Redis Command
+     * @param command  Redis Command
      * @param argName0 first argument name
      * @param argName1 second argument name
-     * @param message {argName0: value, argName1: value} or {}
+     * @param message  {argName0: value, argName1: value} or {}
      */
     private void redisExecLastOptional(final String command, final String argName0, final String argName1, final String argName2, final String argName3, final Message<JsonObject> message) throws RedisCommandError {
         final Object arg0 = getMandatoryField(message, argName0);
@@ -620,13 +620,13 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
     }
 
     /**
-     * @param command Redis Command
+     * @param command  Redis Command
      * @param argName0 first argument name
      * @param argName1 second argument name
      * @param argName2 third argument name
      * @param argName3 forth argument name
      * @param argName4 fifth argument name
-     * @param message {argName0: value, argName1: value, argName2: value, argName3: value, argName4: value}
+     * @param message  {argName0: value, argName1: value, argName2: value, argName3: value, argName4: value}
      */
     private void redisExec(final String command, final String argName0, final String argName1, final String argName2, final String argName3, final String argName4, final Message<JsonObject> message) throws RedisCommandError {
         final Object arg0 = getMandatoryField(message, argName0);
