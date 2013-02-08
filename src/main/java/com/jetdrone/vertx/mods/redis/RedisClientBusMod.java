@@ -10,8 +10,25 @@ import com.jetdrone.vertx.mods.redis.netty.*;
 
 public class RedisClientBusMod extends BusModBase implements Handler<Message<JsonObject>> {
 
+    private static final class KeyValue {
+
+        final String keyName;
+        final String valueName;
+        final String pairName;
+
+        KeyValue(String keyName, String valueName, String pairName) {
+            this.keyName = keyName;
+            this.valueName = valueName;
+            this.pairName = pairName;
+        }
+    }
+
     private NetSocket socket;
     private RedisClientBase redisClient;
+
+    private static final KeyValue KV = new KeyValue("key", "value", "keyvalues");
+    private static final KeyValue FV = new KeyValue("field", "value", "fieldvalues");
+    private static final KeyValue SM = new KeyValue("score", "member", "scoremembers");
 
     @Override
     public void start() {
@@ -347,19 +364,26 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
                 case "zrevrange":
                     redisExecLastOptional(command, "key", "start", "stop", "withscores", message);
                     break;
-
+                // arguments KV: "key" "value" ["key" "value"...]
+                case "mset":
+                case "msetnx":
+                    redisExecKV(command, KV, message);
+                    break;
+                // arguments "key" FV: "field" "value" ["field" "value"...]
+                case "hmset":
+                    redisExecKV(command, "key", FV, message);
+                    break;
+                // arguments "key" SM: "score" "member" ["score" "member"...]
+                case "zadd":
+                    redisExecKV(command, "key", SM, message);
+                    break;
                 // keys
                 case "sort":
                     // strings
                 case "bitcount":
-                case "mset":
-                case "msetnx":
-                    // hashes
-                case "hmset":
-                    // lists
+                // lists
                 case "linsert":
                 // sorted sets
-                case "zadd":
                 case "zinterstore":
                 case "zrangebyscore":
                 case "zrevrangebyscore":
@@ -465,6 +489,26 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
                 processReply(message, reply);
             }
         });
+    }
+
+    /**
+     * @param command Redis Command
+     * @param keyValue key value config
+     * @param message {argName0: value}
+     */
+    private void redisExecKV(final String command, final KeyValue keyValue, final Message<JsonObject> message) throws RedisCommandError {
+        // TODO: process the KV
+        throw new RedisCommandError("not implemented yet");
+    }
+
+    /**
+     * @param command Redis Command
+     * @param keyValue key value config
+     * @param message {argName0: value}
+     */
+    private void redisExecKV(final String command, final String argName0, final KeyValue keyValue, final Message<JsonObject> message) throws RedisCommandError {
+        // TODO: process the KV
+        throw new RedisCommandError("not implemented yet");
     }
 
     /**
