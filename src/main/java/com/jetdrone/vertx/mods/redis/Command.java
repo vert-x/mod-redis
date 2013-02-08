@@ -35,7 +35,15 @@ public class Command {
         if (name != null) writeObject(os, name);
         if (objects != null) {
             for (Object object : objects) {
-                writeObject(os, object);
+                // verify if one of the arguments is an array of objects
+                if (object instanceof Object[]) {
+                    Object[] array = (Object[]) object;
+                    for (Object innerObject : array) {
+                        writeObject(os, innerObject);
+                    }
+                } else {
+                    writeObject(os, object);
+                }
             }
         }
     }

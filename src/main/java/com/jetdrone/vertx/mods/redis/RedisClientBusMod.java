@@ -150,6 +150,9 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
             case "setnx":
             case "lpushx":
             case "rpushx":
+            // arguments "key" "value" ["value"...]
+            case "lpush":
+            case "rpush":
                 redisExec(command, "key", "value", message);
                 break;
             // argumens "key" "seconds"
@@ -193,6 +196,9 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
             // arguments "key" "field"
             case "hexists":
             case "hget":
+            // arguments "key" "field" ["field"...]
+            case "hdel":
+            case "hmget":
                 redisExec(command, "key", "field", message);
                 break;
             // arguments "key" "index"
@@ -204,6 +210,10 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
             case "zrank":
             case "zrevrank":
             case "zscore":
+            // arguments "key" "member" ["member"...]
+            case "sadd":
+            case "srem":
+            case "zrem":
                 redisExec(command, "key", "member", message);
                 break;
             // arguments "source" "destination"
@@ -225,6 +235,12 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
             // arguments "parameter" "value"
             case "config set":
                 redisExec(command, "parameter", "value", message);
+                break;
+            // arguments "destination" "key" ["key"...]
+            case "sdiffstore":
+            case "sinterstore":
+            case "sunionstore":
+                redisExec(command, "destination", "key", message);
                 break;
             // arguments "key" "ttl" "serialized-value"
             case "restore":
@@ -288,6 +304,10 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
             case "zincrby":
                 redisExec(command, "key", "increment", "member", message);
                 break;
+            // arguments "operation" "destkey" "key" ["key"...]
+            case "bitop":
+                redisExec(command, "operation", "destkey", "key", message);
+                break;
             // arguments "host" "port" "key" "destination-db" "timeout"
             case "migrate":
                 redisExec(command, "host", "port", "key", "destination-db", "timeout", message);
@@ -298,39 +318,27 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
             case "sort":
             // strings
             case "bitcount":
-            case "bitop":
             case "mset":
             case "msetnx":
             // hashes
-            case "hdel":
-            case "hmget":
             case "hmset":
             // lists
             case "blpop":
             case "brpop":
             case "linsert":
-            case "lpush":
-            case "rpush":
             // sets
-            case "sadd":
-            case "sdiffstore":
-            case "sinterstore":
             case "srandmember":
-            case "srem":
-            case "sunionstore":
             // sorted sets
             case "zadd":
             case "zinterstore":
             case "zrange":
             case "zrangebyscore":
-            case "zrem":
             case "zrevrange":
             case "zrevrangebyscore":
             case "zunionstore":
             // pub/sub
             case "punsubscribe":
             case "unsubscribe":
-            // transactions
             // scripting
             case "eval":
             case "evalsha":
@@ -435,7 +443,13 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
             if (arg1 == null) {
                 sendError(message, arg1 + " cannot be null");
             } else {
-                redisClient.send(new Command(command, arg0, arg1), new Handler<Reply>() {
+                Command cmd;
+                if (arg1 instanceof JsonArray) {
+                    cmd = new Command(command, arg0, ((JsonArray) arg1).toArray());
+                } else {
+                    cmd = new Command(command, arg0, arg1);
+                }
+                redisClient.send(cmd, new Handler<Reply>() {
                     @Override
                     public void handle(Reply reply) {
                         processReply(message, reply);
@@ -468,7 +482,13 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
                 if (arg2 == null) {
                     sendError(message, arg2 + " cannot be null");
                 } else {
-                    redisClient.send(new Command(command, arg0, arg1, arg2), new Handler<Reply>() {
+                    Command cmd;
+                    if (arg2 instanceof JsonArray) {
+                        cmd = new Command(command, arg0, arg1, ((JsonArray) arg2).toArray());
+                    } else {
+                        cmd = new Command(command, arg0, arg1, arg2);
+                    }
+                    redisClient.send(cmd, new Handler<Reply>() {
                         @Override
                         public void handle(Reply reply) {
                             processReply(message, reply);
