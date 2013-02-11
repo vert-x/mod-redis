@@ -34,6 +34,15 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
         }
     }
 
+    private static final class OrOptions {
+        final Option o1;
+        final Option o2;
+
+        OrOptions(Option o1, Option o2) {
+            this.o1 = o1;
+            this.o2 = o2;
+        }
+    }
     private NetSocket socket;
     private RedisClientBase redisClient;
 
@@ -42,9 +51,10 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
     private static final KeyValue SM = new KeyValue("score", "member", "scoremembers");
 
     private static final Option WITHSCORES = new Option("withscores");
-    private static final Option ASC = new Option("asc");
-    private static final Option DESC = new Option("desc");
     private static final Option ALPHA = new Option("alpha");
+
+    private static final OrOptions ASC_OR_DESC = new OrOptions(new Option("asc"), new Option("desc"));
+    private static final OrOptions BEFORE_OR_AFTER = new OrOptions(new Option("before"), new Option("after"));
 
     @Override
     public void start() {
@@ -405,9 +415,10 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
                 case "sort":
                     redisExecSort(command, message);
                     break;
-                // keys
-                // lists
+                // arguments: key BEFORE|AFTER pivot value
                 case "linsert":
+                    redisExec(command, "key", BEFORE_OR_AFTER, "pivot", "value", message);
+                    break;
                 // sorted sets
                 case "zinterstore":
                 case "zrangebyscore":
@@ -476,6 +487,22 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
         return args;
     }
 
+    private Option getMandatoryOrOptionsField(final Message<JsonObject> message, final OrOptions options) throws RedisCommandError {
+        final Object arg0 = message.body.getField(options.o1.name);
+        if (arg0 == null) {
+            // first field does not exist, try the second
+            final Object arg1 = message.body.getField(options.o2.name);
+            if (arg1 == null) {
+                // second field does not exist either
+                throw new RedisCommandError("both " + options.o1.name + " and " + options.o2.name + " cannot be null");
+            } else {
+                return options.o2;
+            }
+        } else {
+            return options.o1;
+        }
+    }
+
     private Object getOptionalField(final Message<JsonObject> message, final String argName) {
         final Object arg = message.body.getField(argName);
         if (arg == null) {
@@ -489,6 +516,20 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
         }
     }
 
+    private Option getOptionalOrOptionsField(final Message<JsonObject> message, final OrOptions options) throws RedisCommandError {
+        final Object arg0 = message.body.getField(options.o1.name);
+        if (arg0 == null) {
+            // first field does not exist, try the second
+            final Object arg1 = message.body.getField(options.o2.name);
+            if (arg1 == null) {
+                return null;
+            } else {
+                return options.o2;
+            }
+        } else {
+            return options.o1;
+        }
+    }
     private void processReply(Message<JsonObject> message, Reply reply) {
         JsonObject replyMessage;
 
@@ -543,6 +584,20 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
     private void redisExec(final String command, final String argName0, final Message<JsonObject> message) throws RedisCommandError {
         final Object arg0 = getMandatoryField(message, argName0);
         redisClient.send(new Command(command, arg0), new Handler<Reply>() {
+            @Override
+            public void handle(Reply reply) {
+                processReply(message, reply);
+            }
+        });
+    }
+
+    private void redisExec(final String command, final String argName0, final OrOptions options, final String argName1, final String argName2, final Message<JsonObject> message) throws RedisCommandError {
+        final Object arg0 = getMandatoryField(message, argName0);
+        final Option option = getMandatoryOrOptionsField(message, options);
+        final Object arg1 = getMandatoryField(message, argName1);
+        final Object arg2 = getMandatoryField(message, argName2);
+
+        redisClient.send(new Command(command, arg0, option.name, arg1, arg2), new Handler<Reply>() {
             @Override
             public void handle(Reply reply) {
                 processReply(message, reply);
@@ -852,14 +907,9 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
             }
         }
 
-        final Object asc = getOptionalField(message, ASC.name);
-        if (asc != null) {
-            args.add(ASC.name);
-        }
-
-        final Object desc = getOptionalField(message, DESC.name);
-        if (desc != null) {
-            args.add(DESC.name);
+        final Option ascDesc = getOptionalOrOptionsField(message, ASC_OR_DESC);
+        if (ascDesc != null) {
+            args.add(ascDesc.name);
         }
 
         final Object alpha = getOptionalField(message, ALPHA.name);

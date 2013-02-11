@@ -16,8 +16,13 @@ public class RedisClientBusModTest extends TestBase {
         super.tearDown();
     }
 
+//    @Test
+//    public void testPersistor() throws Exception {
+//        startTest(getMethodName());
+//    }
+
     @Test
-    public void testPersistor() throws Exception {
+    public void testAppend() throws Exception {
         startTest(getMethodName());
     }
 }
