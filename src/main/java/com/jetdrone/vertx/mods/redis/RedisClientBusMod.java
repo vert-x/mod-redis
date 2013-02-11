@@ -11,6 +11,7 @@ import com.jetdrone.vertx.mods.redis.netty.*;
 import java.util.ArrayList;
 import java.util.List;
 
+@SuppressWarnings("unused")
 public class RedisClientBusMod extends BusModBase implements Handler<Message<JsonObject>> {
 
     private static final class KeyValue {
@@ -411,23 +412,31 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
                 case "shutdown":
                     redisExecLast2Optional(command, "nosave", "save", message);
                     break;
-                // complex non generic: key [BY pattern] [LIMIT offset count] [GET pattern [GET pattern ...]] [ASC|DESC] [ALPHA] [STORE destination]
-                case "sort":
-                    redisExecSort(command, message);
-                    break;
                 // arguments: key BEFORE|AFTER pivot value
                 case "linsert":
                     redisExec(command, "key", BEFORE_OR_AFTER, "pivot", "value", message);
                     break;
-                // sorted sets
+                // complex non generic: key [BY pattern] [LIMIT offset count] [GET pattern [GET pattern ...]] [ASC|DESC] [ALPHA] [STORE destination]
+                case "sort":
+                    redisExecSort(command, message);
+                    break;
+                // complex non generic: destination numkeys key [key ...] [WEIGHTS weight [weight ...]] [AGGREGATE SUM|MIN|MAX]
                 case "zinterstore":
+                case "zunionstore":
+                    redisExecZStore(command, message);
+                    break;
+                // key min max [WITHSCORES] [LIMIT offset count]
                 case "zrangebyscore":
                 case "zrevrangebyscore":
-                case "zunionstore":
-                    // scripting
+                    redisExecZRange(command, message);
+                    break;
+                // numkeys key [key ...] arg [arg ...]
                 case "eval":
+                    redisExec(command, "numkeys", "key", "arg", message);
+                    break;
+                // sha1 numkeys key [key ...] arg [arg ...]
                 case "evalsha":
-                    sendError(message, "Not Implemented: " + command);
+                    redisExec(command, "sha1", "numkeys", "key", "arg", message);
                     break;
                 default:
                     sendError(message, "Invalid command: " + command);
@@ -743,7 +752,7 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
      * @param command  Redis Command
      * @param argName0 first argument name
      * @param argName1 second argument name
-     * @param argName2 second argument name
+     * @param argName2 third argument name
      * @param message  {argName0: value, argName1: value, argName2: value}
      */
     private void redisExec(final String command, final String argName0, final String argName1, final String argName2, final Message<JsonObject> message) throws RedisCommandError {
@@ -751,6 +760,27 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
         final Object arg1 = getMandatoryField(message, argName1);
         final Object arg2 = getMandatoryField(message, argName2);
         redisClient.send(new Command(command, arg0, arg1, arg2), new Handler<Reply>() {
+            @Override
+            public void handle(Reply reply) {
+                processReply(message, reply);
+            }
+        });
+    }
+
+    /**
+     * @param command  Redis Command
+     * @param argName0 first argument name
+     * @param argName1 second argument name
+     * @param argName2 third argument name
+     * @param argName3 forth argument name
+     * @param message  {argName0: value, argName1: value, argName2: value}
+     */
+    private void redisExec(final String command, final String argName0, final String argName1, final String argName2, final String argName3, final Message<JsonObject> message) throws RedisCommandError {
+        final Object arg0 = getMandatoryField(message, argName0);
+        final Object arg1 = getMandatoryField(message, argName1);
+        final Object arg2 = getMandatoryField(message, argName2);
+        final Object arg3 = getMandatoryField(message, argName3);
+        redisClient.send(new Command(command, arg0, arg1, arg2, arg3), new Handler<Reply>() {
             @Override
             public void handle(Reply reply) {
                 processReply(message, reply);
@@ -929,6 +959,79 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
                 processReply(message, reply);
             }
         });
+    }
 
+    /**
+     * @param command String command
+     * @param message destination numkeys key [key ...] [WEIGHTS weight [weight ...]] [AGGREGATE SUM|MIN|MAX]
+     * @throws RedisCommandError
+     */
+    private void redisExecZStore(final String command, final Message<JsonObject> message) throws RedisCommandError {
+        final Object destination = getMandatoryField(message, "destination");
+        final Object numkeys = getMandatoryField(message, "numkeys");
+        final Object key = getMandatoryField(message, "key");
+
+        final List<Object> args = new ArrayList<>();
+        args.add(destination);
+        args.add(numkeys);
+        args.add(key);
+
+        final Object weights = getOptionalField(message, "weights");
+        if (weights != null) {
+            args.add("weights");
+            args.add(weights);
+        }
+
+        final Object aggregate = getOptionalField(message, "aggregate");
+        if (aggregate != null) {
+            if ("sum".equals(aggregate) || "min".equals(aggregate) || "max".equals(aggregate)) {
+                args.add("aggregate");
+                args.add(aggregate);
+            } else {
+                throw new RedisCommandError("aggregate can only be sum,min,max");
+            }
+        }
+
+        redisClient.send(new Command(command, args.toArray()), new Handler<Reply>() {
+            @Override
+            public void handle(Reply reply) {
+                processReply(message, reply);
+            }
+        });
+    }
+
+    private void redisExecZRange(final String command, final Message<JsonObject> message) throws RedisCommandError {
+        // key min max [WITHSCORES] [LIMIT offset count]
+        final Object key = getMandatoryField(message, "key");
+        final Object min = getMandatoryField(message, "min");
+        final Object max = getMandatoryField(message, "max");
+
+        final List<Object> args = new ArrayList<>();
+        args.add(key);
+        args.add(min);
+        args.add(max);
+
+        final Object withScores = getOptionalField(message, WITHSCORES.name);
+        if (withScores != null) {
+            args.add(WITHSCORES.name);
+        }
+
+        final Object limit = getOptionalField(message, "limit");
+        if (limit != null) {
+            if (limit instanceof JsonObject) {
+                args.add("limit");
+                args.add(getMandatoryField((JsonObject) limit, "offset"));
+                args.add(getMandatoryField((JsonObject) limit, "count"));
+            } else {
+                throw new RedisCommandError("limit must be a JsonObject");
+            }
+        }
+
+        redisClient.send(new Command(command, args.toArray()), new Handler<Reply>() {
+            @Override
+            public void handle(Reply reply) {
+                processReply(message, reply);
+            }
+        });
     }
 }
