@@ -72,12 +72,12 @@ public class RedisDecoder extends ReplayingDecoder<VoidEnum> {
     int code = is.readByte();
     switch (code) {
       case StatusReply.MARKER: {
-        String status = is.readBytes(is.bytesBefore(ChannelBufferIndexFinder.CRLF)).toString(Charset.forName("UTF8"));
+        String status = is.readBytes(is.bytesBefore(ChannelBufferIndexFinder.CRLF)).toString(Charset.forName("UTF-8"));
         is.skipBytes(2);
         return new StatusReply(status);
       }
       case ErrorReply.MARKER: {
-        String error = is.readBytes(is.bytesBefore(ChannelBufferIndexFinder.CRLF)).toString(Charset.forName("UTF8"));
+        String error = is.readBytes(is.bytesBefore(ChannelBufferIndexFinder.CRLF)).toString(Charset.forName("UTF-8"));
         is.skipBytes(2);
         return new ErrorReply(error);
       }

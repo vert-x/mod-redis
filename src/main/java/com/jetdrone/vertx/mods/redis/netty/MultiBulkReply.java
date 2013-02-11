@@ -122,6 +122,6 @@ public class MultiBulkReply implements Reply<Reply[]> {
     }
 
     public String toString() {
-        return asStringList(Charset.forName("UTF8")).toString();
+        return asStringList(Charset.forName("UTF-8")).toString();
     }
 }

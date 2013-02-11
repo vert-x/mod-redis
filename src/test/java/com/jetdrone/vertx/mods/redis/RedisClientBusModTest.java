@@ -25,4 +25,36 @@ public class RedisClientBusModTest extends TestBase {
     public void testAppend() throws Exception {
         startTest(getMethodName());
     }
+
+    @Test
+    public void testAuth() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testBgrewriteaof() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testBgsave() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    // TODO: require 2.6.0
+    public void testBitcount() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    // TODO: require 2.6.0
+    public void testBitop() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testBlpop() {
+        startTest(getMethodName());
+    }
 }

@@ -91,6 +91,7 @@ public class TestClient extends TestClientBase {
                                     public void handle(Message<JsonObject> reply3) {
                                         tu.azzert("ok".equals(reply3.body.getString("status")));
                                         tu.azzert("Hello World".equals(reply3.body.getString("value")));
+                                        tu.testComplete();
                                     }
                                 });
                             }
@@ -102,15 +103,15 @@ public class TestClient extends TestClientBase {
     }
 
     public void testAuth() {
-
+        tu.testComplete();
     }
 
     public void testBgrewriteaof() {
-
+        tu.testComplete();
     }
 
     public void testBgsave() {
-
+        tu.testComplete();
     }
 
     public void testBitcount() {
@@ -136,8 +137,64 @@ public class TestClient extends TestClientBase {
                                     public void handle(Message<JsonObject> reply4) {
                                         tu.azzert("ok".equals(reply4.body.getString("status")));
                                         tu.azzert(6 == reply4.body.getNumber("value"));
+                                        tu.testComplete();
                                     }
                                 });
+                            }
+                        });
+                    }
+                });
+            }
+        });
+    }
+
+    public void testBitOp() {
+        eb.send(address, new JsonObject().putString("command", "set").putString("key", "key1").putString("value", "foobar"), new Handler<Message<JsonObject>>() {
+            @Override
+            public void handle(Message<JsonObject> reply0) {
+                tu.azzert("ok".equals(reply0.body.getString("status")));
+
+                eb.send(address, new JsonObject().putString("command", "set").putString("key", "key2").putString("value", "abcdef"), new Handler<Message<JsonObject>>() {
+                    @Override
+                    public void handle(Message<JsonObject> reply0) {
+                        tu.azzert("ok".equals(reply0.body.getString("status")));
+
+                        eb.send(address, new JsonObject().putString("command", "bitop").putBoolean("and", true).putString("destkey", "key1").putString("key", "key2"), new Handler<Message<JsonObject>>() {
+                            @Override
+                            public void handle(Message<JsonObject> reply0) {
+                                tu.azzert("ok".equals(reply0.body.getString("status")));
+
+                                eb.send(address, new JsonObject().putString("command", "get").putString("key", "dest"), new Handler<Message<JsonObject>>() {
+                                    @Override
+                                    public void handle(Message<JsonObject> reply0) {
+                                        tu.azzert("ok".equals(reply0.body.getString("status")));
+                                        tu.testComplete();
+                                    }
+                                });
+                            }
+                        });
+                    }
+                });
+            }
+        });
+    }
+
+    public void testBlpop() {
+        eb.send(address, new JsonObject().putString("command", "del").putArray("key", new JsonArray().add("list1").add("list2")), new Handler<Message<JsonObject>>() {
+            @Override
+            public void handle(Message<JsonObject> reply0) {
+                tu.azzert("ok".equals(reply0.body.getString("status")));
+                eb.send(address, new JsonObject().putString("command", "rpush").putString("key", "list1").putArray("value", new JsonArray().add("a").add("b").add("c")), new Handler<Message<JsonObject>>() {
+                    @Override
+                    public void handle(Message<JsonObject> reply) {
+                        tu.azzert("ok".equals(reply.body.getString("status")));
+                        tu.azzert(3 == reply.body.getNumber("value"));
+                        eb.send(address, new JsonObject().putString("command", "blpop").putArray("key", new JsonArray().add("list1").add("list2")).putNumber("timeout", 0), new Handler<Message<JsonObject>>() {
+                            @Override
+                            public void handle(Message<JsonObject> reply) {
+                                tu.azzert("ok".equals(reply.body.getString("status")));
+                                // TODO: handle multibulk
+                                tu.testComplete();
                             }
                         });
                     }

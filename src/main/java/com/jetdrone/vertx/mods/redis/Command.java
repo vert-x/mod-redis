@@ -58,9 +58,9 @@ public class Command {
             writeArgument(os, (ChannelBuffer) object);
             return;
         } else if (object instanceof String) {
-            argument = ((String) object).getBytes(Charset.forName("UTF8"));
+            argument = ((String) object).getBytes(Charset.forName("UTF-8"));
         } else {
-            argument = object.toString().getBytes(Charset.forName("UTF8"));
+            argument = object.toString().getBytes(Charset.forName("UTF-8"));
         }
         writeArgument(os, argument);
     }

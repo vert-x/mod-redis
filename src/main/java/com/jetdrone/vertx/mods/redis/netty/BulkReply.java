@@ -27,12 +27,12 @@ public class BulkReply implements Reply<ChannelBuffer> {
 
     public String asAsciiString() {
         if (bytes == null) return null;
-        return bytes.toString(Charset.forName("US_ASCII"));
+        return bytes.toString(Charset.forName("US-ASCII"));
     }
 
     public String asUTF8String() {
         if (bytes == null) return null;
-        return bytes.toString(Charset.forName("UTF8"));
+        return bytes.toString(Charset.forName("UTF-8"));
     }
 
     public String asString(Charset charset) {

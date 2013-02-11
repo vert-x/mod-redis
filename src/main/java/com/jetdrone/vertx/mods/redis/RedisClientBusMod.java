@@ -553,7 +553,7 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
                 return;
             case Bulk:
                 replyMessage = new JsonObject();
-                replyMessage.putBinary("value", ((BulkReply) reply).data().array());
+                replyMessage.putString("value", ((BulkReply) reply).asAsciiString());
                 sendOK(message, replyMessage);
                 return;
             case MultiBulk:
