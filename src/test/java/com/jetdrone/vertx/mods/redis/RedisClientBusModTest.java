@@ -5,6 +5,11 @@ import org.vertx.java.testframework.TestBase;
 
 public class RedisClientBusModTest extends TestBase {
 
+    public RedisClientBusModTest() {
+        super();
+        new Example().sayHello();
+    }
+
     @Override
     protected void setUp() throws Exception {
         super.setUp();
