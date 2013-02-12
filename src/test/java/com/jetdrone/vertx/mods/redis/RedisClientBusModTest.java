@@ -7,7 +7,7 @@ public class RedisClientBusModTest extends TestBase {
 
     public RedisClientBusModTest() {
         super();
-        new Example().sayHello();
+        new GTestClient().sayHello();
     }
 
     @Override

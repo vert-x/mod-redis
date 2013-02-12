@@ -1,6 +1,6 @@
 package com.jetdrone.vertx.mods.redis;
 
-class Example {
+class GTestClient {
 
     void sayHello() {
         println "Hello!!!"
