@@ -30,7 +30,7 @@ public class Command {
         int length = objects == null ? 0 : objects.length;
 
         os.writeBytes(ARGS_PREFIX);
-        os.writeBytes(numToBytes(length + + (name == null ? 0 : 1), true));
+        os.writeBytes(numToBytes(length + (name == null ? 0 : 1), true));
 
         if (name != null) writeObject(os, name);
         if (objects != null) {

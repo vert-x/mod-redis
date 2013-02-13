@@ -7,24 +7,18 @@ public class RedisClientBusModTest extends TestBase {
 
     public RedisClientBusModTest() {
         super();
-        new GTestClient().sayHello();
     }
 
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        startApp(TestClient.class.getName());
+        startApp(GRedisClientTester.class.getName());
     }
 
     @Override
     protected void tearDown() throws Exception {
         super.tearDown();
     }
-
-//    @Test
-//    public void testPersistor() throws Exception {
-//        startTest(getMethodName());
-//    }
 
     @Test
     public void testAppend() throws Exception {
@@ -46,17 +40,17 @@ public class RedisClientBusModTest extends TestBase {
         startTest(getMethodName());
     }
 
-    @Test
-    // TODO: require 2.6.0
-    public void testBitcount() {
-        startTest(getMethodName());
-    }
-
-    @Test
-    // TODO: require 2.6.0
-    public void testBitop() {
-        startTest(getMethodName());
-    }
+//    @Test
+//    // TODO: require 2.6.0
+//    public void testBitcount() {
+//        startTest(getMethodName());
+//    }
+//
+//    @Test
+//    // TODO: require 2.6.0
+//    public void testBitop() {
+//        startTest(getMethodName());
+//    }
 
     @Test
     public void testBlpop() {
