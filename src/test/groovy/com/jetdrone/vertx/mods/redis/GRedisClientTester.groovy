@@ -46,7 +46,7 @@ class GRedisClientTester extends TestClientBase {
         })
     }
 
-    private String makeKey() {
+    private static String makeKey() {
         return UUID.randomUUID().toString()
     }
 
@@ -128,7 +128,6 @@ class GRedisClientTester extends TestClientBase {
         redis([command: "del", key: [list1, list2]]) { reply0 ->
 
             redis([command: "rpush", key: list1, "value": ["a", "b", "c"]]) { reply1 ->
-                println(reply1.body.getNumber("value"))
                 tu.azzert(3 == reply1.body.getNumber("value"))
 
                 redis([command: "blpop", key: [list1, list2], timeout: 0]) { reply2 ->
@@ -150,7 +149,6 @@ class GRedisClientTester extends TestClientBase {
         redis([command: "del", key: [list1, list2]]) { reply0 ->
 
             redis([command: "rpush", key: list1, "value": ["a", "b", "c"]]) { reply1 ->
-                println(reply1.body.getNumber("value"))
                 tu.azzert(3 == reply1.body.getNumber("value"))
 
                 redis([command: "brpop", key: [list1, list2], timeout: 0]) { reply2 ->
@@ -678,6 +676,76 @@ class GRedisClientTester extends TestClientBase {
                     tu.azzert("Hello".equals(array.get(0)))
                     tu.azzert("World".equals(array.get(1)))
                     tu.testComplete()
+                }
+            }
+        }
+    }
+
+    void testIncr() {
+        def mykey = makeKey()
+
+        redis([command: "set", key: mykey, value: "10"]) { reply0 ->
+            redis([command: "incr", key: mykey]) { reply1 ->
+                tu.azzert(11 == reply1.body.getNumber("value"))
+
+                redis([command: "get", key: mykey]) { reply2 ->
+                    tu.azzert("11".equals(reply2.body.getString("value")))
+                    tu.testComplete()
+                }
+            }
+        }
+    }
+
+    void testIncrby() {
+        def mykey = makeKey()
+
+        redis([command: "set", key: mykey, value: "10"]) { reply0 ->
+            redis([command: "incrby", key: mykey, increment: 5]) { reply1 ->
+                tu.azzert(15 == reply1.body.getNumber("value"))
+                tu.testComplete()
+            }
+        }
+    }
+
+    void testIncrbyfloat() {
+        def mykey = makeKey()
+
+        redis([command: "set", key: mykey, value: 10.50]) { reply0 ->
+            redis([command: "incrbyfloat", key: mykey, increment: 0.1]) { reply1 ->
+                tu.azzert("10.6".equals(reply1.body.getString("value")))
+
+                redis([command: "set", key: mykey, value: 5.0e3]) { reply2 ->
+                    redis([command: "incrbyfloat", key: mykey, increment: 2.0e2]) { reply3 ->
+                        tu.azzert("5200".equals(reply3.body.getString("value")))
+                        tu.testComplete()
+                    }
+                }
+            }
+        }
+    }
+
+    void testInfo() {
+        redis([command: "info", section: "server"]) { reply0 ->
+            tu.azzert(reply0.body.getString("value").indexOf("redis_version") != -1)
+            tu.testComplete()
+        }
+    }
+
+    void testKeys() {
+        redis([command: "mset", keyvalues: [[key: "one", value: 1], [key: "two", value: 2], [key: "three", value: 3], [key: "four", value: 4]]]) { reply0 ->
+            redis([command: "keys", pattern: "*o*"]) { reply1 ->
+                def array = reply1.body.getArray("value")
+                tu.azzert(3 == array.size())
+
+                redis([command: "keys", pattern: "t??"]) { reply2 ->
+                    def array2 = reply2.body.getArray("value")
+                    tu.azzert(1 == array2.size())
+
+                    redis([command: "keys", pattern: "*"]) { reply3 ->
+                        def array3 = reply3.body.getArray("value")
+                        tu.azzert(4 <= array3.size())
+                        tu.testComplete()
+                    }
                 }
             }
         }

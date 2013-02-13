@@ -278,4 +278,29 @@ public class RedisClientBusModTest extends TestBase {
     public void testHvals() {
         startTest(getMethodName());
     }
+
+    @Test
+    public void testIncr() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testIncrby() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testIncrbyfloat() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testInfo() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testKeys() {
+        startTest(getMethodName());
+    }
 }
