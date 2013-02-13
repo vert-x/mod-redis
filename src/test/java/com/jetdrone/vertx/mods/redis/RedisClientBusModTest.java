@@ -243,4 +243,39 @@ public class RedisClientBusModTest extends TestBase {
 //    public void testHIncrbyfloat() {
 //        startTest(getMethodName());
 //    }
+
+    @Test
+    public void testHkeys() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testHlen() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testHmget() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testHmset() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testHset() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testHsetnx() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testHvals() {
+        startTest(getMethodName());
+    }
 }

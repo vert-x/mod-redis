@@ -539,6 +539,7 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
             return options.o1;
         }
     }
+
     private void processReply(Message<JsonObject> message, Reply reply) {
         JsonObject replyMessage;
 
@@ -558,8 +559,12 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
                 return;
             case MultiBulk:
                 replyMessage = new JsonObject();
-                // TODO: process array of bytes
-                replyMessage.putString("value", ((MultiBulkReply) reply).toString());
+                MultiBulkReply mbreply = (MultiBulkReply) reply;
+                JsonArray bulk = new JsonArray();
+                for (Reply r : mbreply.data()) {
+                    bulk.addString(((BulkReply) r).asAsciiString());
+                }
+                replyMessage.putArray("value", bulk);
                 sendOK(message, replyMessage);
                 return;
             case Integer:
