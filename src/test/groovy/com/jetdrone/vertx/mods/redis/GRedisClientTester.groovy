@@ -725,7 +725,7 @@ class GRedisClientTester extends TestClientBase {
     }
 
     void testInfo() {
-        redis([command: "info", section: "server"]) { reply0 ->
+        redis([command: "info" /*, section: "server"*/]) { reply0 ->
             tu.azzert(reply0.body.getString("value").indexOf("redis_version") != -1)
             tu.testComplete()
         }
@@ -744,6 +744,145 @@ class GRedisClientTester extends TestClientBase {
                     redis([command: "keys", pattern: "*"]) { reply3 ->
                         def array3 = reply3.body.getArray("value")
                         tu.azzert(4 <= array3.size())
+                        tu.testComplete()
+                    }
+                }
+            }
+        }
+    }
+
+    void testLastsave() {
+        redis([command: "lastsave"]) { reply0 ->
+            tu.testComplete()
+        }
+    }
+
+    void testLindex() {
+        def mykey = makeKey()
+
+        redis([command: "lpush", key: mykey, value: "World"]) { reply0 ->
+            tu.azzert(1 == reply0.body.getNumber("value"))
+
+            redis([command: "lpush", key: mykey, value: "Hello"]) { reply1 ->
+                tu.azzert(2 == reply1.body.getNumber("value"))
+
+                redis([command: "lindex", key: mykey, index: 0]) { reply2 ->
+                    tu.azzert("Hello".equals(reply2.body.getString("value")))
+
+                    redis([command: "lindex", key: mykey, index: -1]) { reply3 ->
+                        tu.azzert("World".equals(reply3.body.getString("value")))
+                        tu.testComplete()
+                    }
+                }
+            }
+        }
+    }
+
+    void testLinsert() {
+        def mykey = makeKey()
+
+        redis([command: "rpush", key: mykey, value: "Hello"]) { reply0 ->
+            tu.azzert(1 == reply0.body.getNumber("value"))
+
+            redis([command: "rpush", key: mykey, value: "World"]) { reply1 ->
+                tu.azzert(2 == reply1.body.getNumber("value"))
+
+                redis([command: "linsert", key: mykey, before: true, pivot: "World", value: "There"]) { reply2 ->
+                    tu.azzert(3 == reply2.body.getNumber("value"))
+                    tu.testComplete()
+                }
+            }
+        }
+    }
+
+    void testLlen() {
+        def mykey = makeKey()
+        redis([command: "lpush", key: mykey, value: "World"]) { reply0 ->
+            tu.azzert(1 == reply0.body.getNumber("value"))
+            redis([command: "lpush", key: mykey, value: "Hello"]) { reply1 ->
+                tu.azzert(2 == reply1.body.getNumber("value"))
+                redis([command: "llen", key: mykey]) { reply2 ->
+                    tu.azzert(2 == reply2.body.getNumber("value"))
+                    tu.testComplete()
+                }
+            }
+        }
+    }
+
+    void testLpop() {
+        def mykey = makeKey()
+        redis([command: "rpush", key: mykey, value: "one"]) { reply0 ->
+            tu.azzert(1 == reply0.body.getNumber("value"))
+            redis([command: "rpush", key: mykey, value: "two"]) { reply1 ->
+                tu.azzert(2 == reply1.body.getNumber("value"))
+                redis([command: "rpush", key: mykey, value: "three"]) { reply2 ->
+                    tu.azzert(3 == reply2.body.getNumber("value"))
+                    redis([command: "lpop", key: mykey]) { reply3 ->
+                        tu.azzert("one".equals(reply3.body.getString("value")))
+                        tu.testComplete()
+                    }
+                }
+            }
+        }
+    }
+
+    void testLpush() {
+        def mykey = makeKey()
+        redis([command: "lpush", key: mykey, value: "world"]) { reply0 ->
+            tu.azzert(1 == reply0.body.getNumber("value"))
+            redis([command: "lpush", key: mykey, value: "hello"]) { reply1 ->
+                tu.azzert(2 == reply1.body.getNumber("value"))
+                redis([command: "lrange", key: mykey, start: 0, stop: -1]) { reply2 ->
+                    def array2 = reply2.body.getArray("value")
+                    tu.azzert(2 == array2.size())
+
+                    tu.azzert("hello".equals(array2.get(0)))
+                    tu.azzert("world".equals(array2.get(1)))
+                    tu.testComplete()
+                }
+            }
+        }
+    }
+
+    void testLpushx() {
+        def mykey = makeKey()
+        def myotherkey = makeKey()
+
+        redis([command: "lpush", key: mykey, value: "World"]) { reply0 ->
+            tu.azzert(1 == reply0.body.getNumber("value"))
+            redis([command: "lpushx", key: mykey, value: "Hello"]) { reply1 ->
+                tu.azzert(2 == reply1.body.getNumber("value"))
+                redis([command: "lpushx", key: myotherkey, value: "Hello"]) { reply2 ->
+                    tu.azzert(0 == reply2.body.getNumber("value"))
+                    redis([command: "lrange", key: mykey, start: 0, stop: -1]) { reply3 ->
+                        def array3 = reply3.body.getArray("value")
+                        tu.azzert(2 == array3.size())
+
+                        tu.azzert("Hello".equals(array3.get(0)))
+                        tu.azzert("World".equals(array3.get(1)))
+                        redis([command: "lrange", key: myotherkey, start: 0, stop: -1]) { reply4 ->
+                            def array4 = reply4.body.getArray("value")
+                            tu.azzert(0 == array4.size())
+                            tu.testComplete()
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    void testLrange() {
+        def mykey = makeKey()
+        redis([command: "rpush", key: mykey, value: "one"]) { reply0 ->
+            tu.azzert(1 == reply0.body.getNumber("value"))
+            redis([command: "rpush", key: mykey, value: "two"]) { reply1 ->
+                tu.azzert(2 == reply1.body.getNumber("value"))
+                redis([command: "rpush", key: mykey, value: "three"]) { reply2 ->
+                    tu.azzert(3 == reply2.body.getNumber("value"))
+                    redis([command: "lrange", key: mykey, start: 0, stop: 0]) { reply3 ->
+                        def array3 = reply3.body.getArray("value")
+                        tu.azzert(1 == array3.size())
+                        tu.azzert("one".equals(array3.get(0)))
                         tu.testComplete()
                     }
                 }
