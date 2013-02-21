@@ -345,11 +345,11 @@ public class RedisClientBusModTest extends TestBase {
         startTest(getMethodName());
     }
 
-//    @Test
-//    public void testLrem() {
-//        startTest(getMethodName());
-//    }
-//
+    @Test
+    public void testLrem() {
+        startTest(getMethodName());
+    }
+
 //    @Test
 //    public void testLset() {
 //        startTest(getMethodName());

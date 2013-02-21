@@ -50,19 +50,45 @@ class GRedisClientTester extends TestClientBase {
         return UUID.randomUUID().toString()
     }
 
+    private void assertNumber(expected, value) {
+        tu.azzert(expected == value.body.getNumber("value"), "Expected: <" + expected + "> but got: <" + value.body.getNumber("value") + ">")
+    }
+
+    private void assertString(expected, value) {
+        tu.azzert(expected.equals(value.body.getString("value")), "Expected: <" + expected + "> but got: <" + value.body.getString("value") + ">")
+    }
+
+    private void assertNull(value) {
+        tu.azzert(null == value.body.getField("value"), "Expected: <null> but got: <" + value.body.getField("value") + ">")
+    }
+
+    private void assertNotNull(value) {
+        tu.azzert(null != value.body.getField("value"), "Expected: <!null> but got: <" + value.body.getField("value") + ">")
+    }
+
+    private void assertArray(expected, value) {
+        def array = value.body.getArray("value")
+        tu.azzert(null != array, "Expected: <!null> but got: <" + array + ">")
+        tu.azzert(expected.size() == array.size(), "Expected Length: <" + expected.size() + "> but got: <" + array.size() + ">")
+
+        for (int i = 0; i < array.size(); i++) {
+            tu.azzert(expected[i].equals(array.get(i)), "Expected at " + i + ": <" + expected[i] + "> but got: <" + array.get(i) + ">")
+        }
+    }
+
     void testAppend() {
         def key = makeKey()
 
         redis([command: "del", key: key]) { reply0 ->
 
             redis([command: "append", key: key, value: "Hello"]) { reply1 ->
-                tu.azzert(5 == reply1.body.getNumber("value"))
+                assertNumber(5, reply1)
 
                 redis([command: "append", key: key, value: " World"]) { reply2 ->
-                    tu.azzert(11 == reply2.body.getNumber("value"))
+                    assertNumber(11, reply2)
 
                     redis([command: "get", key: key]) { reply3 ->
-                        tu.azzert("Hello World".equals(reply3.body.getString("value")))
+                        assertString("Hello World", reply3)
                         tu.testComplete()
                     }
                 }
@@ -88,13 +114,13 @@ class GRedisClientTester extends TestClientBase {
         redis([command: "set", key: key, value: "foobar"]) { reply0 ->
 
             redis([command: "bitcount", key: key]) { reply1 ->
-                tu.azzert(26 == reply1.body.getNumber("value"))
+                assertNumber(26, reply1)
 
                 redis([command: "bitcount", key: key, start: 0, end: 0]) { reply2 ->
-                    tu.azzert(4 == reply2.body.getNumber("value"))
+                    assertNumber(4, reply2)
 
                     redis([command: "bitcount", key: key, start: 1, end: 1]) { reply3 ->
-                        tu.azzert(6 == reply3.body.getNumber("value"))
+                        assertNumber(6, reply3)
                         tu.testComplete()
                     }
                 }
@@ -128,14 +154,10 @@ class GRedisClientTester extends TestClientBase {
         redis([command: "del", key: [list1, list2]]) { reply0 ->
 
             redis([command: "rpush", key: list1, "value": ["a", "b", "c"]]) { reply1 ->
-                tu.azzert(3 == reply1.body.getNumber("value"))
+                assertNumber(3, reply1)
 
                 redis([command: "blpop", key: [list1, list2], timeout: 0]) { reply2 ->
-                    def array = reply2.body.getArray("value")
-
-                    tu.azzert(2 == array.size())
-                    tu.azzert(list1.equals(array.get(0)))
-                    tu.azzert("a".equals(array.get(1)))
+                    assertArray([list1, "a"], reply2)
                     tu.testComplete()
                 }
             }
@@ -149,14 +171,10 @@ class GRedisClientTester extends TestClientBase {
         redis([command: "del", key: [list1, list2]]) { reply0 ->
 
             redis([command: "rpush", key: list1, "value": ["a", "b", "c"]]) { reply1 ->
-                tu.azzert(3 == reply1.body.getNumber("value"))
+                assertNumber(3, reply1)
 
                 redis([command: "brpop", key: [list1, list2], timeout: 0]) { reply2 ->
-                    def array = reply2.body.getArray("value")
-
-                    tu.azzert(2 == array.size())
-                    tu.azzert(list1.equals(array.get(0)))
-                    tu.azzert("c".equals(array.get(1)))
+                    assertArray([list1, "c"], reply2)
                     tu.testComplete()
                 }
             }
@@ -221,7 +239,7 @@ class GRedisClientTester extends TestClientBase {
 
         redis([command: "set", key: mykey, value: "10"]) { reply0 ->
             redis([command: "decr", key: mykey]) { reply1 ->
-                tu.azzert(9 == reply1.body.getNumber("value"))
+                assertNumber(9, reply1)
                 tu.testComplete()
             }
         }
@@ -232,7 +250,7 @@ class GRedisClientTester extends TestClientBase {
 
         redis([command: "set", key: mykey, value: "10"]) { reply0 ->
             redis([command: "decrby", key: mykey, decrement: 5]) { reply1 ->
-                tu.azzert(5 == reply1.body.getNumber("value"))
+                assertNumber(5, reply1)
                 tu.testComplete()
             }
         }
@@ -246,7 +264,7 @@ class GRedisClientTester extends TestClientBase {
         redis([command: "set", key: key1, value: "Hello"]) { reply0 ->
             redis([command: "set", key: key2, value: "World"]) { reply1 ->
                 redis([command: "del", key: [key1, key2, key3]]) { reply2 ->
-                    tu.azzert(2 == reply2.body.getNumber("value"))
+                    assertNumber(2, reply2)
                     tu.testComplete()
                 }
             }
@@ -262,7 +280,7 @@ class GRedisClientTester extends TestClientBase {
 
         redis([command: "set", key: mykey, value: 10]) { reply0 ->
             redis([command: "dump", key: mykey]) { reply1 ->
-                tu.azzert("\\u0000\\xC0\\n\\u0006\\u0000\\xF8r?\\xC5\\xFB\\xFB_(".equals(reply1.body.getString("value")))
+                assertString("\\u0000\\xC0\\n\\u0006\\u0000\\xF8r?\\xC5\\xFB\\xFB_(", reply1)
                 tu.testComplete()
             }
         }
@@ -270,7 +288,7 @@ class GRedisClientTester extends TestClientBase {
 
     void testEcho() {
         redis([command: "echo", message: "Hello World!"]) { reply0 ->
-            tu.azzert("Hello World!".equals(reply0.body.getString("value")))
+            assertString("Hello World!", reply0)
             tu.testComplete()
         }
     }
@@ -305,10 +323,10 @@ class GRedisClientTester extends TestClientBase {
 
         redis([command: "set", key: key1, value: "Hello"]) {reply0 ->
             redis([command: "exists", key: key1]) {reply1 ->
-                tu.azzert(1 == reply1.body.getNumber("value"))
+                assertNumber(1, reply1)
 
                 redis([command: "exists", key: key2]) {reply2 ->
-                    tu.azzert(0 == reply2.body.getNumber("value"))
+                    assertNumber(0, reply2)
                     tu.testComplete()
                 }
             }
@@ -320,14 +338,14 @@ class GRedisClientTester extends TestClientBase {
 
         redis([command: "set", key: mykey, value: "Hello"]) { reply0 ->
             redis([command: "expire", key: mykey, seconds: 10]) { reply1 ->
-                tu.azzert(1 == reply1.body.getNumber("value"))
+                assertNumber(1, reply1)
 
                 redis([command: "ttl", key: mykey]) { reply2 ->
-                    tu.azzert(10 == reply2.body.getNumber("value"))
+                    assertNumber(10, reply2)
 
                     redis([command: "set", key: mykey, value: "Hello World"]) { reply3 ->
                         redis([command: "ttl", key: mykey]) { reply4 ->
-                            tu.azzert(-1 == reply4.body.getNumber("value"))
+                            assertNumber(-1, reply4)
                             tu.testComplete()
                         }
                     }
@@ -341,13 +359,13 @@ class GRedisClientTester extends TestClientBase {
 
         redis([command: "set", key: mykey, value: "Hello"]) { reply0 ->
             redis([command: "exists", key: mykey]) { reply1 ->
-                tu.azzert(1 == reply1.body.getNumber("value"))
+                assertNumber(1, reply1)
 
                 redis([command: "expireat", key: mykey, timestamp: 1293840000]) { reply2 ->
-                    tu.azzert(1 == reply2.body.getNumber("value"))
+                    assertNumber(1, reply2)
 
                     redis([command: "exists", key: mykey]) { reply3 ->
-                        tu.azzert(0 == reply3.body.getNumber("value"))
+                        assertNumber(0, reply3)
                         tu.testComplete()
                     }
                 }
@@ -368,11 +386,11 @@ class GRedisClientTester extends TestClientBase {
         def mykey = makeKey()
 
         redis([command: "get", key: nonexisting]) { reply0 ->
-            tu.azzert(null == reply0.body.getField("value"))
+            assertNull(reply0)
 
             redis([command: "set", key: mykey, value: "Hello"]) { reply1 ->
                 redis([command: "get", key: mykey]) { reply2 ->
-                    tu.azzert("Hello".equals(reply2.body.getString("value")))
+                    assertString("Hello", reply2)
                     tu.testComplete()
                 }
             }
@@ -383,16 +401,16 @@ class GRedisClientTester extends TestClientBase {
         def mykey = makeKey()
 
         redis([command: "setbit", key: mykey, offset: 7, value: 1]) { reply0 ->
-            tu.azzert(0 == reply0.body.getNumber("value"))
+            assertNumber(0, reply0)
 
             redis([command: "getbit", key: mykey, offset: 0]) { reply1 ->
-                tu.azzert(0 == reply1.body.getNumber("value"))
+                assertNumber(0, reply1)
 
                 redis([command: "getbit", key: mykey, offset: 7]) { reply2 ->
-                    tu.azzert(1 == reply2.body.getNumber("value"))
+                    assertNumber(1, reply2)
 
                     redis([command: "getbit", key: mykey, offset: 100]) { reply3 ->
-                        tu.azzert(0 == reply3.body.getNumber("value"))
+                        assertNumber(0, reply3)
                         tu.testComplete()
                     }
                 }
@@ -405,16 +423,16 @@ class GRedisClientTester extends TestClientBase {
 
         redis([command: "set", key: mykey, value: "This is a string"]) { reply0 ->
             redis([command: "getrange", key: mykey, start:  0, end: 3]) { reply1 ->
-                tu.azzert("This".equals(reply1.body.getString("value")))
+                assertString("This", reply1)
 
                 redis([command: "getrange", key: mykey, start:  -3, end: -1]) { reply2 ->
-                    tu.azzert("ing".equals(reply2.body.getString("value")))
+                    assertString("ing", reply2)
 
                     redis([command: "getrange", key: mykey, start:  0, end: -1]) { reply3 ->
-                        tu.azzert("This is a string".equals(reply3.body.getString("value")))
+                        assertString("This is a string", reply3)
 
                         redis([command: "getrange", key: mykey, start: 10, end: 100]) { reply4 ->
-                            tu.azzert("string".equals(reply4.body.getString("value")))
+                            assertString("string", reply4)
                             tu.testComplete()
                         }
                     }
@@ -427,13 +445,13 @@ class GRedisClientTester extends TestClientBase {
         def mycounter = makeKey()
 
         redis([command: "incr", key: mycounter]) { reply0 ->
-            tu.azzert(1 == reply0.body.getNumber("value"))
+            assertNumber(1, reply0)
 
             redis([command: "getset", key: mycounter, value: "0"]) { reply1 ->
-                tu.azzert("1".equals(reply1.body.getString("value")))
+                assertString("1", reply1)
 
                 redis([command: "get", key: mycounter]) { reply2 ->
-                    tu.azzert("0".equals(reply2.body.getString("value")))
+                    assertString("0", reply2)
                     tu.testComplete()
                 }
             }
@@ -444,13 +462,13 @@ class GRedisClientTester extends TestClientBase {
         def myhash = makeKey()
 
         redis([command: "hset", key: myhash, field: "field1", value: "foo"]) { reply0 ->
-            tu.azzert(1 == reply0.body.getNumber("value"))
+            assertNumber(1, reply0)
 
             redis([command: "hdel", key: myhash, field: "field1"]) { reply1 ->
-                tu.azzert(1 == reply1.body.getNumber("value"))
+                assertNumber(1, reply1)
 
                 redis([command: "hdel", key: myhash, field: "field2"]) { reply2 ->
-                    tu.azzert(0 == reply2.body.getNumber("value"))
+                    assertNumber(0, reply2)
                     tu.testComplete()
                 }
             }
@@ -461,13 +479,13 @@ class GRedisClientTester extends TestClientBase {
         def myhash = makeKey()
 
         redis([command: "hset", key: myhash, field: "field1", value: "foo"]) { reply0 ->
-            tu.azzert(1 == reply0.body.getNumber("value"))
+            assertNumber(1, reply0)
 
             redis([command: "hexists", key: myhash, field: "field1"]) { reply1 ->
-                tu.azzert(1 == reply1.body.getNumber("value"))
+                assertNumber(1, reply1)
 
                 redis([command: "hexists", key: myhash, field: "field2"]) { reply2 ->
-                    tu.azzert(0 == reply2.body.getNumber("value"))
+                    assertNumber(0, reply2)
                     tu.testComplete()
                 }
             }
@@ -478,13 +496,13 @@ class GRedisClientTester extends TestClientBase {
         def myhash = makeKey()
 
         redis([command: "hset", key: myhash, field: "field1", value: "foo"]) { reply0 ->
-            tu.azzert(1 == reply0.body.getNumber("value"))
+            assertNumber(1, reply0)
 
             redis([command: "hget", key: myhash, field: "field1"]) { reply1 ->
-                tu.azzert("foo".equals(reply1.body.getString("value")))
+                assertString("foo", reply1)
 
                 redis([command: "hget", key: myhash, field: "field2"]) { reply2 ->
-                    tu.azzert(null == reply2.body.getField("value"))
+                    assertNull(reply2)
                     tu.testComplete()
                 }
             }
@@ -495,19 +513,13 @@ class GRedisClientTester extends TestClientBase {
         def myhash = makeKey()
 
         redis([command: "hset", key: myhash, field: "field1", value: "Hello"]) { reply0 ->
-            tu.azzert(1 == reply0.body.getNumber("value"))
+            assertNumber(1, reply0)
 
             redis([command: "hset", key: myhash, field: "field2", value: "World"]) { reply1 ->
-                tu.azzert(1 == reply1.body.getNumber("value"))
+                assertNumber(1, reply1)
 
                 redis([command: "hgetall", key: myhash]) { reply2 ->
-                    def array = reply2.body.getArray("value")
-
-                    tu.azzert(4 == array.size())
-                    tu.azzert("field1".equals(array.get(0)))
-                    tu.azzert("Hello".equals(array.get(1)))
-                    tu.azzert("field2".equals(array.get(2)))
-                    tu.azzert("World".equals(array.get(3)))
+                    assertArray(["field1", "Hello", "field2", "World"], reply2)
                     tu.testComplete()
                }
             }
@@ -518,16 +530,16 @@ class GRedisClientTester extends TestClientBase {
         def myhash = makeKey()
 
         redis([command: "hset", key: myhash, field: "field", value: 5]) { reply0 ->
-            tu.azzert(1 == reply0.body.getNumber("value"))
+            assertNumber(1, reply0)
 
             redis([command: "hincrby", key: myhash, field: "field", increment: 1]) { reply1 ->
-                tu.azzert(6 == reply1.body.getNumber("value"))
+                assertNumber(6, reply1)
 
                 redis([command: "hincrby", key: myhash, field: "field", increment: -1]) { reply2 ->
-                    tu.azzert(5 == reply2.body.getNumber("value"))
+                    assertNumber(5, reply2)
 
                     redis([command: "hincrby", key: myhash, field: "field", increment: -10]) { reply3 ->
-                        tu.azzert(-5 == reply3.body.getNumber("value"))
+                        assertNumber(-5, reply3)
                         tu.testComplete()
                     }
                 }
@@ -539,16 +551,16 @@ class GRedisClientTester extends TestClientBase {
         def mykey = makeKey()
 
         redis([command: "hset", key: mykey, field: "field", value: 10.50]) { reply0 ->
-            tu.azzert(1 == reply0.body.getNumber("value"))
+            assertNumber(1, reply0)
 
             redis([command: "hincrbyfloat", key: mykey, field: "field", increment: 0.1]) { reply1 ->
-                tu.azzert("10.6".equals(reply1.body.getNumber("value")))
+                assertNumber(10.6, reply1)
 
                 redis([command: "hset", key: mykey, field: "field", value: 5.0e3]) { reply2 ->
-                    tu.azzert(0 == reply2.body.getNumber("value"))
+                    assertNumber(0, reply2)
 
                     redis([command: "hincrbyfloat", key: mykey, field: "field", increment: 2.0e2]) { reply3 ->
-                        tu.azzert("5200".equals(reply3.body.getNumber("value")))
+                        assertNumber(5200, reply3)
                         tu.testComplete()
                     }
                 }
@@ -560,17 +572,13 @@ class GRedisClientTester extends TestClientBase {
         def myhash = makeKey()
 
         redis([command: "hset", key: myhash, field: "field1", value: "Hello"]) { reply0 ->
-            tu.azzert(1 == reply0.body.getNumber("value"))
+            assertNumber(1, reply0)
 
             redis([command: "hset", key: myhash, field: "field2", value: "World"]) { reply1 ->
-                tu.azzert(1 == reply1.body.getNumber("value"))
+                assertNumber(1, reply1)
 
                 redis([command: "hkeys", key: myhash]) { reply2 ->
-                    def array = reply2.body.getArray("value")
-
-                    tu.azzert(2 == array.size())
-                    tu.azzert("field1".equals(array.get(0)))
-                    tu.azzert("field2".equals(array.get(1)))
+                    assertArray(["field1", "field2"], reply2)
                     tu.testComplete()
                 }
             }
@@ -581,13 +589,13 @@ class GRedisClientTester extends TestClientBase {
         def myhash = makeKey()
 
         redis([command: "hset", key: myhash, field: "field1", value: "Hello"]) { reply0 ->
-            tu.azzert(1 == reply0.body.getNumber("value"))
+            assertNumber(1, reply0)
 
             redis([command: "hset", key: myhash, field: "field2", value: "World"]) { reply1 ->
-                tu.azzert(1 == reply1.body.getNumber("value"))
+                assertNumber(1, reply1)
 
                 redis([command: "hlen", key: myhash]) { reply2 ->
-                    tu.azzert(2 == reply2.body.getNumber("value"))
+                    assertNumber(2, reply2)
                     tu.testComplete()
                 }
             }
@@ -598,18 +606,13 @@ class GRedisClientTester extends TestClientBase {
         def myhash = makeKey()
 
         redis([command: "hset", key: myhash, field: "field1", value: "Hello"]) { reply0 ->
-            tu.azzert(1 == reply0.body.getNumber("value"))
+            assertNumber(1, reply0)
 
             redis([command: "hset", key: myhash, field: "field2", value: "World"]) { reply1 ->
-                tu.azzert(1 == reply1.body.getNumber("value"))
+                assertNumber(1, reply1)
 
                 redis([command: "hmget", key: myhash, field: ["field1", "field2", "nofield"]]) { reply2 ->
-                    def array = reply2.body.getArray("value")
-
-                    tu.azzert(3 == array.size())
-                    tu.azzert("Hello".equals(array.get(0)))
-                    tu.azzert("World".equals(array.get(1)))
-                    tu.azzert(null == array.get(2))
+                    assertArray(["Hello", "World", null], reply2)
                     tu.testComplete()
                 }
             }
@@ -621,9 +624,9 @@ class GRedisClientTester extends TestClientBase {
 
         redis([command: "hmset", key: myhash, fieldvalues: [[field: "field1", value: "Hello"],[field: "field2", value: "World"]]]) { reply0 ->
             redis([command: "hget", key: myhash, field: "field1"]) { reply1 ->
-                tu.azzert("Hello".equals(reply1.body.getString("value")))
+                assertString("Hello", reply1)
                 redis([command: "hget", key: myhash, field: "field2"]) { reply2 ->
-                    tu.azzert("World".equals(reply2.body.getString("value")))
+                    assertString("World", reply2)
                     tu.testComplete()
                 }
             }
@@ -634,10 +637,10 @@ class GRedisClientTester extends TestClientBase {
         def myhash = makeKey()
 
         redis([command: "hset", key: myhash, field: "field1", value: "Hello"]) { reply0 ->
-            tu.azzert(1 == reply0.body.getNumber("value"))
+            assertNumber(1, reply0)
 
             redis([command: "hget", key: myhash, field: "field1"]) { reply1 ->
-                tu.azzert("Hello".equals(reply1.body.getString("value")))
+                assertString("Hello", reply1)
                 tu.testComplete()
             }
         }
@@ -647,13 +650,13 @@ class GRedisClientTester extends TestClientBase {
         def myhash = makeKey()
 
         redis([command: "hsetnx", key: myhash, field: "field", value: "Hello"]) { reply0 ->
-            tu.azzert(1 == reply0.body.getNumber("value"))
+            assertNumber(1, reply0)
 
             redis([command: "hsetnx", key: myhash, field: "field", value: "World"]) { reply1 ->
-                tu.azzert(0 == reply1.body.getNumber("value"))
+                assertNumber(0, reply1)
 
                 redis([command: "hget", key: myhash, field: "field"]) { reply2 ->
-                    tu.azzert("Hello".equals(reply2.body.getString("value")))
+                    assertString("Hello", reply2)
                     tu.testComplete()
                 }
             }
@@ -664,17 +667,13 @@ class GRedisClientTester extends TestClientBase {
         def myhash = makeKey()
 
         redis([command: "hset", key: myhash, field: "field1", value: "Hello"]) { reply0 ->
-            tu.azzert(1 == reply0.body.getNumber("value"))
+            assertNumber(1, reply0)
 
             redis([command: "hset", key: myhash, field: "field2", value: "World"]) { reply1 ->
-                tu.azzert(1 == reply1.body.getNumber("value"))
+                assertNumber(1, reply1)
 
                 redis([command: "hvals", key: myhash]) { reply2 ->
-                    def array = reply2.body.getArray("value")
-
-                    tu.azzert(2 == array.size())
-                    tu.azzert("Hello".equals(array.get(0)))
-                    tu.azzert("World".equals(array.get(1)))
+                    assertArray(["Hello", "World"], reply2)
                     tu.testComplete()
                 }
             }
@@ -686,10 +685,10 @@ class GRedisClientTester extends TestClientBase {
 
         redis([command: "set", key: mykey, value: "10"]) { reply0 ->
             redis([command: "incr", key: mykey]) { reply1 ->
-                tu.azzert(11 == reply1.body.getNumber("value"))
+                assertNumber(11, reply1)
 
                 redis([command: "get", key: mykey]) { reply2 ->
-                    tu.azzert("11".equals(reply2.body.getString("value")))
+                    assertString("11", reply2)
                     tu.testComplete()
                 }
             }
@@ -701,7 +700,7 @@ class GRedisClientTester extends TestClientBase {
 
         redis([command: "set", key: mykey, value: "10"]) { reply0 ->
             redis([command: "incrby", key: mykey, increment: 5]) { reply1 ->
-                tu.azzert(15 == reply1.body.getNumber("value"))
+                assertNumber(15, reply1)
                 tu.testComplete()
             }
         }
@@ -712,11 +711,11 @@ class GRedisClientTester extends TestClientBase {
 
         redis([command: "set", key: mykey, value: 10.50]) { reply0 ->
             redis([command: "incrbyfloat", key: mykey, increment: 0.1]) { reply1 ->
-                tu.azzert("10.6".equals(reply1.body.getString("value")))
+                assertString("10.6", reply1)
 
                 redis([command: "set", key: mykey, value: 5.0e3]) { reply2 ->
                     redis([command: "incrbyfloat", key: mykey, increment: 2.0e2]) { reply3 ->
-                        tu.azzert("5200".equals(reply3.body.getString("value")))
+                        assertString("5200", reply3)
                         tu.testComplete()
                     }
                 }
@@ -735,7 +734,9 @@ class GRedisClientTester extends TestClientBase {
         redis([command: "mset", keyvalues: [[key: "one", value: 1], [key: "two", value: 2], [key: "three", value: 3], [key: "four", value: 4]]]) { reply0 ->
             redis([command: "keys", pattern: "*o*"]) { reply1 ->
                 def array = reply1.body.getArray("value")
-                tu.azzert(3 == array.size())
+                println array
+                // this is because there are leftovers from previous tests
+                tu.azzert(3 <= array.size())
 
                 redis([command: "keys", pattern: "t??"]) { reply2 ->
                     def array2 = reply2.body.getArray("value")
@@ -761,16 +762,16 @@ class GRedisClientTester extends TestClientBase {
         def mykey = makeKey()
 
         redis([command: "lpush", key: mykey, value: "World"]) { reply0 ->
-            tu.azzert(1 == reply0.body.getNumber("value"))
+            assertNumber(1, reply0)
 
             redis([command: "lpush", key: mykey, value: "Hello"]) { reply1 ->
-                tu.azzert(2 == reply1.body.getNumber("value"))
+                assertNumber(2, reply1)
 
                 redis([command: "lindex", key: mykey, index: 0]) { reply2 ->
-                    tu.azzert("Hello".equals(reply2.body.getString("value")))
+                    assertString("Hello", reply2)
 
                     redis([command: "lindex", key: mykey, index: -1]) { reply3 ->
-                        tu.azzert("World".equals(reply3.body.getString("value")))
+                        assertString("World", reply3)
                         tu.testComplete()
                     }
                 }
@@ -782,13 +783,13 @@ class GRedisClientTester extends TestClientBase {
         def mykey = makeKey()
 
         redis([command: "rpush", key: mykey, value: "Hello"]) { reply0 ->
-            tu.azzert(1 == reply0.body.getNumber("value"))
+            assertNumber(1, reply0)
 
             redis([command: "rpush", key: mykey, value: "World"]) { reply1 ->
-                tu.azzert(2 == reply1.body.getNumber("value"))
+                assertNumber(2, reply1)
 
                 redis([command: "linsert", key: mykey, before: true, pivot: "World", value: "There"]) { reply2 ->
-                    tu.azzert(3 == reply2.body.getNumber("value"))
+                    assertNumber(3, reply2)
                     tu.testComplete()
                 }
             }
@@ -798,11 +799,11 @@ class GRedisClientTester extends TestClientBase {
     void testLlen() {
         def mykey = makeKey()
         redis([command: "lpush", key: mykey, value: "World"]) { reply0 ->
-            tu.azzert(1 == reply0.body.getNumber("value"))
+            assertNumber(1, reply0)
             redis([command: "lpush", key: mykey, value: "Hello"]) { reply1 ->
-                tu.azzert(2 == reply1.body.getNumber("value"))
+                assertNumber(2, reply1)
                 redis([command: "llen", key: mykey]) { reply2 ->
-                    tu.azzert(2 == reply2.body.getNumber("value"))
+                    assertNumber(2, reply2)
                     tu.testComplete()
                 }
             }
@@ -812,13 +813,13 @@ class GRedisClientTester extends TestClientBase {
     void testLpop() {
         def mykey = makeKey()
         redis([command: "rpush", key: mykey, value: "one"]) { reply0 ->
-            tu.azzert(1 == reply0.body.getNumber("value"))
+            assertNumber(1, reply0)
             redis([command: "rpush", key: mykey, value: "two"]) { reply1 ->
-                tu.azzert(2 == reply1.body.getNumber("value"))
+                assertNumber(2, reply1)
                 redis([command: "rpush", key: mykey, value: "three"]) { reply2 ->
-                    tu.azzert(3 == reply2.body.getNumber("value"))
+                    assertNumber(3, reply2)
                     redis([command: "lpop", key: mykey]) { reply3 ->
-                        tu.azzert("one".equals(reply3.body.getString("value")))
+                        assertString("one", reply3)
                         tu.testComplete()
                     }
                 }
@@ -829,15 +830,11 @@ class GRedisClientTester extends TestClientBase {
     void testLpush() {
         def mykey = makeKey()
         redis([command: "lpush", key: mykey, value: "world"]) { reply0 ->
-            tu.azzert(1 == reply0.body.getNumber("value"))
+            assertNumber(1, reply0)
             redis([command: "lpush", key: mykey, value: "hello"]) { reply1 ->
-                tu.azzert(2 == reply1.body.getNumber("value"))
+                assertNumber(2, reply1)
                 redis([command: "lrange", key: mykey, start: 0, stop: -1]) { reply2 ->
-                    def array2 = reply2.body.getArray("value")
-                    tu.azzert(2 == array2.size())
-
-                    tu.azzert("hello".equals(array2.get(0)))
-                    tu.azzert("world".equals(array2.get(1)))
+                    assertArray(["hello", "world"], reply2)
                     tu.testComplete()
                 }
             }
@@ -849,11 +846,11 @@ class GRedisClientTester extends TestClientBase {
         def myotherkey = makeKey()
 
         redis([command: "lpush", key: mykey, value: "World"]) { reply0 ->
-            tu.azzert(1 == reply0.body.getNumber("value"))
+            assertNumber(1, reply0)
             redis([command: "lpushx", key: mykey, value: "Hello"]) { reply1 ->
-                tu.azzert(2 == reply1.body.getNumber("value"))
+                assertNumber(2, reply1)
                 redis([command: "lpushx", key: myotherkey, value: "Hello"]) { reply2 ->
-                    tu.azzert(0 == reply2.body.getNumber("value"))
+                    assertNumber(0, reply2)
                     redis([command: "lrange", key: mykey, start: 0, stop: -1]) { reply3 ->
                         def array3 = reply3.body.getArray("value")
                         tu.azzert(2 == array3.size())
@@ -874,16 +871,37 @@ class GRedisClientTester extends TestClientBase {
     void testLrange() {
         def mykey = makeKey()
         redis([command: "rpush", key: mykey, value: "one"]) { reply0 ->
-            tu.azzert(1 == reply0.body.getNumber("value"))
+            assertNumber(1, reply0)
             redis([command: "rpush", key: mykey, value: "two"]) { reply1 ->
-                tu.azzert(2 == reply1.body.getNumber("value"))
+                assertNumber(2, reply1)
                 redis([command: "rpush", key: mykey, value: "three"]) { reply2 ->
-                    tu.azzert(3 == reply2.body.getNumber("value"))
+                    assertNumber(3, reply2)
                     redis([command: "lrange", key: mykey, start: 0, stop: 0]) { reply3 ->
-                        def array3 = reply3.body.getArray("value")
-                        tu.azzert(1 == array3.size())
-                        tu.azzert("one".equals(array3.get(0)))
+                        assertArray(["one"], reply3)
                         tu.testComplete()
+                    }
+                }
+            }
+        }
+    }
+
+    void testLrem() {
+        def mykey = makeKey()
+        redis([command: "rpush", key: mykey, value: "hello"]) { reply0 ->
+            assertNumber(1, reply0)
+            redis([command: "rpush", key: mykey, value: "hello"]) { reply1 ->
+                assertNumber(2, reply1)
+                redis([command: "rpush", key: mykey, value: "foo"]) { reply2 ->
+                    assertNumber(3, reply2)
+                    redis([command: "rpush", key: mykey, value: "hello"]) { reply3 ->
+                        assertNumber(4, reply3)
+                        redis([command: "lrem", key: mykey, count: -2, value: "hello"]) { reply4 ->
+                            assertNumber(2, reply4)
+                            redis([command: "lrange", key: mykey, start: 0, stop: -1]) { reply5 ->
+                                assertArray(["hello", "foo"], reply5)
+                                tu.testComplete()
+                            }
+                        }
                     }
                 }
             }
