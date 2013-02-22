@@ -470,61 +470,61 @@ public class RedisClientBusModTest extends TestBase {
         startTest(getMethodName());
     }
 
-//    @Test
-//    public void testRpop() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testRpoplpush() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testRpush() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testRpushx() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testSadd() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testSave() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testScard() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testScriptexists() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testScriptflush() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testScriptkill() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testScriptload() {
-//        startTest(getMethodName());
-//    }
-//
+    @Test
+    public void testRpop() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testRpoplpush() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testRpush() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testRpushx() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testSadd() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testSave() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testScard() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testScriptexists() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testScriptflush() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testScriptkill() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testScriptload() {
+        startTest(getMethodName());
+    }
+
 //    @Test
 //    public void testSdiff() {
 //        startTest(getMethodName());
