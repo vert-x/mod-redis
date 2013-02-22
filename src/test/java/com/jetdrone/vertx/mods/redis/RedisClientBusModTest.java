@@ -525,101 +525,101 @@ public class RedisClientBusModTest extends TestBase {
         startTest(getMethodName());
     }
 
-//    @Test
-//    public void testSdiff() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testSdiffstore() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testSelect() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testSet() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testSetbit() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testSetex() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testSetnx() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testSetrange() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testShutdown() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testSinter() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testSinterstore() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testSismember() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testSlaveof() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testSlowlog() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testSmembers() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testSmove() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testSort() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testSpop() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testSrandmember() {
-//        startTest(getMethodName());
-//    }
-//
+    @Test
+    public void testSdiff() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testSdiffstore() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testSelect() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testSet() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testSetbit() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testSetex() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testSetnx() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testSetrange() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testShutdown() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testSinter() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testSinterstore() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testSismember() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testSlaveof() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testSlowlog() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testSmembers() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testSmove() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testSort() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testSpop() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testSrandmember() {
+        startTest(getMethodName());
+    }
+
 //    @Test
 //    public void testSrem() {
 //        startTest(getMethodName());

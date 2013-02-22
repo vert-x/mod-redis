@@ -1020,7 +1020,7 @@ class GRedisClientTester extends TestClientBase {
     void testPersist() {
         def mykey = makeKey()
         redis([command: "set", key: mykey, value: "Hello"]) { reply0 ->
-            redis([command: "expire", key: mykey, value: 10]) { reply1 ->
+            redis([command: "expire", key: mykey, seconds: 10]) { reply1 ->
                 assertNumber(1, reply1)
                 redis([command: "ttl", key: mykey]) { reply2 ->
                     assertNumber(10, reply2)
@@ -1267,6 +1267,229 @@ class GRedisClientTester extends TestClientBase {
     }
 
     void testScriptload() {
+        tu.testComplete()
+    }
+
+    void testSdiff() {
+        def mykey1 = makeKey()
+        def mykey2 = makeKey()
+
+        redis([command: "sadd", key: mykey1, member: "a"]) { reply0 ->
+            assertNumber(1, reply0)
+            redis([command: "sadd", key: mykey1, member: "b"]) { reply1 ->
+                assertNumber(1, reply1)
+                redis([command: "sadd", key: mykey1, member: "c"]) { reply2 ->
+                    assertNumber(1, reply2)
+                    redis([command: "sadd", key: mykey2, member: "c"]) { reply3 ->
+                        assertNumber(1, reply3)
+                        redis([command: "sadd", key: mykey2, member: "d"]) { reply4 ->
+                            assertNumber(1, reply4)
+                            redis([command: "sadd", key: mykey2, member: "e"]) { reply5 ->
+                                assertNumber(1, reply5)
+                                redis([command: "sdiff", key: [mykey1, mykey2]]) { reply6 ->
+                                    assertArray(["a", "b"], reply6)
+                                    tu.testComplete()
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    void testSdiffstore() {
+        tu.testComplete()
+    }
+
+    void testSelect() {
+        tu.testComplete()
+    }
+
+    void testSet() {
+        def mykey = makeKey()
+        redis([command: "set", key: mykey, value: "Hello"]) { reply0 ->
+            redis([command: "get", key: mykey]) { reply1 ->
+                assertString("Hello", reply1)
+                tu.testComplete()
+            }
+        }
+    }
+
+    void testSetbit() {
+        def mykey = makeKey()
+        redis([command: "setbit", key: mykey, offset: 7, value: 1]) { reply0 ->
+            assertNumber(0, reply0)
+            redis([command: "setbit", key: mykey, offset: 7, value: 0]) { reply1 ->
+                assertNumber(1, reply1)
+                redis([command: "get", key: mykey]) { reply2 ->
+                    assertString("\u0000", reply2)
+                    tu.testComplete()
+                }
+            }
+        }
+    }
+
+    void testSetex() {
+        def mykey = makeKey()
+        redis([command: "setex", key: mykey, seconds: 10, value: "Hello"]) { reply0 ->
+            redis([command: "ttl", key: mykey]) { reply1 ->
+                assertNumber(10, reply1)
+                redis([command: "get", key: mykey]) { reply2 ->
+                    assertString("Hello", reply2)
+                    tu.testComplete()
+                }
+            }
+        }
+    }
+
+    void testSetnx() {
+        def mykey = makeKey()
+        redis([command: "setnx", key: mykey, value: "Hello"]) { reply0 ->
+            assertNumber(1, reply0)
+            redis([command: "setnx", key: mykey, value: "World"]) { reply1 ->
+                assertNumber(0, reply1)
+                redis([command: "get", key: mykey]) { reply2 ->
+                    assertString("Hello", reply2)
+                    tu.testComplete()
+                }
+            }
+        }
+    }
+
+    void testSetrange() {
+        def mykey = makeKey()
+        redis([command: "set", key: mykey, value: "Hello World"]) { reply0 ->
+            redis([command: "setrange", key: mykey, offset: 6, value: "Redis"]) { reply1 ->
+                assertNumber(11, reply1)
+                redis([command: "get", key: mykey]) { reply2 ->
+                    assertString("Hello Redis", reply2)
+                    tu.testComplete()
+                }
+            }
+        }
+    }
+
+    void testShutdown() {
+        tu.testComplete()
+    }
+
+    void testSinter() {
+        def mykey1 = makeKey()
+        def mykey2 = makeKey()
+
+        redis([command: "sadd", key: mykey1, member: "a"]) { reply0 ->
+            assertNumber(1, reply0)
+            redis([command: "sadd", key: mykey1, member: "b"]) { reply1 ->
+                assertNumber(1, reply1)
+                redis([command: "sadd", key: mykey1, member: "c"]) { reply2 ->
+                    assertNumber(1, reply2)
+                    redis([command: "sadd", key: mykey2, member: "c"]) { reply3 ->
+                        assertNumber(1, reply3)
+                        redis([command: "sadd", key: mykey2, member: "d"]) { reply4 ->
+                            assertNumber(1, reply4)
+                            redis([command: "sadd", key: mykey2, member: "e"]) { reply5 ->
+                                assertNumber(1, reply5)
+                                redis([command: "sinter", key: [mykey1, mykey2]]) { reply6 ->
+                                    assertArray(["c"], reply6)
+                                    tu.testComplete()
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    void testSinterstore() {
+        tu.testComplete()
+    }
+
+    void testSismember() {
+        def mykey = makeKey()
+        redis([command: "sadd", key: mykey, member: "one"]) { reply0 ->
+            redis([command: "sismember", key: mykey, member: "one"]) { reply1 ->
+                assertNumber(1, reply1)
+                redis([command: "sismember", key: mykey, member: "two"]) { reply2 ->
+                    assertNumber(0, reply2)
+                    tu.testComplete()
+                }
+            }
+        }
+    }
+
+    void testSlaveof() {
+        tu.testComplete()
+    }
+
+    void testSlowlog() {
+        tu.testComplete()
+    }
+
+    void testSmembers() {
+        def mykey = makeKey()
+        redis([command: "sadd", key: mykey, member: "Hello"]) { reply0 ->
+            assertNumber(1, reply0)
+            redis([command: "sadd", key: mykey, member: "World"]) { reply1 ->
+                assertNumber(1, reply1)
+                redis([command: "smembers", key: mykey]) { reply2 ->
+                    assertArray(["World", "Hello"], reply2)
+                    tu.testComplete()
+                }
+            }
+        }
+    }
+
+    void testSmove() {
+        def mykey = makeKey()
+        def myotherkey = makeKey()
+        redis([command: "sadd", key: mykey, member: "one"]) { reply0 ->
+            assertNumber(1, reply0)
+            redis([command: "sadd", key: mykey, member: "two"]) { reply1 ->
+                assertNumber(1, reply1)
+                redis([command: "sadd", key: myotherkey, member: "three"]) { reply2 ->
+                    assertNumber(1, reply2)
+                    redis([command: "smove", source: mykey, destination: myotherkey, member: "two"]) { reply3 ->
+                        assertNumber(1, reply3)
+                        redis([command: "smembers", key: mykey]) { reply4 ->
+                            assertArray(["one"], reply4)
+                            redis([command: "smembers", key: myotherkey]) { reply5 ->
+                                assertArray(["two", "three"], reply5)
+                                tu.testComplete()
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    void testSort() {
+        tu.testComplete()
+    }
+
+    void testSpop() {
+        def mykey = makeKey()
+        redis([command: "sadd", key: mykey, member: "one"]) { reply0 ->
+            assertNumber(1, reply0)
+            redis([command: "sadd", key: mykey, member: "two"]) { reply1 ->
+                assertNumber(1, reply1)
+                redis([command: "sadd", key: mykey, member: "three"]) { reply2 ->
+                    assertNumber(1, reply2)
+                    redis([command: "spop", key: mykey]) { reply3 ->
+                        assertString("one", reply3)
+                        redis([command: "smembers", key: mykey]) { reply4 ->
+                            assertArray(["three", "two"], reply4)
+                            tu.testComplete()
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    void testSrandmember() {
         tu.testComplete()
     }
 }
