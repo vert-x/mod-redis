@@ -350,126 +350,126 @@ public class RedisClientBusModTest extends TestBase {
         startTest(getMethodName());
     }
 
-//    @Test
-//    public void testLset() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testLtrim() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testMget() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testMigrate() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testMonitor() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testMove() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testMset() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testMsetnx() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testMulti() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testObject() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testPersist() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testPexpire() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testPexpireat() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testPing() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testPsetex() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testPsubscribe() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testPttl() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testPublish() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testPunsubscribe() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testQuit() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testRandomkey() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testRename() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testRenamenx() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testRestore() {
-//        startTest(getMethodName());
-//    }
-//
+    @Test
+    public void testLset() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testLtrim() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testMget() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testMigrate() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testMonitor() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testMove() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testMset() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testMsetnx() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testMulti() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testObject() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testPersist() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testPexpire() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testPexpireat() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testPing() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testPsetex() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testPsubscribe() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testPttl() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testPublish() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testPunsubscribe() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testQuit() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testRandomkey() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testRename() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testRenamenx() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testRestore() {
+        startTest(getMethodName());
+    }
+
 //    @Test
 //    public void testRpop() {
 //        startTest(getMethodName());

@@ -6,6 +6,7 @@ import org.vertx.java.core.eventbus.Message
 import org.vertx.java.core.json.JsonObject
 import org.vertx.java.testframework.TestClientBase
 
+@SuppressWarnings("GroovyUnusedDeclaration")
 class GRedisClientTester extends TestClientBase {
 
     private final String address = "test.my_redisclient"
@@ -72,7 +73,11 @@ class GRedisClientTester extends TestClientBase {
         tu.azzert(expected.size() == array.size(), "Expected Length: <" + expected.size() + "> but got: <" + array.size() + ">")
 
         for (int i = 0; i < array.size(); i++) {
-            tu.azzert(expected[i].equals(array.get(i)), "Expected at " + i + ": <" + expected[i] + "> but got: <" + array.get(i) + ">")
+            if (expected[i] == null) {
+                tu.azzert(null == array.get(i), "Expected: <null> but got: <" + array.get(i) + ">")
+            } else {
+                tu.azzert(expected[i].equals(array.get(i)), "Expected at " + i + ": <" + expected[i] + "> but got: <" + array.get(i) + ">")
+            }
         }
     }
 
@@ -153,7 +158,7 @@ class GRedisClientTester extends TestClientBase {
 
         redis([command: "del", key: [list1, list2]]) { reply0 ->
 
-            redis([command: "rpush", key: list1, "value": ["a", "b", "c"]]) { reply1 ->
+            redis([command: "rpush", key: list1, value: ["a", "b", "c"]]) { reply1 ->
                 assertNumber(3, reply1)
 
                 redis([command: "blpop", key: [list1, list2], timeout: 0]) { reply2 ->
@@ -170,7 +175,7 @@ class GRedisClientTester extends TestClientBase {
 
         redis([command: "del", key: [list1, list2]]) { reply0 ->
 
-            redis([command: "rpush", key: list1, "value": ["a", "b", "c"]]) { reply1 ->
+            redis([command: "rpush", key: list1, value: ["a", "b", "c"]]) { reply1 ->
                 assertNumber(3, reply1)
 
                 redis([command: "brpop", key: [list1, list2], timeout: 0]) { reply2 ->
@@ -906,5 +911,232 @@ class GRedisClientTester extends TestClientBase {
                 }
             }
         }
+    }
+
+    void testLset() {
+        def mykey = makeKey()
+        redis([command: "rpush", key: mykey, value: "one"]) { reply0 ->
+            assertNumber(1, reply0)
+            redis([command: "rpush", key: mykey, value: "two"]) { reply1 ->
+                assertNumber(2, reply1)
+                redis([command: "rpush", key: mykey, value: "three"]) { reply2 ->
+                    assertNumber(3, reply2)
+                    redis([command: "lset", key: mykey, index: 0, value: "four"]) { reply3 ->
+                        redis([command: "lset", key: mykey, index: -2, value: "five"]) { reply4 ->
+                            redis([command: "lrange", key: mykey, start: 0, stop: -1]) { reply5 ->
+                                assertArray(["four", "five", "three"], reply5)
+                                tu.testComplete()
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    void testLtrim() {
+        def mykey = makeKey()
+        redis([command: "rpush", key: mykey, value: "one"]) { reply0 ->
+            assertNumber(1, reply0)
+            redis([command: "rpush", key: mykey, value: "two"]) { reply1 ->
+                assertNumber(2, reply1)
+                redis([command: "rpush", key: mykey, value: "three"]) { reply2 ->
+                    assertNumber(3, reply2)
+                    redis([command: "ltrim", key: mykey, start: 0, stop: -1]) { reply3 ->
+                        redis([command: "lrange", key: mykey, start: 0, stop: -1]) { reply5 ->
+                            assertArray(["two", "three"], reply5)
+                            tu.testComplete()
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    void testMget() {
+        def mykey1 = makeKey()
+        def mykey2 = makeKey()
+        redis([command: "set", key: mykey1, value: "Hello"]) { reply0 ->
+            redis([command: "set", key: mykey2, value: "World"]) { reply1 ->
+                redis([command: "mget", key: [mykey1, mykey2, "nonexisting"]]) { reply2 ->
+                    assertArray(["Hello", "World", null], reply2)
+                    tu.testComplete()
+                }
+            }
+        }
+    }
+
+    void testMigrate() {
+        tu.testComplete()
+    }
+
+    void testMonitor() {
+        tu.testComplete()
+    }
+
+    void testMove() {
+        tu.testComplete()
+    }
+
+    void testMset() {
+        def mykey1 = makeKey()
+        def mykey2 = makeKey()
+        redis([command: "mset", keyvalues: [[key: mykey1, value: "Hello"], [key: mykey2, value: "World"]]]) { reply0 ->
+            redis([command: "get", key: mykey1]) { reply1 ->
+                assertString("Hello", reply1)
+                redis([command: "get", key: mykey2]) { reply2 ->
+                    assertString("World", reply2)
+                    tu.testComplete()
+                }
+            }
+        }
+    }
+
+    void testMsetnx() {
+        def mykey1 = makeKey()
+        def mykey2 = makeKey()
+        def mykey3 = makeKey()
+
+        redis([command: "msetnx", keyvalues: [[key: mykey1, value: "Hello"], [key: mykey2, value: "there"]]]) { reply0 ->
+            assertNumber(1, reply0)
+            redis([command: "msetnx", keyvalues: [[key: mykey2, value: "there"], [key: mykey3, value: "world"]]]) { reply1 ->
+                assertNumber(0, reply1)
+                redis([command: "mget", key: [mykey1, mykey2, mykey3]]) { reply2 ->
+                    assertArray(["Hello", "there", null], reply2)
+                    tu.testComplete()
+                }
+            }
+        }
+    }
+
+    void testMulti() {
+        tu.testComplete()
+    }
+
+    void testObject() {
+        tu.testComplete()
+    }
+
+    void testPersist() {
+        def mykey = makeKey()
+        redis([command: "set", key: mykey, value: "Hello"]) { reply0 ->
+            redis([command: "expire", key: mykey, value: 10]) { reply1 ->
+                assertNumber(1, reply1)
+                redis([command: "ttl", key: mykey]) { reply2 ->
+                    assertNumber(10, reply2)
+                    redis([command: "persist", key: mykey]) { reply3 ->
+                        assertNumber(1, reply3)
+                        redis([command: "ttl", key: mykey]) { reply4 ->
+                            assertNumber(-1, reply4)
+                            tu.testComplete()
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    void testPexpire() {
+        def mykey = makeKey()
+        redis([command: "set", key: mykey, value: "Hello"]) { reply0 ->
+            redis([command: "pexpire", key: mykey, milliseconds: 1500]) { reply1 ->
+                assertNumber(1, reply1)
+                redis([command: "ttl", key: mykey]) { reply2 ->
+                    assertNumber(1, reply2)
+                    redis([command: "pttl", key: mykey]) { reply3 ->
+                        tu.azzert(1500 > reply3.body.getNumber("value") && reply3.body.getNumber("value") > 0)
+                        tu.testComplete()
+                    }
+                }
+            }
+        }
+    }
+
+    void testPing() {
+        redis([command: "ping"]) { reply0 ->
+            assertString("PONG", reply0)
+            tu.testComplete()
+        }
+    }
+
+    void testPsetex() {
+        def mykey = makeKey()
+        redis([command: "psetex", key: mykey, milliseconds: 1000, value: "Hello"]) { reply0 ->
+            redis([command: "pttl", key: mykey]) { reply1 ->
+                tu.azzert(1500 > reply1.body.getNumber("value") && reply1.body.getNumber("value") > 0)
+                redis([command: "get", key: mykey]) { reply2 ->
+                    assertString("Hello", reply2)
+                    tu.testComplete()
+                }
+            }
+        }
+    }
+
+    void testPsubscribe() {
+        tu.testComplete()
+    }
+
+    void testPttl() {
+        def mykey = makeKey()
+        redis([command: "set", key: mykey, value: "Hello"]) { reply0 ->
+            redis([command: "expire", key: mykey, seconds: 1]) { reply1 ->
+                assertNumber(1, reply1)
+                redis([command: "pttl", key: mykey]) { reply2 ->
+                    tu.azzert(1000 > reply2.body.getNumber("value") && reply2.body.getNumber("value") > 0)
+                    tu.testComplete()
+                }
+            }
+        }
+    }
+
+    void testPublish() {
+        tu.testComplete()
+    }
+
+    void testPunsubscribe() {
+        tu.testComplete()
+    }
+
+    void testQuit() {
+        tu.testComplete()
+    }
+
+    void testRandomkey() {
+        tu.testComplete()
+    }
+
+    void testRename() {
+        def mykey = makeKey()
+        def myotherkey = makeKey()
+
+        redis([command: "set", key: mykey, value: "Hello"]) { reply0 ->
+            redis([command: "rename", key: mykey, newkey: myotherkey]) { reply1 ->
+                redis([command: "get", key: myotherkey]) { reply2 ->
+                    assertString("Hello", reply2)
+                    tu.testComplete()
+                }
+            }
+        }
+    }
+
+    void testRenamenx() {
+        def mykey = makeKey()
+        def myotherkey = makeKey()
+
+        redis([command: "set", key: mykey, value: "Hello"]) { reply0 ->
+            redis([command: "set", key: myotherkey, value: "World"]) { reply1 ->
+                redis([command: "renamenx", key: mykey, newkey: myotherkey]) { reply2 ->
+                    assertNumber(0, reply2)
+                    redis([command: "get", key: myotherkey]) { reply3 ->
+                        assertString("World", reply3)
+                        tu.testComplete()
+                    }
+                }
+            }
+        }
+    }
+
+    void testRestore() {
+        tu.testComplete()
     }
 }
