@@ -1573,4 +1573,63 @@ class GRedisClientTester extends TestClientBase {
     void testSync() {
         tu.testComplete()
     }
+
+    void testTime() {
+        redis([command: "time"]) { reply0 ->
+            tu.azzert(reply0.body.getArray("value").size() == 2)
+            tu.testComplete()
+        }
+    }
+
+    void testTtl() {
+        def mykey = makeKey()
+        redis([command: "set", key: mykey, value: "Hello"]) { reply0 ->
+            redis([command: "expire", key: mykey, seconds: 10]) { reply1 ->
+                assertNumber(1, reply1)
+                redis([command: "ttl", key: mykey]) { reply2 ->
+                    assertNumber(10, reply2)
+                    tu.testComplete()
+                }
+            }
+        }
+    }
+
+    void testType() {
+        def key1 = makeKey()
+        def key2 = makeKey()
+        def key3 = makeKey()
+
+        redis([command: "set", key: key1, value: "value"]) { reply0 ->
+            redis([command: "lpush", key: key2, value: "value"]) { reply1 ->
+                assertNumber(1, reply1)
+                redis([command: "sadd", key: key3, member: "value"]) { reply2 ->
+                    assertNumber(1, reply2)
+                    redis([command: "type", key: key1]) { reply3 ->
+                        assertString("string", reply3)
+                        redis([command: "type", key: key2]) { reply4 ->
+                            assertString("list", reply4)
+                            redis([command: "type", key: key3]) { reply5 ->
+                                assertString("set", reply5)
+                                tu.testComplete()
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    void testUnsubscribe() {
+        tu.testComplete()
+    }
+
+    void testUnwatch() {
+        tu.testComplete()
+    }
+
+    void testWatch() {
+        tu.testComplete()
+    }
+
+
 }

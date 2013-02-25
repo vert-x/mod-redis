@@ -650,31 +650,31 @@ public class RedisClientBusModTest extends TestBase {
         startTest(getMethodName());
     }
 
-//    @Test
-//    public void testTime() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testTtl() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testType() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testUnsubscribe() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testUnwatch() {
-//        startTest(getMethodName());
-//    }
-//
+    @Test
+    public void testTime() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testTtl() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testType() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testUnsubscribe() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testUnwatch() {
+        startTest(getMethodName());
+    }
+
 //    @Test
 //    public void testZadd() {
 //        startTest(getMethodName());
