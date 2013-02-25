@@ -1631,5 +1631,69 @@ class GRedisClientTester extends TestClientBase {
         tu.testComplete()
     }
 
+    void testZadd() {
+        def key = makeKey()
+        redis([command: "zadd", key: key, score: 1, member: "one"]) { reply0 ->
+            assertNumber(1, reply0)
+            redis([command: "zadd", key: key, score: 1, member: "uno"]) { reply1 ->
+                assertNumber(1, reply1)
+                redis([command: "zadd", key: key, score: 2, member: "two"]) { reply2 ->
+                    assertNumber(1, reply2)
+                    redis([command: "zadd", key: key, score: 3, member: "two"]) { reply3 ->
+                        assertNumber(0, reply3)
+                        redis([command: "zrange", key: key, start: 0, stop: -1, withscores: true]) { reply4 ->
+                            assertArray(["one", "1", "uno", "1", "two", "3"], reply4)
+                            tu.testComplete()
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    void testZcard() {
+        def key = makeKey()
+        redis([command: "zadd", key: key, score: 1, member: "one"]) { reply0 ->
+            assertNumber(1, reply0)
+            redis([command: "zadd", key: key, score: 2, member: "two"]) { reply1 ->
+                assertNumber(1, reply1)
+                redis([command: "zcard", key: key]) { reply2 ->
+                    assertNumber(2, reply2)
+                    tu.testComplete()
+                }
+            }
+        }
+    }
+
+    void testZcount() {
+        def key = makeKey()
+        redis([command: "zadd", key: key, score: 1, member: "one"]) { reply0 ->
+            assertNumber(1, reply0)
+            redis([command: "zadd", key: key, score: 2, member: "two"]) { reply1 ->
+                assertNumber(1, reply1)
+                redis([command: "zadd", key: key, score: 3, member: "three"]) { reply2 ->
+                    assertNumber(1, reply2)
+                    redis([command: "zcount", key: key, min: "-inf", max: "+inf"]) { reply3 ->
+                        assertNumber(3, reply3)
+                        tu.testComplete()
+                    }
+                }
+            }
+        }
+    }
+
+    void testZincrby() {
+        def key = makeKey()
+        redis([command: "zadd", key: key, score: 1, member: "one"]) { reply0 ->
+            assertNumber(1, reply0)
+            redis([command: "zadd", key: key, score: 2, member: "two"]) { reply1 ->
+                assertNumber(1, reply1)
+                redis([command: "zincrby", key: key, increment: 2, member: "one"]) { reply2 ->
+                    assertNumber(3, reply2)
+                    tu.testComplete()
+                }
+            }
+        }
+    }
 
 }

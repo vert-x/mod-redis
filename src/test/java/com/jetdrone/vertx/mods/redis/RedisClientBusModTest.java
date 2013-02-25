@@ -675,26 +675,26 @@ public class RedisClientBusModTest extends TestBase {
         startTest(getMethodName());
     }
 
-//    @Test
-//    public void testZadd() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testZcard() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testZcount() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testZincrby() {
-//        startTest(getMethodName());
-//    }
-//
+    @Test
+    public void testZadd() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testZcard() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testZcount() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testZincrby() {
+        startTest(getMethodName());
+    }
+
 //    @Test
 //    public void testZinterstore() {
 //        startTest(getMethodName());
