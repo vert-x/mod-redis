@@ -620,36 +620,36 @@ public class RedisClientBusModTest extends TestBase {
         startTest(getMethodName());
     }
 
-//    @Test
-//    public void testSrem() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testStrlen() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testSubscribe() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testSunion() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testSunionstore() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testSync() {
-//        startTest(getMethodName());
-//    }
-//
+    @Test
+    public void testSrem() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testStrlen() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testSubscribe() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testSunion() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testSunionstore() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testSync() {
+        startTest(getMethodName());
+    }
+
 //    @Test
 //    public void testTime() {
 //        startTest(getMethodName());
