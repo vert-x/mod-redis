@@ -430,10 +430,11 @@ public class RedisClientBusModTest extends TestBase {
         startTest(getMethodName());
     }
 
-    @Test
-    public void testPttl() {
-        startTest(getMethodName());
-    }
+//    @Test
+//    // TODO: require 2.6.0
+//    public void testPttl() {
+//        startTest(getMethodName());
+//    }
 
     @Test
     public void testPublish() {
@@ -650,10 +651,11 @@ public class RedisClientBusModTest extends TestBase {
         startTest(getMethodName());
     }
 
-    @Test
-    public void testTime() {
-        startTest(getMethodName());
-    }
+//    @Test
+//    // TODO: require 2.6.0
+//    public void testTime() {
+//        startTest(getMethodName());
+//    }
 
     @Test
     public void testTtl() {
@@ -695,63 +697,63 @@ public class RedisClientBusModTest extends TestBase {
         startTest(getMethodName());
     }
 
-//    @Test
-//    public void testZinterstore() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testZrange() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testZrangebyscore() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testZrank() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testZrem() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testZremrangebyrank() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testZremrangebyscore() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testZrevrange() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testZrevrangebyscore() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testZrevrank() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testZscore() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testZunionstore() {
-//        startTest(getMethodName());
-//    }
+    @Test
+    public void testZinterstore() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testZrange() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testZrangebyscore() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testZrank() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testZrem() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testZremrangebyrank() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testZremrangebyscore() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testZrevrange() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testZrevrangebyscore() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testZrevrank() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testZscore() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testZunionstore() {
+        startTest(getMethodName());
+    }
 }

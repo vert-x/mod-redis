@@ -1696,4 +1696,202 @@ class GRedisClientTester extends TestClientBase {
         }
     }
 
+    void testZinterstore() {
+        def key1 = makeKey()
+        def key2 = makeKey()
+        def key3 = makeKey()
+
+        redis([command: "zadd", key: key1, score: 1, member: "one"]) { reply0 ->
+            assertNumber(1, reply0)
+            redis([command: "zadd", key: key1, score: 2, member: "two"]) { reply1 ->
+                assertNumber(1, reply1)
+                redis([command: "zadd", key: key2, score: 1, member: "one"]) { reply2 ->
+                    assertNumber(1, reply2)
+                    redis([command: "zadd", key: key2, score: 2, member: "two"]) { reply3 ->
+                        assertNumber(1, reply3)
+                        redis([command: "zadd", key: key2, score: 3, member: "three"]) { reply4 ->
+                            assertNumber(1, reply4)
+                            redis([command: "zinterstore", destination: key3, numkeys: 2, key: [key1, key2], weigths: [2, 3]]) { reply5 ->
+                                assertNumber(2, reply5)
+                                tu.testComplete()
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    void testZrange() {
+        def key = makeKey()
+        redis([command: "zadd", key: key, score: 1, member: "one"]) { reply0 ->
+            assertNumber(1, reply0)
+            redis([command: "zadd", key: key, score: 2, member: "two"]) { reply1 ->
+                assertNumber(1, reply1)
+                redis([command: "zadd", key: key, score: 3, member: "three"]) { reply2 ->
+                    assertNumber(1, reply2)
+                    redis([command: "zrange", key: key, start: 0, stop: -1]) { reply3 ->
+                        assertArray(["one", "two", "three"], reply3)
+                        tu.testComplete()
+                    }
+                }
+            }
+        }
+    }
+
+    void testZrangebyscore() {
+        def key = makeKey()
+        redis([command: "zadd", key: key, score: 1, member: "one"]) { reply0 ->
+            assertNumber(1, reply0)
+            redis([command: "zadd", key: key, score: 2, member: "two"]) { reply1 ->
+                assertNumber(1, reply1)
+                redis([command: "zadd", key: key, score: 3, member: "three"]) { reply2 ->
+                    assertNumber(1, reply2)
+                    redis([command: "zrangebyscore", key: key, min: "-inf", max: "+inf"]) { reply3 ->
+                        assertArray(["one", "two", "three"], reply3)
+                        tu.testComplete()
+                    }
+                }
+            }
+        }
+    }
+
+    void testZrank() {
+        def key = makeKey()
+        redis([command: "zadd", key: key, score: 1, member: "one"]) { reply0 ->
+            assertNumber(1, reply0)
+            redis([command: "zadd", key: key, score: 2, member: "two"]) { reply1 ->
+                assertNumber(1, reply1)
+                redis([command: "zadd", key: key, score: 3, member: "three"]) { reply2 ->
+                    assertNumber(1, reply2)
+                    redis([command: "zrank", key: key, member: "three"]) { reply3 ->
+                        assertNumber(2, reply3)
+                        tu.testComplete()
+                    }
+                }
+            }
+        }
+    }
+
+    void testZrem() {
+        def key = makeKey()
+        redis([command: "zadd", key: key, score: 1, member: "one"]) { reply0 ->
+            assertNumber(1, reply0)
+            redis([command: "zadd", key: key, score: 2, member: "two"]) { reply1 ->
+                assertNumber(1, reply1)
+                redis([command: "zadd", key: key, score: 3, member: "three"]) { reply2 ->
+                    assertNumber(1, reply2)
+                    redis([command: "zrem", key: key, member: "two"]) { reply3 ->
+                        assertNumber(1, reply3)
+                        tu.testComplete()
+                    }
+                }
+            }
+        }
+    }
+
+    void testZremrangebyrank() {
+        def key = makeKey()
+        redis([command: "zadd", key: key, score: 1, member: "one"]) { reply0 ->
+            assertNumber(1, reply0)
+            redis([command: "zadd", key: key, score: 2, member: "two"]) { reply1 ->
+                assertNumber(1, reply1)
+                redis([command: "zadd", key: key, score: 3, member: "three"]) { reply2 ->
+                    assertNumber(1, reply2)
+                    redis([command: "zremrangebyrank", key: key, start: 0, stop: 1]) { reply3 ->
+                        assertNumber(2, reply3)
+                        tu.testComplete()
+                    }
+                }
+            }
+        }
+    }
+
+    void testZrevrange() {
+        def key = makeKey()
+        redis([command: "zadd", key: key, score: 1, member: "one"]) { reply0 ->
+            assertNumber(1, reply0)
+            redis([command: "zadd", key: key, score: 2, member: "two"]) { reply1 ->
+                assertNumber(1, reply1)
+                redis([command: "zadd", key: key, score: 3, member: "three"]) { reply2 ->
+                    assertNumber(1, reply2)
+                    redis([command: "zrevrange", key: key, start: 0, stop: -1]) { reply3 ->
+                        assertArray(["three", "two", "one"], reply3)
+                        tu.testComplete()
+                    }
+                }
+            }
+        }
+    }
+
+    void testZrevrangebyscore() {
+        def key = makeKey()
+        redis([command: "zadd", key: key, score: 1, member: "one"]) { reply0 ->
+            assertNumber(1, reply0)
+            redis([command: "zadd", key: key, score: 2, member: "two"]) { reply1 ->
+                assertNumber(1, reply1)
+                redis([command: "zadd", key: key, score: 3, member: "three"]) { reply2 ->
+                    assertNumber(1, reply2)
+                    redis([command: "zrevrangebyscore", key: key, max: "+inf", min: "-inf"]) { reply3 ->
+                        assertArray(["three", "two", "one"], reply3)
+                        tu.testComplete()
+                    }
+                }
+            }
+        }
+    }
+
+    void testZrevrank() {
+        def key = makeKey()
+        redis([command: "zadd", key: key, score: 1, member: "one"]) { reply0 ->
+            assertNumber(1, reply0)
+            redis([command: "zadd", key: key, score: 2, member: "two"]) { reply1 ->
+                assertNumber(1, reply1)
+                redis([command: "zadd", key: key, score: 3, member: "three"]) { reply2 ->
+                    assertNumber(1, reply2)
+                    redis([command: "zrevrank", key: key, member: "one"]) { reply3 ->
+                        assertNumber(2, reply3)
+                        tu.testComplete()
+                    }
+                }
+            }
+        }
+    }
+
+    void testZscore() {
+        def key = makeKey()
+        redis([command: "zadd", key: key, score: 1, member: "one"]) { reply0 ->
+            assertNumber(1, reply0)
+            redis([command: "zscore", key: key, member: "one"]) { reply1 ->
+                assertNumber(1, reply1)
+                tu.testComplete()
+            }
+        }
+    }
+
+    void testZunionstore() {
+        def key1 = makeKey()
+        def key2 = makeKey()
+        def key3 = makeKey()
+
+        redis([command: "zadd", key: key1, score: 1, member: "one"]) { reply0 ->
+            assertNumber(1, reply0)
+            redis([command: "zadd", key: key1, score: 2, member: "two"]) { reply1 ->
+                assertNumber(1, reply1)
+                redis([command: "zadd", key: key2, score: 1, member: "one"]) { reply2 ->
+                    assertNumber(1, reply2)
+                    redis([command: "zadd", key: key2, score: 2, member: "two"]) { reply3 ->
+                        assertNumber(1, reply3)
+                        redis([command: "zadd", key: key2, score: 3, member: "three"]) { reply4 ->
+                            assertNumber(1, reply4)
+                            redis([command: "zunionstore", destination: key3, numkeys: 2, key: [key1, key2], weigths: [2, 3]]) { reply5 ->
+                                assertNumber(3, reply5)
+                                tu.testComplete()
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
