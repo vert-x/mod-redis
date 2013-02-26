@@ -1,6 +1,7 @@
 package com.jetdrone.vertx.mods.redis;
 
 import org.junit.Test;
+import org.junit.Ignore;
 import org.vertx.java.testframework.TestBase;
 
 public class RedisClientBusModTest extends TestBase {
@@ -40,17 +41,17 @@ public class RedisClientBusModTest extends TestBase {
         startTest(getMethodName());
     }
 
-//    @Test
-//    // TODO: require 2.6.0
-//    public void testBitcount() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    // TODO: require 2.6.0
-//    public void testBitop() {
-//        startTest(getMethodName());
-//    }
+    @Ignore("Requires redis 2.6.0")
+    @Test
+    public void testBitcount() {
+        startTest(getMethodName());
+    }
+
+    @Ignore("Requires redis 2.6.0")
+    @Test
+    public void testBitop() {
+        startTest(getMethodName());
+    }
 
     @Test
     public void testBlpop() {
@@ -77,23 +78,23 @@ public class RedisClientBusModTest extends TestBase {
         startTest(getMethodName());
     }
 
-//    @Test
-//    // TODO: requires 2.6.9
-//    public void testClientGetname() {
-//        startTest(getMethodName());
-//    }
+    @Ignore("Requires redis 2.6.0")
+    @Test
+    public void testClientGetname() {
+        startTest(getMethodName());
+    }
 
-//    @Test
-//    // TODO: requires 2.6.9
-//    public void testClientSetname() {
-//        startTest(getMethodName());
-//    }
+    @Ignore("Requires redis 2.6.0")
+    @Test
+    public void testClientSetname() {
+        startTest(getMethodName());
+    }
 
-//    @Test
-//    // TODO: broken
-//    public void testConfigGet() {
-//        startTest(getMethodName());
-//    }
+    @Ignore("Requires redis 2.6.0")
+    @Test
+    public void testConfigGet() {
+        startTest(getMethodName());
+    }
 
     @Test
     public void testConfigSet() {
@@ -140,28 +141,28 @@ public class RedisClientBusModTest extends TestBase {
         startTest(getMethodName());
     }
 
-//    @Test
-//    // TODO: require 2.6.0
-//    public void testDump() {
-//        startTest(getMethodName());
-//    }
+    @Ignore("Requires redis 2.6.0")
+    @Test
+    public void testDump() {
+        startTest(getMethodName());
+    }
 
     @Test
     public void testEcho() {
         startTest(getMethodName());
     }
 
-//    @Test
-//    // TODO: require 2.6.0
-//    public void testEval() {
-//        startTest(getMethodName());
-//    }
+    @Ignore("Requires redis 2.6.0")
+    @Test
+    public void testEval() {
+        startTest(getMethodName());
+    }
 
-//    @Test
-//    // TODO: require 2.6.0
-//    public void testEvalsha() {
-//        startTest(getMethodName());
-//    }
+    @Ignore("Requires redis 2.6.0")
+    @Test
+    public void testEvalsha() {
+        startTest(getMethodName());
+    }
 
     @Test
     public void testExec() {
@@ -238,11 +239,11 @@ public class RedisClientBusModTest extends TestBase {
         startTest(getMethodName());
     }
 
-//    // TODO: require 2.6.0
-//    @Test
-//    public void testHIncrbyfloat() {
-//        startTest(getMethodName());
-//    }
+    @Ignore("Requires redis 2.6.0")
+    @Test
+    public void testHIncrbyfloat() {
+        startTest(getMethodName());
+    }
 
     @Test
     public void testHkeys() {
@@ -289,11 +290,11 @@ public class RedisClientBusModTest extends TestBase {
         startTest(getMethodName());
     }
 
-//    // TODO: require 2.6.0
-//    @Test
-//    public void testIncrbyfloat() {
-//        startTest(getMethodName());
-//    }
+    @Ignore("Requires redis 2.6.0")
+    @Test
+    public void testIncrbyfloat() {
+        startTest(getMethodName());
+    }
 
     @Test
     public void testInfo() {
@@ -405,11 +406,13 @@ public class RedisClientBusModTest extends TestBase {
         startTest(getMethodName());
     }
 
+    @Ignore("Requires redis 2.6.0")
     @Test
     public void testPexpire() {
         startTest(getMethodName());
     }
 
+    @Ignore("Requires redis 2.6.0")
     @Test
     public void testPexpireat() {
         startTest(getMethodName());
@@ -420,6 +423,7 @@ public class RedisClientBusModTest extends TestBase {
         startTest(getMethodName());
     }
 
+    @Ignore("Requires redis 2.6.0")
     @Test
     public void testPsetex() {
         startTest(getMethodName());
@@ -430,6 +434,7 @@ public class RedisClientBusModTest extends TestBase {
         startTest(getMethodName());
     }
 
+    @Ignore("Requires redis 2.6.0")
     @Test
     public void testPttl() {
         startTest(getMethodName());
@@ -620,138 +625,139 @@ public class RedisClientBusModTest extends TestBase {
         startTest(getMethodName());
     }
 
-//    @Test
-//    public void testSrem() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testStrlen() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testSubscribe() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testSunion() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testSunionstore() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testSync() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testTime() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testTtl() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testType() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testUnsubscribe() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testUnwatch() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testZadd() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testZcard() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testZcount() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testZincrby() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testZinterstore() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testZrange() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testZrangebyscore() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testZrank() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testZrem() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testZremrangebyrank() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testZremrangebyscore() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testZrevrange() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testZrevrangebyscore() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testZrevrank() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testZscore() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    public void testZunionstore() {
-//        startTest(getMethodName());
-//    }
+    @Test
+    public void testSrem() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testStrlen() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testSubscribe() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testSunion() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testSunionstore() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testSync() {
+        startTest(getMethodName());
+    }
+
+    @Ignore("Requires redis 2.6.0")
+    @Test
+    public void testTime() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testTtl() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testType() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testUnsubscribe() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testUnwatch() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testZadd() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testZcard() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testZcount() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testZincrby() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testZinterstore() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testZrange() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testZrangebyscore() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testZrank() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testZrem() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testZremrangebyrank() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testZremrangebyscore() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testZrevrange() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testZrevrangebyscore() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testZrevrank() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testZscore() {
+        startTest(getMethodName());
+    }
+
+    @Test
+    public void testZunionstore() {
+        startTest(getMethodName());
+    }
 }
