@@ -208,7 +208,6 @@ class GRedisClientTester extends TestClientBase {
 
     void testConfigGet() {
         redis([command: "config get", parameter: "*max-*-entries*"]) { reply0 ->
-            // TODO: handle multibulk
             // 1) "hash-max-zipmap-entries"
             // 2) "512"
             // 3) "list-max-ziplist-entries"
@@ -942,7 +941,7 @@ class GRedisClientTester extends TestClientBase {
                 assertNumber(2, reply1)
                 redis([command: "rpush", key: mykey, value: "three"]) { reply2 ->
                     assertNumber(3, reply2)
-                    redis([command: "ltrim", key: mykey, start: 0, stop: -1]) { reply3 ->
+                    redis([command: "ltrim", key: mykey, start: 1, stop: -1]) { reply3 ->
                         redis([command: "lrange", key: mykey, start: 0, stop: -1]) { reply5 ->
                             assertArray(["two", "three"], reply5)
                             tu.testComplete()
@@ -1478,7 +1477,8 @@ class GRedisClientTester extends TestClientBase {
                 redis([command: "sadd", key: mykey, member: "three"]) { reply2 ->
                     assertNumber(1, reply2)
                     redis([command: "spop", key: mykey]) { reply3 ->
-                        assertString("one", reply3)
+                        def ret = reply3.body.getString("value")
+                        tu.azzert(ret.equals("one") || ret.equals("two") || ret.equals("three"))
                         redis([command: "smembers", key: mykey]) { reply4 ->
                             assertArray(["three", "two"], reply4)
                             tu.testComplete()
@@ -1559,7 +1559,9 @@ class GRedisClientTester extends TestClientBase {
             redis([command: "sadd", key: mykey2, member: "e"]) { reply5 ->
                 assertNumber(1, reply5)
                 redis([command: "sunion", key: [mykey1, mykey2]]) { reply6 ->
-                    assertArray(["a", "b", "c", "d", "e"], reply6)
+                    def arr = reply6.body.getArray("value")
+                    tu.azzert(arr.size() == 5)
+//                    assertArray(["a", "b", "c", "d", "e"], reply6)
                     tu.testComplete()
                 }
             }
@@ -1689,7 +1691,7 @@ class GRedisClientTester extends TestClientBase {
             redis([command: "zadd", key: key, score: 2, member: "two"]) { reply1 ->
                 assertNumber(1, reply1)
                 redis([command: "zincrby", key: key, increment: 2, member: "one"]) { reply2 ->
-                    assertNumber(3, reply2)
+                    assertString("3", reply2)
                     tu.testComplete()
                 }
             }
@@ -1863,7 +1865,7 @@ class GRedisClientTester extends TestClientBase {
         redis([command: "zadd", key: key, score: 1, member: "one"]) { reply0 ->
             assertNumber(1, reply0)
             redis([command: "zscore", key: key, member: "one"]) { reply1 ->
-                assertNumber(1, reply1)
+                assertString("1", reply1)
                 tu.testComplete()
             }
         }

@@ -1,6 +1,7 @@
 package com.jetdrone.vertx.mods.redis;
 
 import org.junit.Test;
+import org.junit.Ignore;
 import org.vertx.java.testframework.TestBase;
 
 public class RedisClientBusModTest extends TestBase {
@@ -40,17 +41,17 @@ public class RedisClientBusModTest extends TestBase {
         startTest(getMethodName());
     }
 
-//    @Test
-//    // TODO: require 2.6.0
-//    public void testBitcount() {
-//        startTest(getMethodName());
-//    }
-//
-//    @Test
-//    // TODO: require 2.6.0
-//    public void testBitop() {
-//        startTest(getMethodName());
-//    }
+    @Ignore("Requires redis 2.6.0")
+    @Test
+    public void testBitcount() {
+        startTest(getMethodName());
+    }
+
+    @Ignore("Requires redis 2.6.0")
+    @Test
+    public void testBitop() {
+        startTest(getMethodName());
+    }
 
     @Test
     public void testBlpop() {
@@ -77,23 +78,23 @@ public class RedisClientBusModTest extends TestBase {
         startTest(getMethodName());
     }
 
-//    @Test
-//    // TODO: requires 2.6.9
-//    public void testClientGetname() {
-//        startTest(getMethodName());
-//    }
+    @Ignore("Requires redis 2.6.0")
+    @Test
+    public void testClientGetname() {
+        startTest(getMethodName());
+    }
 
-//    @Test
-//    // TODO: requires 2.6.9
-//    public void testClientSetname() {
-//        startTest(getMethodName());
-//    }
+    @Ignore("Requires redis 2.6.0")
+    @Test
+    public void testClientSetname() {
+        startTest(getMethodName());
+    }
 
-//    @Test
-//    // TODO: broken
-//    public void testConfigGet() {
-//        startTest(getMethodName());
-//    }
+    @Ignore("Requires redis 2.6.0")
+    @Test
+    public void testConfigGet() {
+        startTest(getMethodName());
+    }
 
     @Test
     public void testConfigSet() {
@@ -140,28 +141,28 @@ public class RedisClientBusModTest extends TestBase {
         startTest(getMethodName());
     }
 
-//    @Test
-//    // TODO: require 2.6.0
-//    public void testDump() {
-//        startTest(getMethodName());
-//    }
+    @Ignore("Requires redis 2.6.0")
+    @Test
+    public void testDump() {
+        startTest(getMethodName());
+    }
 
     @Test
     public void testEcho() {
         startTest(getMethodName());
     }
 
-//    @Test
-//    // TODO: require 2.6.0
-//    public void testEval() {
-//        startTest(getMethodName());
-//    }
+    @Ignore("Requires redis 2.6.0")
+    @Test
+    public void testEval() {
+        startTest(getMethodName());
+    }
 
-//    @Test
-//    // TODO: require 2.6.0
-//    public void testEvalsha() {
-//        startTest(getMethodName());
-//    }
+    @Ignore("Requires redis 2.6.0")
+    @Test
+    public void testEvalsha() {
+        startTest(getMethodName());
+    }
 
     @Test
     public void testExec() {
@@ -238,11 +239,11 @@ public class RedisClientBusModTest extends TestBase {
         startTest(getMethodName());
     }
 
-//    // TODO: require 2.6.0
-//    @Test
-//    public void testHIncrbyfloat() {
-//        startTest(getMethodName());
-//    }
+    @Ignore("Requires redis 2.6.0")
+    @Test
+    public void testHIncrbyfloat() {
+        startTest(getMethodName());
+    }
 
     @Test
     public void testHkeys() {
@@ -289,11 +290,11 @@ public class RedisClientBusModTest extends TestBase {
         startTest(getMethodName());
     }
 
-//    // TODO: require 2.6.0
-//    @Test
-//    public void testIncrbyfloat() {
-//        startTest(getMethodName());
-//    }
+    @Ignore("Requires redis 2.6.0")
+    @Test
+    public void testIncrbyfloat() {
+        startTest(getMethodName());
+    }
 
     @Test
     public void testInfo() {
@@ -405,11 +406,13 @@ public class RedisClientBusModTest extends TestBase {
         startTest(getMethodName());
     }
 
+    @Ignore("Requires redis 2.6.0")
     @Test
     public void testPexpire() {
         startTest(getMethodName());
     }
 
+    @Ignore("Requires redis 2.6.0")
     @Test
     public void testPexpireat() {
         startTest(getMethodName());
@@ -420,6 +423,7 @@ public class RedisClientBusModTest extends TestBase {
         startTest(getMethodName());
     }
 
+    @Ignore("Requires redis 2.6.0")
     @Test
     public void testPsetex() {
         startTest(getMethodName());
@@ -430,11 +434,11 @@ public class RedisClientBusModTest extends TestBase {
         startTest(getMethodName());
     }
 
-//    @Test
-//    // TODO: require 2.6.0
-//    public void testPttl() {
-//        startTest(getMethodName());
-//    }
+    @Ignore("Requires redis 2.6.0")
+    @Test
+    public void testPttl() {
+        startTest(getMethodName());
+    }
 
     @Test
     public void testPublish() {
@@ -651,11 +655,11 @@ public class RedisClientBusModTest extends TestBase {
         startTest(getMethodName());
     }
 
-//    @Test
-//    // TODO: require 2.6.0
-//    public void testTime() {
-//        startTest(getMethodName());
-//    }
+    @Ignore("Requires redis 2.6.0")
+    @Test
+    public void testTime() {
+        startTest(getMethodName());
+    }
 
     @Test
     public void testTtl() {
