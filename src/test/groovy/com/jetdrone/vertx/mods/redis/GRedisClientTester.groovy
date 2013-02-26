@@ -5,7 +5,6 @@ import org.vertx.java.core.eventbus.EventBus
 import org.vertx.java.core.eventbus.Message
 import org.vertx.java.core.json.JsonObject
 import org.vertx.java.testframework.TestClientBase
-import java.nio.charset.Charset
 
 @SuppressWarnings("GroovyUnusedDeclaration")
 class GRedisClientTester extends TestClientBase {
@@ -158,17 +157,14 @@ class GRedisClientTester extends TestClientBase {
         }
     }
 
-    void testBitOp() {
+    void testBitop() {
         def key1 = makeKey()
         def key2 = makeKey()
         def destkey = makeKey()
 
         redis([command: "set", key: key1, value: "foobar"]) { reply0 ->
-
             redis([command: "set", key: key2, value: "abcdef"]) { reply1 ->
-
-                redis([command: "bitop", and: true, destkey: destkey, key: [key1, key2]]) { reply2 ->
-
+                redis([command: "bitop", operation: "and", destkey: destkey, key: [key1, key2]]) { reply2 ->
                     redis([command: "get", key: destkey]) { reply3 ->
                         tu.testComplete()
                     }
@@ -1089,6 +1085,22 @@ class GRedisClientTester extends TestClientBase {
         }
     }
 
+    void testPexpireat() {
+        def mykey = makeKey()
+        redis([command: "set", key: mykey, value: "Hello"]) { reply0 ->
+            redis([command: "pexpireat", key: mykey, 'milliseconds-timestamp': 1555555555005]) { reply1 ->
+                assertNumber(1, reply1)
+                redis([command: "ttl", key: mykey]) { reply2 ->
+                    tu.azzert(200000000 > reply2.body.getNumber("value") && reply2.body.getNumber("value") > 0)
+                    redis([command: "pttl", key: mykey]) { reply3 ->
+                        tu.azzert(1555555555005 > reply3.body.getNumber("value") && reply3.body.getNumber("value") > 0)
+                        tu.testComplete()
+                    }
+                }
+            }
+        }
+    }
+
     void testPing() {
         redis([command: "ping"]) { reply0 ->
             assertString("PONG", reply0)
@@ -1616,7 +1628,7 @@ class GRedisClientTester extends TestClientBase {
         }
     }
 
-    void testSuionstore() {
+    void testSunionstore() {
         tu.testComplete()
     }
 
@@ -1850,6 +1862,23 @@ class GRedisClientTester extends TestClientBase {
                     assertNumber(1, reply2)
                     redis([command: "zremrangebyrank", key: key, start: 0, stop: 1]) { reply3 ->
                         assertNumber(2, reply3)
+                        tu.testComplete()
+                    }
+                }
+            }
+        }
+    }
+
+    void testZremrangebyscore() {
+        def key = makeKey()
+        redis([command: "zadd", key: key, score: 1, member: "one"]) { reply0 ->
+            assertNumber(1, reply0)
+            redis([command: "zadd", key: key, score: 2, member: "two"]) { reply1 ->
+                assertNumber(1, reply1)
+                redis([command: "zadd", key: key, score: 3, member: "three"]) { reply2 ->
+                    assertNumber(1, reply2)
+                    redis([command: "zremrangebyscore", key: key, min: "-inf", max: "(2"]) { reply3 ->
+                        assertNumber(1, reply3)
                         tu.testComplete()
                     }
                 }
