@@ -25,9 +25,14 @@ public class BulkReply implements Reply<ChannelBuffer> {
         return ReplyType.Bulk;
     }
 
-    public String asAsciiString() {
+    public String as7BitAsciiString() {
         if (bytes == null) return null;
         return bytes.toString(Charset.forName("US-ASCII"));
+    }
+
+    public String as8BitAsciiString() {
+        if (bytes == null) return null;
+        return bytes.toString(Charset.forName("ISO-8859-1"));
     }
 
     public String asUTF8String() {

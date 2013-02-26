@@ -309,13 +309,21 @@ class GRedisClientTester extends TestClientBase {
 
         redis([command: "set", key: mykey, value: 10]) { reply0 ->
             redis([command: "dump", key: mykey]) { reply1 ->
-                System.out.println("GGGGGG");
-                byte[] data = reply1.body.getString("value").getBytes("US-ASCII")
-                for (int i= 0; i< data.length; i++) {
-                    System.out.println(data[i] + "  " + (int) data[i] + "  " + Integer.toHexString(data[i]));
-                }
+                byte[] data = reply1.body.getString("value").getBytes("ISO-8859-1")
 
-                assertString("\\u0000\\xC0\\n\\u0006\\u0000\\xF8r?\\xC5\\xFB\\xFB_(", reply1)
+                tu.azzert(data[0] == 0, "Expected: " + ((int) data[0]))
+                tu.azzert(data[1] == (byte) 0xc0, "Expected: " + ((int) data[1]))
+                tu.azzert(data[2] == '\n', "Expected: " + ((int) data[2]))
+                tu.azzert(data[3] == 6, "Expected: " + ((int) data[3]))
+                tu.azzert(data[4] == 0, "Expected: " + ((int) data[4]))
+                tu.azzert(data[5] == (byte) 0xf8, "Expected: " + ((int) data[5]))
+                tu.azzert(data[6] == 'r', "Expected: " + ((int) data[6]))
+                tu.azzert(data[7] == '?', "Expected: " + ((int) data[7]))
+                tu.azzert(data[8] == (byte) 0xc5, "Expected: " + ((int) data[8]))
+                tu.azzert(data[9] == (byte) 0xfb, "Expected: " + ((int) data[9]))
+                tu.azzert(data[10] == (byte) 0xfb, "Expected: " + ((int) data[10]))
+                tu.azzert(data[11] == '_', "Expected: " + ((int) data[11]))
+                tu.azzert(data[12] == '(', "Expected: " + ((int) data[12]))
                 tu.testComplete()
             }
         }

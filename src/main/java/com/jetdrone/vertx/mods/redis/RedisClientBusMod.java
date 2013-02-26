@@ -556,7 +556,7 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
                 return;
             case Bulk:
                 replyMessage = new JsonObject();
-                replyMessage.putString("value", ((BulkReply) reply).asUTF8String());
+                replyMessage.putString("value", ((BulkReply) reply).as8BitAsciiString());
                 sendOK(message, replyMessage);
                 return;
             case MultiBulk:
@@ -564,7 +564,7 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
                 MultiBulkReply mbreply = (MultiBulkReply) reply;
                 JsonArray bulk = new JsonArray();
                 for (Reply r : mbreply.data()) {
-                    bulk.addString(((BulkReply) r).asUTF8String());
+                    bulk.addString(((BulkReply) r).as8BitAsciiString());
                 }
                 replyMessage.putArray("value", bulk);
                 sendOK(message, replyMessage);
