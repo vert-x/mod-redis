@@ -427,12 +427,14 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
                     break;
                 // key min max [WITHSCORES] [LIMIT offset count]
                 case "zrangebyscore":
-                case "zrevrangebyscore":
                     redisExecZRange(command, message);
                     break;
-                // numkeys key [key ...] arg [arg ...]
+                case "zrevrangebyscore":
+                    redisExecZRevRange(command, message);
+                    break;
+                // script numkeys key [key ...] arg [arg ...]
                 case "eval":
-                    redisExec(command, "numkeys", "key", "arg", message);
+                    redisExec(command, "script", "numkeys", "key", "arg", message);
                     break;
                 // sha1 numkeys key [key ...] arg [arg ...]
                 case "evalsha":
@@ -554,7 +556,7 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
                 return;
             case Bulk:
                 replyMessage = new JsonObject();
-                replyMessage.putString("value", ((BulkReply) reply).asAsciiString());
+                replyMessage.putString("value", ((BulkReply) reply).asUTF8String());
                 sendOK(message, replyMessage);
                 return;
             case MultiBulk:
@@ -562,7 +564,7 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
                 MultiBulkReply mbreply = (MultiBulkReply) reply;
                 JsonArray bulk = new JsonArray();
                 for (Reply r : mbreply.data()) {
-                    bulk.addString(((BulkReply) r).asAsciiString());
+                    bulk.addString(((BulkReply) r).asUTF8String());
                 }
                 replyMessage.putArray("value", bulk);
                 sendOK(message, replyMessage);
@@ -785,6 +787,7 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
         final Object arg1 = getMandatoryField(message, argName1);
         final Object arg2 = getMandatoryField(message, argName2);
         final Object arg3 = getMandatoryField(message, argName3);
+
         redisClient.send(new Command(command, arg0, arg1, arg2, arg3), new Handler<Reply>() {
             @Override
             public void handle(Reply reply) {
@@ -1015,6 +1018,41 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
         args.add(key);
         args.add(min);
         args.add(max);
+
+        final Object withScores = getOptionalField(message, WITHSCORES.name);
+        if (withScores != null) {
+            args.add(WITHSCORES.name);
+        }
+
+        final Object limit = getOptionalField(message, "limit");
+        if (limit != null) {
+            if (limit instanceof JsonObject) {
+                args.add("limit");
+                args.add(getMandatoryField((JsonObject) limit, "offset"));
+                args.add(getMandatoryField((JsonObject) limit, "count"));
+            } else {
+                throw new RedisCommandError("limit must be a JsonObject");
+            }
+        }
+
+        redisClient.send(new Command(command, args.toArray()), new Handler<Reply>() {
+            @Override
+            public void handle(Reply reply) {
+                processReply(message, reply);
+            }
+        });
+    }
+
+    private void redisExecZRevRange(final String command, final Message<JsonObject> message) throws RedisCommandError {
+        // key min max [WITHSCORES] [LIMIT offset count]
+        final Object key = getMandatoryField(message, "key");
+        final Object min = getMandatoryField(message, "min");
+        final Object max = getMandatoryField(message, "max");
+
+        final List<Object> args = new ArrayList<>();
+        args.add(key);
+        args.add(max);
+        args.add(min);
 
         final Object withScores = getOptionalField(message, WITHSCORES.name);
         if (withScores != null) {

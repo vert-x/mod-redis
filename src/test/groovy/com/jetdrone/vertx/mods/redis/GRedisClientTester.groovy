@@ -5,6 +5,7 @@ import org.vertx.java.core.eventbus.EventBus
 import org.vertx.java.core.eventbus.Message
 import org.vertx.java.core.json.JsonObject
 import org.vertx.java.testframework.TestClientBase
+import java.nio.charset.Charset
 
 @SuppressWarnings("GroovyUnusedDeclaration")
 class GRedisClientTester extends TestClientBase {
@@ -78,6 +79,30 @@ class GRedisClientTester extends TestClientBase {
             } else {
                 tu.azzert(expected[i].equals(array.get(i)), "Expected at " + i + ": <" + expected[i] + "> but got: <" + array.get(i) + ">")
             }
+        }
+    }
+
+    private void assertUnorderedArray(expected, value) {
+        def array = value.body.getArray("value")
+        tu.azzert(null != array, "Expected: <!null> but got: <" + array + ">")
+        tu.azzert(expected.size() == array.size(), "Expected Length: <" + expected.size() + "> but got: <" + array.size() + ">")
+
+        for (int i = 0; i < array.size(); i++) {
+            def found = false
+            for (int j = 0; j < expected.size(); j++) {
+                if (expected[j] == null && array.get(i) == null) {
+                    found = true
+                    expected.remove(j)
+                    break
+                }
+                if (expected[j].equals(array.get(i))) {
+                    found = true
+                    expected.remove(j)
+                    break
+                }
+            }
+
+            tu.azzert(found, "Expected one of: <" + expected + "> but got: <" + array.get(i) + ">")
         }
     }
 
@@ -284,6 +309,12 @@ class GRedisClientTester extends TestClientBase {
 
         redis([command: "set", key: mykey, value: 10]) { reply0 ->
             redis([command: "dump", key: mykey]) { reply1 ->
+                System.out.println("GGGGGG");
+                byte[] data = reply1.body.getString("value").getBytes("US-ASCII")
+                for (int i= 0; i< data.length; i++) {
+                    System.out.println(data[i] + "  " + (int) data[i] + "  " + Integer.toHexString(data[i]));
+                }
+
                 assertString("\\u0000\\xC0\\n\\u0006\\u0000\\xF8r?\\xC5\\xFB\\xFB_(", reply1)
                 tu.testComplete()
             }
@@ -308,7 +339,7 @@ class GRedisClientTester extends TestClientBase {
             tu.azzert(key1.equals(array.get(0)))
             tu.azzert(key2.equals(array.get(1)))
             tu.azzert("first".equals(array.get(2)))
-            tu.azzert("second".equals(array.get(2)))
+            tu.azzert("second".equals(array.get(3)))
             tu.testComplete()
         }
     }
@@ -558,13 +589,13 @@ class GRedisClientTester extends TestClientBase {
             assertNumber(1, reply0)
 
             redis([command: "hincrbyfloat", key: mykey, field: "field", increment: 0.1]) { reply1 ->
-                assertNumber(10.6, reply1)
+                assertString("10.6", reply1)
 
                 redis([command: "hset", key: mykey, field: "field", value: 5.0e3]) { reply2 ->
                     assertNumber(0, reply2)
 
                     redis([command: "hincrbyfloat", key: mykey, field: "field", increment: 2.0e2]) { reply3 ->
-                        assertNumber(5200, reply3)
+                        assertString("5200", reply3)
                         tu.testComplete()
                     }
                 }
@@ -738,7 +769,6 @@ class GRedisClientTester extends TestClientBase {
         redis([command: "mset", keyvalues: [[key: "one", value: 1], [key: "two", value: 2], [key: "three", value: 3], [key: "four", value: 4]]]) { reply0 ->
             redis([command: "keys", pattern: "*o*"]) { reply1 ->
                 def array = reply1.body.getArray("value")
-                println array
                 // this is because there are leftovers from previous tests
                 tu.azzert(3 <= array.size())
 
@@ -1227,7 +1257,7 @@ class GRedisClientTester extends TestClientBase {
                 redis([command: "sadd", key: mykey, member: "World"]) { reply2 ->
                     assertNumber(0, reply2)
                     redis([command: "smembers", key: mykey]) { reply3 ->
-                        assertArray(["World", "Hello"], reply3)
+                        assertUnorderedArray(["World", "Hello"], reply3)
                         tu.testComplete()
                     }
                 }
@@ -1433,7 +1463,7 @@ class GRedisClientTester extends TestClientBase {
             redis([command: "sadd", key: mykey, member: "World"]) { reply1 ->
                 assertNumber(1, reply1)
                 redis([command: "smembers", key: mykey]) { reply2 ->
-                    assertArray(["World", "Hello"], reply2)
+                    assertUnorderedArray(["World", "Hello"], reply2)
                     tu.testComplete()
                 }
             }
@@ -1452,9 +1482,9 @@ class GRedisClientTester extends TestClientBase {
                     redis([command: "smove", source: mykey, destination: myotherkey, member: "two"]) { reply3 ->
                         assertNumber(1, reply3)
                         redis([command: "smembers", key: mykey]) { reply4 ->
-                            assertArray(["one"], reply4)
+                            assertUnorderedArray(["one"], reply4)
                             redis([command: "smembers", key: myotherkey]) { reply5 ->
-                                assertArray(["two", "three"], reply5)
+                                assertUnorderedArray(["two", "three"], reply5)
                                 tu.testComplete()
                             }
                         }
@@ -1479,8 +1509,18 @@ class GRedisClientTester extends TestClientBase {
                     redis([command: "spop", key: mykey]) { reply3 ->
                         def ret = reply3.body.getString("value")
                         tu.azzert(ret.equals("one") || ret.equals("two") || ret.equals("three"))
+                        def expected = []
+                        if (!ret.equals("one")) {
+                            expected.add("one")
+                        }
+                        if (!ret.equals("two")) {
+                            expected.add("two")
+                        }
+                        if (!ret.equals("three")) {
+                            expected.add("three")
+                        }
                         redis([command: "smembers", key: mykey]) { reply4 ->
-                            assertArray(["three", "two"], reply4)
+                            assertUnorderedArray(expected, reply4)
                             tu.testComplete()
                         }
                     }
