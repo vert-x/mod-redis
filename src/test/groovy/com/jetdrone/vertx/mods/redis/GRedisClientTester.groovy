@@ -20,6 +20,7 @@ class GRedisClientTester extends TestClientBase {
         config.putString("address", address)
         config.putString("host", "localhost")
         config.putNumber("port", 6379)
+        config.putString("encoding", "ISO-8859-1")
 
         container.deployModule("vertx.mods.redis-DEV", config, 1, new Handler<String>() {
             public void handle(String res) {

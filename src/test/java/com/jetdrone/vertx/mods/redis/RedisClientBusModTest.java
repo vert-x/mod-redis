@@ -10,7 +10,7 @@ public class RedisClientBusModTest extends TestBase {
 
     public RedisClientBusModTest() {
         super();
-        if (System.getenv("TRAVISCI") != null) {
+        if ("1".equals(System.getenv("TRAVISCI"))) {
             skip26 = true;
         }
     }

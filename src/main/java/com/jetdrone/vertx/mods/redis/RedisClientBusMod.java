@@ -539,11 +539,6 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
         }
     }
 
-    private void fillOptionalField(final List<byte[]> args, final Message<JsonObject> message, final String argName) {
-        final Object arg = message.body.getField(argName);
-        jsonToRedis(args, arg);
-    }
-
     private Option getOptionalOrOptionsField(final Message<JsonObject> message, final OrOptions options) throws RedisCommandError {
         final Object arg0 = message.body.getField(options.o1.name);
         if (arg0 == null) {
@@ -573,7 +568,7 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
                 return;
             case Bulk:
                 replyMessage = new JsonObject();
-                replyMessage.putString("value", ((BulkReply) reply).as8BitAsciiString());
+                replyMessage.putString("value", ((BulkReply) reply).asString(charset));
                 sendOK(message, replyMessage);
                 return;
             case MultiBulk:
@@ -581,7 +576,7 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
                 MultiBulkReply mbreply = (MultiBulkReply) reply;
                 JsonArray bulk = new JsonArray();
                 for (Reply r : mbreply.data()) {
-                    bulk.addString(((BulkReply) r).as8BitAsciiString());
+                    bulk.addString(((BulkReply) r).asString(charset));
                 }
                 replyMessage.putArray("value", bulk);
                 sendOK(message, replyMessage);

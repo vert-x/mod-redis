@@ -22,15 +22,4 @@ public class StatusReply implements Reply<String> {
     public ReplyType getType() {
         return ReplyType.Status;
     }
-
-    @Override
-    public void write(ChannelBuffer os) throws IOException {
-        os.writeByte(MARKER);
-        os.writeBytes(status.getBytes(Charset.forName("UTF-8")));
-        os.writeBytes(CRLF);
-    }
-
-    public String toString() {
-        return status;
-    }
 }
