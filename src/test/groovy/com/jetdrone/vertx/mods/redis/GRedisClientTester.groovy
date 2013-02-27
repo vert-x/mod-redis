@@ -1337,7 +1337,7 @@ class GRedisClientTester extends TestClientBase {
                             redis([command: "sadd", key: mykey2, member: "e"]) { reply5 ->
                                 assertNumber(1, reply5)
                                 redis([command: "sdiff", key: [mykey1, mykey2]]) { reply6 ->
-                                    assertArray(["a", "b"], reply6)
+                                    assertUnorderedArray(["a", "b"], reply6)
                                     tu.testComplete()
                                 }
                             }
