@@ -1,5 +1,6 @@
-package com.jetdrone.vertx.mods.redis.netty;
+package com.jetdrone.vertx.mods.redis.reply;
 
+import com.jetdrone.vertx.mods.redis.RedisDecoder;
 import org.jboss.netty.buffer.ChannelBuffer;
 
 import java.io.IOException;

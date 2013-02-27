@@ -1,36 +1,36 @@
-package com.jetdrone.vertx.mods.redis.netty;
+package com.jetdrone.vertx.mods.redis.reply;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
 
 import org.jboss.netty.buffer.ChannelBuffer;
 
-public class StatusReply implements Reply<String> {
-    public static final char MARKER = '+';
-    private final String status;
+public class ErrorReply implements Reply<String> {
+    public static final char MARKER = '-';
+    private final String error;
 
-    public StatusReply(String status) {
-        this.status = status;
+    public ErrorReply(String error) {
+        this.error = error;
     }
 
     @Override
     public String data() {
-        return status;
+        return error;
     }
 
     @Override
     public ReplyType getType() {
-        return ReplyType.Status;
+        return ReplyType.Error;
     }
 
     @Override
     public void write(ChannelBuffer os) throws IOException {
         os.writeByte(MARKER);
-        os.writeBytes(status.getBytes(Charset.forName("UTF-8")));
+        os.writeBytes(error.getBytes(Charset.forName("UTF8")));
         os.writeBytes(CRLF);
     }
 
     public String toString() {
-        return status;
+        return error;
     }
 }

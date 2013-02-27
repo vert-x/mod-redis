@@ -1,4 +1,4 @@
-package com.jetdrone.vertx.mods.redis.netty;
+package com.jetdrone.vertx.mods.redis.reply;
 
 import java.io.IOException;
 import java.nio.charset.Charset;

@@ -5,8 +5,7 @@ import org.jboss.netty.buffer.ChannelBuffers;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.buffer.Buffer;
 import org.vertx.java.core.net.NetSocket;
-import com.jetdrone.vertx.mods.redis.netty.RedisDecoder;
-import com.jetdrone.vertx.mods.redis.netty.Reply;
+import com.jetdrone.vertx.mods.redis.reply.Reply;
 
 import java.io.IOException;
 import java.util.LinkedList;

@@ -69,8 +69,8 @@ public class Encoding {
 
   /**
    * Reads a number from a byte array.
-   * @param bytes
-   * @return
+   * @param bytes byte array
+   * @return number
    */
   public static long bytesToNum(byte[] bytes) {
     int length = bytes.length;

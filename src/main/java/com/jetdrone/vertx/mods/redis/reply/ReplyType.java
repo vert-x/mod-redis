@@ -1,4 +1,4 @@
-package com.jetdrone.vertx.mods.redis.netty;
+package com.jetdrone.vertx.mods.redis.reply;
 
 public enum ReplyType {
     Error,
