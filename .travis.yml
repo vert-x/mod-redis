@@ -3,3 +3,4 @@ jdk:
   - openjdk7
   - oraclejdk7
 services: redis
+env: TRAVISCI=1
