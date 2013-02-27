@@ -1,4 +1,4 @@
-package com.jetdrone.vertx.mods.redis.netty;
+package com.jetdrone.vertx.mods.redis.reply;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -21,16 +21,5 @@ public class StatusReply implements Reply<String> {
     @Override
     public ReplyType getType() {
         return ReplyType.Status;
-    }
-
-    @Override
-    public void write(ChannelBuffer os) throws IOException {
-        os.writeByte(MARKER);
-        os.writeBytes(status.getBytes(Charset.forName("UTF-8")));
-        os.writeBytes(CRLF);
-    }
-
-    public String toString() {
-        return status;
     }
 }

@@ -20,6 +20,7 @@ class GRedisClientTester extends TestClientBase {
         config.putString("address", address)
         config.putString("host", "localhost")
         config.putNumber("port", 6379)
+        config.putString("encoding", "ISO-8859-1")
 
         container.deployModule("vertx.mods.redis-DEV", config, 1, new Handler<String>() {
             public void handle(String res) {
@@ -1336,7 +1337,7 @@ class GRedisClientTester extends TestClientBase {
                             redis([command: "sadd", key: mykey2, member: "e"]) { reply5 ->
                                 assertNumber(1, reply5)
                                 redis([command: "sdiff", key: [mykey1, mykey2]]) { reply6 ->
-                                    assertArray(["a", "b"], reply6)
+                                    assertUnorderedArray(["a", "b"], reply6)
                                     tu.testComplete()
                                 }
                             }

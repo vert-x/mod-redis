@@ -6,8 +6,13 @@ import org.vertx.java.testframework.TestBase;
 
 public class RedisClientBusModTest extends TestBase {
 
+    boolean skip26 = false;
+
     public RedisClientBusModTest() {
         super();
+        if ("1".equals(System.getenv("TRAVISCI"))) {
+            skip26 = true;
+        }
     }
 
     @Override
@@ -44,13 +49,17 @@ public class RedisClientBusModTest extends TestBase {
     @Ignore("Requires redis 2.6.0")
     @Test
     public void testBitcount() {
-        startTest(getMethodName());
+        if (!skip26) {
+            startTest(getMethodName());
+        }
     }
 
     @Ignore("Requires redis 2.6.0")
     @Test
     public void testBitop() {
-        startTest(getMethodName());
+        if (!skip26) {
+            startTest(getMethodName());
+        }
     }
 
     @Test
@@ -81,19 +90,25 @@ public class RedisClientBusModTest extends TestBase {
     @Ignore("Requires redis 2.6.0")
     @Test
     public void testClientGetname() {
-        startTest(getMethodName());
+        if (!skip26) {
+            startTest(getMethodName());
+        }
     }
 
     @Ignore("Requires redis 2.6.0")
     @Test
     public void testClientSetname() {
-        startTest(getMethodName());
+        if (!skip26) {
+            startTest(getMethodName());
+        }
     }
 
     @Ignore("Requires redis 2.6.0")
     @Test
     public void testConfigGet() {
-        startTest(getMethodName());
+        if (!skip26) {
+            startTest(getMethodName());
+        }
     }
 
     @Test
@@ -144,7 +159,9 @@ public class RedisClientBusModTest extends TestBase {
     @Ignore("Requires redis 2.6.0")
     @Test
     public void testDump() {
-        startTest(getMethodName());
+        if (!skip26) {
+            startTest(getMethodName());
+        }
     }
 
     @Test
@@ -155,7 +172,9 @@ public class RedisClientBusModTest extends TestBase {
     @Ignore("Requires redis 2.6.0")
     @Test
     public void testEval() {
-        startTest(getMethodName());
+        if (!skip26) {
+            startTest(getMethodName());
+        }
     }
 
     @Ignore("Requires redis 2.6.0")
@@ -242,7 +261,9 @@ public class RedisClientBusModTest extends TestBase {
     @Ignore("Requires redis 2.6.0")
     @Test
     public void testHIncrbyfloat() {
-        startTest(getMethodName());
+        if (!skip26) {
+            startTest(getMethodName());
+        }
     }
 
     @Test
@@ -293,7 +314,9 @@ public class RedisClientBusModTest extends TestBase {
     @Ignore("Requires redis 2.6.0")
     @Test
     public void testIncrbyfloat() {
-        startTest(getMethodName());
+        if (!skip26) {
+            startTest(getMethodName());
+        }
     }
 
     @Test
@@ -409,13 +432,17 @@ public class RedisClientBusModTest extends TestBase {
     @Ignore("Requires redis 2.6.0")
     @Test
     public void testPexpire() {
-        startTest(getMethodName());
+        if (!skip26) {
+            startTest(getMethodName());
+        }
     }
 
     @Ignore("Requires redis 2.6.0")
     @Test
     public void testPexpireat() {
-        startTest(getMethodName());
+        if (!skip26) {
+            startTest(getMethodName());
+        }
     }
 
     @Test
@@ -426,18 +453,24 @@ public class RedisClientBusModTest extends TestBase {
     @Ignore("Requires redis 2.6.0")
     @Test
     public void testPsetex() {
-        startTest(getMethodName());
+        if (!skip26) {
+            startTest(getMethodName());
+        }
     }
 
     @Test
     public void testPsubscribe() {
-        startTest(getMethodName());
+        if (!skip26) {
+            startTest(getMethodName());
+        }
     }
 
     @Ignore("Requires redis 2.6.0")
     @Test
     public void testPttl() {
-        startTest(getMethodName());
+        if (!skip26) {
+            startTest(getMethodName());
+        }
     }
 
     @Test
@@ -658,7 +691,9 @@ public class RedisClientBusModTest extends TestBase {
     @Ignore("Requires redis 2.6.0")
     @Test
     public void testTime() {
-        startTest(getMethodName());
+        if (!skip26) {
+            startTest(getMethodName());
+        }
     }
 
     @Test
