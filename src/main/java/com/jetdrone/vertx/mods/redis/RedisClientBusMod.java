@@ -85,7 +85,7 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
             }
         });
 
-        String address = getOptionalStringConfig("address", "redis-client");
+        String address = getOptionalStringConfig("address", "vertx.mod-redis-io");
         eb.registerHandler(address, this);
     }
 
