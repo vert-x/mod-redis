@@ -78,31 +78,9 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
             charset = Charset.defaultCharset();
         }
 
-        NetClient client = vertx.createNetClient();
-        client.exceptionHandler(new Handler<Exception>() {
-            public void handle(Exception e) {
-                container.getLogger().error("Net client error",e);                
-            }
-        });
-        client.connect(port, host, new Handler<NetSocket>() {
-            @Override
-            public void handle(NetSocket netSocket) {
-                socket = netSocket;
-                redisClient = new RedisClientBase(netSocket);                
-                socket.exceptionHandler(new Handler<Exception>() {
-                    public void handle(Exception e) {
-                        container.getLogger().error("Socket client error",e);
-                    }
-                });
-                
-                socket.closedHandler(new Handler<Void>() {
-                    public void handle(Void arg0) {
-                        container.getLogger().info("Socket closed");
-                    }
-                });
-            }
-        });
-
+        redisClient = new RedisClientBase(vertx, logger, host, port);
+        redisClient.connect(null);
+        
         String address = getOptionalStringConfig("address", "vertx.mod-redis-io");
         eb.registerHandler(address, this);
     }
