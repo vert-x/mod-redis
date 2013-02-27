@@ -5,6 +5,7 @@ import org.vertx.java.core.Handler;
 import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
+import org.vertx.java.core.net.NetClient;
 import org.vertx.java.core.net.NetSocket;
 import com.jetdrone.vertx.mods.redis.netty.*;
 
@@ -64,18 +65,35 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
         String host = getOptionalStringConfig("host", "localhost");
         int port = getOptionalIntConfig("port", 6379);
 
-        vertx.createNetClient().connect(port, host, new Handler<NetSocket>() {
+        NetClient client = vertx.createNetClient();
+        client.exceptionHandler(new Handler<Exception>() {
+            public void handle(Exception e) {
+                container.getLogger().error("Net client error",e);                
+            }
+        });
+        client.connect(port, host, new Handler<NetSocket>() {
             @Override
             public void handle(NetSocket netSocket) {
                 socket = netSocket;
-                redisClient = new RedisClientBase(netSocket);
+                redisClient = new RedisClientBase(netSocket);                
+                socket.exceptionHandler(new Handler<Exception>() {
+                    public void handle(Exception e) {
+                        container.getLogger().error("Socket client error",e);
+                    }
+                });
+                
+                socket.closedHandler(new Handler<Void>() {
+                    public void handle(Void arg0) {
+                        container.getLogger().info("Socket closed");
+                    }
+                });
             }
         });
 
         String address = getOptionalStringConfig("address", "redis-client");
         eb.registerHandler(address, this);
     }
-
+    
     @Override
     public void stop() throws Exception {
         socket.close();
