@@ -8,7 +8,7 @@ hashes, lists, sets and sorted sets. To use this module you must have a Redis se
 [![Build Status](https://travis-ci.org/pmlopes/mod-redis-io.png)](https://travis-ci.org/pmlopes/mod-redis-io)
 
 This is a worker module and must be started as a worker verticle. (not entirelly true since I am still coding against
-Vert.x 1.3.1).
+Vert.x 1.3.1). On the vertx-2 branch worker is set to true.
 
 ## Dependencies
 
