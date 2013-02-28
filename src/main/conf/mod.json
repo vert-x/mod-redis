@@ -1,3 +1,4 @@
 {
-  "main": "com.jetdrone.vertx.mods.redis.RedisClientBusMod"
+  "main": "com.jetdrone.vertx.mods.redis.RedisClientBusMod",
+  "worker": true
 }

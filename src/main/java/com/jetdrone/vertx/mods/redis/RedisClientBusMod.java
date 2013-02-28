@@ -5,8 +5,6 @@ import org.vertx.java.core.Handler;
 import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
-import org.vertx.java.core.net.NetClient;
-import org.vertx.java.core.net.NetSocket;
 import com.jetdrone.vertx.mods.redis.reply.*;
 
 import java.nio.charset.Charset;
@@ -46,7 +44,7 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
             this.o2 = o2;
         }
     }
-    private NetSocket socket;
+
     private RedisClientBase redisClient;
     private Charset charset;
     private boolean binary;
@@ -85,12 +83,6 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
         eb.registerHandler(address, this);
     }
     
-    @Override
-    public void stop() throws Exception {
-        socket.close();
-        super.stop();
-    }
-
     @Override
     public void handle(Message<JsonObject> message) {
 

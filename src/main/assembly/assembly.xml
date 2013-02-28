@@ -1,5 +1,5 @@
 <assembly>
-    <id>mod</id>
+    <id>${project.groupId}.${project.artifactId}-v${project.version}</id>
     <formats>
         <format>zip</format>
     </formats>
@@ -8,21 +8,21 @@
     <fileSets>
         <fileSet>
             <directory>${project.build.directory}</directory>
-            <outputDirectory>${project.artifactId}-${project.version}/lib</outputDirectory>
+            <outputDirectory>${project.groupId}.${project.artifactId}-v${project.version}/lib</outputDirectory>
             <includes>
                 <include>*.jar</include>
             </includes>
         </fileSet>
         <fileSet>
             <directory>${project.basedir}/src/main/conf</directory>
-            <outputDirectory>${project.artifactId}-${project.version}</outputDirectory>
+            <outputDirectory>${project.groupId}.${project.artifactId}-v${project.version}</outputDirectory>
             <includes>
                 <include>mod.json</include>
             </includes>
         </fileSet>
         <fileSet>
             <directory>${project.basedir}</directory>
-            <outputDirectory>${project.artifactId}-${project.version}</outputDirectory>
+            <outputDirectory>${project.groupId}.${project.artifactId}-v${project.version}</outputDirectory>
             <includes>
                 <include>README.md</include>
             </includes>

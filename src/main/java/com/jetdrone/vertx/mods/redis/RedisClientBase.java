@@ -36,26 +36,34 @@ class RedisClientBase {
     private NetSocket netSocket;
     private String host;
     private int port;
-    
-    private enum State { DISCONNECTED, CONNECTING, CONNECTED };
+
+    private static enum State {
+        DISCONNECTED,
+        CONNECTING,
+        CONNECTED
+    }
+
     private State state = State.DISCONNECTED;
-    
+
     public RedisClientBase(Vertx vertx, final Logger logger, String host, int port) {
         this.vertx = vertx;
         this.logger = logger;
         this.host = host;
         this.port = port;
     }
-    
+
     void connect(final AsyncResultHandler<Void> resultHandler) {
-        if(state == State.DISCONNECTED) {
+        if (state == State.DISCONNECTED) {
             state = State.CONNECTING;
             NetClient client = vertx.createNetClient();
             client.exceptionHandler(new Handler<Exception>() {
                 public void handle(Exception e) {
-                    logger.error("Net client error",e);
-                    if(resultHandler != null) {
-                        resultHandler.handle(new AsyncResult<Void>(e));
+                    logger.error("Net client error", e);
+                    if (resultHandler != null) {
+                        AsyncResult<Void> result = new AsyncResult<>();
+                        result.setFailure(e);
+
+                        resultHandler.handle(result);
                     }
                     disconnect();
                 }
@@ -68,18 +76,21 @@ class RedisClientBase {
                     init(netSocket);
                     socket.exceptionHandler(new Handler<Exception>() {
                         public void handle(Exception e) {
-                            logger.error("Socket client error",e);
+                            logger.error("Socket client error", e);
                             disconnect();
                         }
-                    });                
+                    });
                     socket.closedHandler(new Handler<Void>() {
                         public void handle(Void arg0) {
                             logger.info("Socket closed");
                             disconnect();
                         }
                     });
-                    if(resultHandler != null) {
-                        resultHandler.handle(new AsyncResult<Void>((Void)null));
+                    if (resultHandler != null) {
+                        AsyncResult<Void> result = new AsyncResult<>();
+                        result.setResult(null);
+
+                        resultHandler.handle(result);
                     }
                 }
             });
@@ -123,59 +134,59 @@ class RedisClientBase {
             }
         });
     }
-        
+
     void send(final List<byte[]> command, final Handler<Reply> replyHandler) {
-        switch(state) {
-        case CONNECTED:
-            // Serialize the buffer before writing it
-            ChannelBuffer channelBuffer = ChannelBuffers.dynamicBuffer();
+        switch (state) {
+            case CONNECTED:
+                // Serialize the buffer before writing it
+                ChannelBuffer channelBuffer = ChannelBuffers.dynamicBuffer();
 
-            channelBuffer.writeBytes(ARGS_PREFIX);
-            channelBuffer.writeBytes(numToBytes(command.size(), true));
+                channelBuffer.writeBytes(ARGS_PREFIX);
+                channelBuffer.writeBytes(numToBytes(command.size(), true));
 
-            for (byte[] arg : command) {
-                channelBuffer.writeBytes(BYTES_PREFIX);
-                channelBuffer.writeBytes(numToBytes(arg.length, true));
-                channelBuffer.writeBytes(arg);
-                channelBuffer.writeBytes(CRLF);
-            }
+                for (byte[] arg : command) {
+                    channelBuffer.writeBytes(BYTES_PREFIX);
+                    channelBuffer.writeBytes(numToBytes(arg.length, true));
+                    channelBuffer.writeBytes(arg);
+                    channelBuffer.writeBytes(CRLF);
+                }
 
-            Buffer buffer = new Buffer(channelBuffer);
-            // The order read must match the order written, vertx guarantees
-            // that this is only called from a single thread.
-            netSocket.write(buffer);
-            replies.offer(replyHandler);
-            break;
-        case DISCONNECTED:
-            logger.info("Got request when disconnected. Trying to connect.");
-            connect(new AsyncResultHandler<Void>() {
-                public void handle(AsyncResult<Void> connection) {
-                    if(connection.succeeded()) {
-                        send(command, replyHandler);
-                    } else {
-                        replyHandler.handle(new ErrorReply("Unable to connect"));
+                Buffer buffer = new Buffer(channelBuffer);
+                // The order read must match the order written, vertx guarantees
+                // that this is only called from a single thread.
+                netSocket.write(buffer);
+                replies.offer(replyHandler);
+                break;
+            case DISCONNECTED:
+                logger.info("Got request when disconnected. Trying to connect.");
+                connect(new AsyncResultHandler<Void>() {
+                    public void handle(AsyncResult<Void> connection) {
+                        if (connection.succeeded()) {
+                            send(command, replyHandler);
+                        } else {
+                            replyHandler.handle(new ErrorReply("Unable to connect"));
+                        }
                     }
-                }
-            });
-            break;
-        case CONNECTING:
-            logger.debug("Got send request while connecting. Will try again in a while.");
-            vertx.setTimer(100, new Handler<Long>() {
-                public void handle(Long event) {                    
-                    send(command, replyHandler);
-                }
-            });
+                });
+                break;
+            case CONNECTING:
+                logger.debug("Got send request while connecting. Will try again in a while.");
+                vertx.setTimer(100, new Handler<Long>() {
+                    public void handle(Long event) {
+                        send(command, replyHandler);
+                    }
+                });
         }
     }
-    
+
     void disconnect() {
         state = State.DISCONNECTED;
-        while(!replies.isEmpty()) {
+        while (!replies.isEmpty()) {
             replies.poll().handle(new ErrorReply("Connection closed"));
         }
         // make sure the socket is closed
-        if(netSocket!=null) {
+        if (netSocket != null) {
             netSocket.close();
-        };
+        }
     }
 }
