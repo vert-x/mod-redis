@@ -26,4 +26,16 @@ public class BulkReply implements Reply<ChannelBuffer> {
         if (bytes == null) return null;
         return bytes.toString(charset);
     }
+
+    public byte[] asByteArray() {
+        if (bytes == null) return null;
+        int size = bytes.readableBytes();
+        byte[] buffer = null;
+        if (size > 0) {
+            buffer = new byte[size];
+            bytes.getBytes(bytes.readerIndex(), buffer);
+        }
+
+        return buffer;
+    }
 }
