@@ -5,6 +5,7 @@ import org.vertx.java.core.Handler;
 import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
+import org.vertx.java.core.net.NetClient;
 import org.vertx.java.core.net.NetSocket;
 import com.jetdrone.vertx.mods.redis.reply.*;
 
@@ -77,18 +78,13 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
             charset = Charset.defaultCharset();
         }
 
-        vertx.createNetClient().connect(port, host, new Handler<NetSocket>() {
-            @Override
-            public void handle(NetSocket netSocket) {
-                socket = netSocket;
-                redisClient = new RedisClientBase(netSocket);
-            }
-        });
-
+        redisClient = new RedisClientBase(vertx, logger, host, port);
+        redisClient.connect(null);
+        
         String address = getOptionalStringConfig("address", "vertx.mod-redis-io");
         eb.registerHandler(address, this);
     }
-
+    
     @Override
     public void stop() throws Exception {
         socket.close();
