@@ -44,7 +44,7 @@ Let's take a look at each field in turn:
 * `host` Host name or ip address of the Redis instance. Defaults to `localhost`.
 * `port` Port at which the Redis instance is listening. Defaults to `6379`.
 * `encoding` The character encoding for string conversions (e.g.: `UTF-8`, `ISO-8859-1`, `US-ASCII`). Defaults to the platform default.
-* `binary` If true then a no conversion to String is done and binary data is returned.
+* `binary` If true then a no conversion to String is done and binary data is returned. Also all String values are expected to be in byte array format.
 
 ## Usage
 
@@ -68,6 +68,45 @@ Simple example:
         }
     }
 ```
+
+Simple example with binary mode:
+
+```groovy
+    def eb = vertx.eventBus()
+    def config = new JsonObject()
+
+    config.putString("address", address)
+    config.putString("host", "localhost")
+    config.putNumber("port", 6379)
+    config.putNumber("binary", true)
+
+    container.deployModule("vertx.mods.redis", config, 1)
+
+    eb.send(address, [command: "del", key: key]) { reply0 ->
+
+        eb.send(address, [command: "append", key: key, value: "Hello".getBytes()]) { reply1 ->
+            assertNumber(5, reply1)
+
+                eb.send(address, [command: "append", key: key, value: " World".getBytes()]) { reply2 ->
+                    assertNumber(11, reply2)
+
+                    eb.send(address, [command: "get", key: key]) { reply3 ->
+                        def expected = "Hello World".getBytes()
+                        def result = reply3.body.getBinary("value")
+
+                        tu.azzert(expected.length == result.length)
+
+                        for (int i = 0; i < expected.length; i++) {
+                            tu.azzert(expected[i] == result[i])
+                        }
+                        tu.testComplete()
+                    }
+                }
+            }
+        }
+    }
+```
+
 
 ### Sending Commands
 

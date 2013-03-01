@@ -11,10 +11,10 @@ class GTestBinary extends GRedisTest {
 
         redis([command: "del", key: key]) { reply0 ->
 
-            redis([command: "append", key: key, value: "Hello"]) { reply1 ->
+            redis([command: "append", key: key, value: "Hello".getBytes()]) { reply1 ->
                 assertNumber(5, reply1)
 
-                redis([command: "append", key: key, value: " World"]) { reply2 ->
+                redis([command: "append", key: key, value: " World".getBytes()]) { reply2 ->
                     assertNumber(11, reply2)
 
                     redis([command: "get", key: key]) { reply3 ->
