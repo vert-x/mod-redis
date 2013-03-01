@@ -19,7 +19,7 @@ public class RedisClientBusModTest extends TestBase {
         startApp(GRedisClientTester.class.getName());
     }
 
-    public void testAppend() throws Exception {
+    public void testAppend() {
         startTest(getMethodName());
     }
 
