@@ -1,9 +1,6 @@
 package com.jetdrone.vertx.mods.redis;
 
-import com.jetdrone.vertx.mods.redis.command.Command;
-import com.jetdrone.vertx.mods.redis.command.KeyValue;
-import com.jetdrone.vertx.mods.redis.command.Option;
-import com.jetdrone.vertx.mods.redis.command.OrOption;
+import com.jetdrone.vertx.mods.redis.command.*;
 import org.vertx.java.busmods.BusModBase;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.eventbus.Message;
@@ -30,6 +27,9 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
     private static final OrOption ASC_OR_DESC = new OrOption(new Option("asc"), new Option("desc"));
     private static final OrOption BEFORE_OR_AFTER = new OrOption(new Option("before"), new Option("after"));
     private static final OrOption SAVE_OR_NOSAVE = new OrOption(new Option("save"), new Option("nosave"));
+
+    private static final NamedValue BY = new NamedValue("by");
+    private static final NamedValue WEIGTHS = new NamedValue("weights");
 
     @Override
     public void start() {
@@ -63,7 +63,7 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
             return;
         }
 
-        final Command command = new Command(redisCommand, message, charset, binary);
+        final Command command = new Command(redisCommand, message, charset);
 
         // helpers
         Object limit;
@@ -174,7 +174,7 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
                 case "lpush":
                 case "rpush":
                     command.arg("key");
-                    command.binArg("value");
+                    command.arg("value");
                     break;
                 // argumens "key" "seconds"
                 case "expire":
@@ -291,7 +291,7 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
                 case "restore":
                     command.arg("key");
                     command.arg("ttl");
-                    command.binArg("serialized-value");
+                    command.arg("serialized-value");
                     break;
                 // arguments "key" "start" "end"
                 case "getrange":
@@ -303,20 +303,20 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
                 case "psetex":
                     command.arg("key");
                     command.arg("milliseconds");
-                    command.binArg("value");
+                    command.arg("value");
                     break;
                 // arguments "key" "offset" "value"
                 case "setbit":
                 case "setrange":
                     command.arg("key");
                     command.arg("offset");
-                    command.binArg("value");
+                    command.arg("value");
                     break;
                 // arguments "key" "seconds" "value"
                 case "setex":
                     command.arg("key");
                     command.arg("seconds");
-                    command.binArg("value");
+                    command.arg("value");
                     break;
                 // arguments "key" "field" "increment"
                 case "hincrby":
@@ -330,7 +330,7 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
                 case "hsetnx":
                     command.arg("key");
                     command.arg("field");
-                    command.binArg("value");
+                    command.arg("value");
                     break;
                 // arguments "source" "destination" "timeout"
                 case "brpoplpush":
@@ -350,13 +350,13 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
                 case "lrem":
                     command.arg("key");
                     command.arg("count");
-                    command.binArg("value");
+                    command.arg("value");
                     break;
                 // arguments "key" "index" "value"
                 case "lset":
                     command.arg("key");
                     command.arg("index");
-                    command.binArg("value");
+                    command.arg("value");
                     break;
                 // arguments "source" "destination" "member"
                 case "smove":
@@ -456,17 +456,12 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
                     command.arg("key");
                     command.optArg(BEFORE_OR_AFTER);
                     command.arg("pivot");
-                    command.binArg("value");
+                    command.arg("value");
                     break;
                 // complex non generic: key [BY pattern] [LIMIT offset count] [GET pattern [GET pattern ...]] [ASC|DESC] [ALPHA] [STORE destination]
                 case "sort":
                     command.arg("key");
-
-                    final Object by = message.body.getField("by");
-                    if (by != null) {
-                        command.raw("by");
-                        command.raw(by);
-                    }
+                    command.optArg(BY);
 
                     limit = message.body.getField("limit");
                     if (limit != null) {
@@ -517,12 +512,7 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
                     command.arg("destination");
                     command.arg("numkeys");
                     command.arg("key");
-
-                    final Object weights = message.body.getField("weights");
-                    if (weights != null) {
-                        command.raw("weights");
-                        command.raw(weights);
-                    }
+                    command.optArg(WEIGTHS);
 
                     final Object aggregate = message.body.getField("aggregate");
                     if (aggregate != null) {

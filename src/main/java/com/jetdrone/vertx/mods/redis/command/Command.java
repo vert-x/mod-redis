@@ -8,7 +8,6 @@ import org.vertx.java.core.json.JsonObject;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Pattern;
 
 public final class Command {
 
@@ -17,12 +16,10 @@ public final class Command {
     public final List<byte[]> args = new ArrayList<>();
     final Message<JsonObject> message;
     final Charset charset;
-    final boolean binary;
 
-    public Command(String redisCommand, Message<JsonObject> message, Charset charset, boolean binary) {
+    public Command(String redisCommand, Message<JsonObject> message, Charset charset) {
         this.charset = charset;
         this.message = message;
-        this.binary = binary;
 
         // add the command to the list
         if (redisCommand.indexOf(' ') == -1) {
@@ -51,28 +48,10 @@ public final class Command {
         }
     }
 
-    public void binArg(final String argName) throws RedisCommandError {
-        Object arg = message.body.getField(argName);
-        if (arg == null) {
-            throw new RedisCommandError(argName + " cannot be null");
-        } else {
-            if (arg instanceof String) {
-                if (binary) {
-                    arg = message.body.getBinary(argName);
-                }
-            }
-            raw(arg);
-        }
-    }
-
-    public void optBinArg(final String argName) {
-        Object arg = message.body.getField(argName);
+    public void optArg(final NamedValue namedValue) {
+        final Object arg = message.body.getField(namedValue.name);
         if (arg != null) {
-            if (arg instanceof String) {
-                if (binary) {
-                    arg = message.body.getBinary(argName);
-                }
-            }
+            raw(namedValue.name);
             raw(arg);
         }
     }
@@ -104,11 +83,6 @@ public final class Command {
                             throw new RedisCommandError(keyValue.keyName + " or " + keyValue.valueName + " cannot be null");
                         }
 
-                        if (value instanceof String) {
-                            if (binary) {
-                                value = jsonEntry.getBinary(keyValue.valueName);
-                            }
-                        }
                         raw(key);
                         raw(value);
                     } else {
@@ -128,24 +102,6 @@ public final class Command {
             // first field does not exist, try the second
             final Object arg1 = message.body.getField(options.o2.name);
             if (arg1 != null) {
-                // secon field exists
-                raw(options.o2.name);
-            }
-        } else {
-            // first field exists
-            raw(options.o1.name);
-        }
-    }
-
-    public void arg(final OrOption options) throws RedisCommandError {
-        final Object arg0 = message.body.getField(options.o1.name);
-        if (arg0 == null) {
-            // first field does not exist, try the second
-            final Object arg1 = message.body.getField(options.o2.name);
-            if (arg1 == null) {
-                // second field does not exist either
-                throw new RedisCommandError("both " + options.o1.name + " and " + options.o2.name + " cannot be null");
-            } else {
                 // secon field exists
                 raw(options.o2.name);
             }
