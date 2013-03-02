@@ -24,7 +24,7 @@ class GRedisTest extends TestClientBase {
     void start() {
         super.start()
         eb = vertx.eventBus()
-        container.deployModule("com.jetdrone.mod-redis-io-vTEST", config, 1, new Handler<String>() {
+        container.deployModule("mod-redis-io-vTEST", config, 1, new Handler<String>() {
             public void handle(String res) {
                 tu.appReady()
             }

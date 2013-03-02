@@ -22,7 +22,7 @@ class GRedisClientTester extends TestClientBase {
         config.putNumber("port", 6379)
         config.putString("encoding", "ISO-8859-1")
 
-        container.deployModule("com.jetdrone.mod-redis-io-vTEST", config, 1, new Handler<String>() {
+        container.deployModule("mod-redis-io-vTEST", config, 1, new Handler<String>() {
             public void handle(String res) {
                 tu.appReady()
             }

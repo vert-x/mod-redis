@@ -60,10 +60,7 @@ class RedisClientBase {
                 public void handle(Exception e) {
                     logger.error("Net client error", e);
                     if (resultHandler != null) {
-                        AsyncResult<Void> result = new AsyncResult<>();
-                        result.setFailure(e);
-
-                        resultHandler.handle(result);
+                        resultHandler.handle(new AsyncResult<Void>(e));
                     }
                     disconnect();
                 }
@@ -87,10 +84,7 @@ class RedisClientBase {
                         }
                     });
                     if (resultHandler != null) {
-                        AsyncResult<Void> result = new AsyncResult<>();
-                        result.setResult(null);
-
-                        resultHandler.handle(result);
+                        resultHandler.handle(new AsyncResult<>((Void) null));
                     }
                 }
             });
