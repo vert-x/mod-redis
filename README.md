@@ -5,7 +5,7 @@ This module allows data to be saved, retrieved, searched for, and deleted in a R
 licensed, advanced key-value store. It is often referred to as a data structure server since keys can contain strings,
 hashes, lists, sets and sorted sets. To use this module you must have a Redis server instance running on your network.
 
-[![Build Status](https://travis-ci.org/pmlopes/mod-redis-io.png)](https://travis-ci.org/pmlopes/mod-redis-io)
+[![Build Status](https://travis-ci.org/pmlopes/mod-redis-io.png?branch=master)](https://travis-ci.org/pmlopes/mod-redis-io)
 
 This is a worker module and must be started as a worker verticle. (not entirelly true since I am still coding against
 Vert.x 1.3.1). On the vertx-2 branch worker is set to true.
