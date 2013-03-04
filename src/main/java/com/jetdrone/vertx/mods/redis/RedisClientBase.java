@@ -110,6 +110,8 @@ class RedisClientBase {
                 try {
                     // Attempt to decode a full reply from the channelbuffer
                     Reply receive = redisDecoder.receive(channelBuffer);
+                    // TODO: at this point we need to know if this is a pub/sub message or not.
+                    // TODO: if not then continue as usual
                     // If successful, grab the matching handler
                     replies.poll().handle(receive);
                     // May be more to read

@@ -559,15 +559,40 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
                     Reply[] mbreplyData = mbreply.data();
 
                     for (int i = 0; i < mbreplyData.length; i+=2) {
+                        if (mbreplyData[i].getType() != ReplyType.Bulk) {
+                            sendError(message, "Expected String as key type in multibulk: " + mbreplyData[i].getType());
+                            return;
+                        }
                         BulkReply brKey = (BulkReply) mbreplyData[i];
-                        BulkReply brValue = (BulkReply) mbreplyData[i+1];
-                        bulk.putString(brKey.asString(charset), brValue.asString(charset));
+                        Reply brValue = mbreplyData[i+1];
+                        switch (brValue.getType()) {
+                            case Bulk:
+                                bulk.putString(brKey.asString(charset), ((BulkReply) brValue).asString(charset));
+                                break;
+                            case Integer:
+                                bulk.putNumber(brKey.asString(charset), ((IntegerReply) brValue).data());
+                                break;
+                            default:
+                                sendError(message, "Unknown sub message type in multibulk: " + mbreplyData[i+1].getType());
+                                return;
+                        }
+
                     }
                     replyMessage.putObject("value", bulk);
                 } else {
                     JsonArray bulk = new JsonArray();
                     for (Reply r : mbreply.data()) {
-                        bulk.addString(((BulkReply) r).asString(charset));
+                        switch (r.getType()) {
+                            case Bulk:
+                                bulk.addString(((BulkReply) r).asString(charset));
+                                break;
+                            case Integer:
+                                bulk.addNumber(((IntegerReply) r).data());
+                                break;
+                            default:
+                                sendError(message, "Unknown sub message type in multibulk: " + r.getType());
+                                return;
+                        }
                     }
                     replyMessage.putArray("value", bulk);
                 }
