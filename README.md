@@ -44,7 +44,7 @@ Let's take a look at each field in turn:
 * `host` Host name or ip address of the Redis instance. Defaults to `localhost`.
 * `port` Port at which the Redis instance is listening. Defaults to `6379`.
 * `encoding` The character encoding for string conversions (e.g.: `UTF-8`, `ISO-8859-1`, `US-ASCII`). Defaults to the platform default.
-* `binary` If true then a no conversion to String is done and binary data is returned. Also all String values are expected to be in byte array format.
+* `binary` To be implemented. In this case messages are expected to be in binary format.
 
 ## Usage
 
@@ -141,4 +141,4 @@ For a list of Redis commands, see [Redis Command Reference](http://redis.io/comm
 At the moment, commands can be specified only in lowercase. Minimal parsing is done on the replies.
 Commands that return a single line reply return `java.lang.String`, integer replies return `java.lang.Number`,
 "bulk" replies return an array of `java.lang.String` using the specified encoding, and "multi bulk" replies return a
-array of `java.lang.String` again using the specified encoding. `hgetall` is expected to return an `JsonObject`.
+array of `java.lang.String` again using the specified encoding. `hgetall` is returns a `JsonObject`.
