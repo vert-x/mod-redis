@@ -9,7 +9,7 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
-public final class Command {
+public final class JSONCommand {
 
     private static final byte[] EMPTY_BYTES = new byte[0];
 
@@ -17,7 +17,7 @@ public final class Command {
     final Message<JsonObject> message;
     final Charset charset;
 
-    public Command(String redisCommand, Message<JsonObject> message, Charset charset) {
+    public JSONCommand(String redisCommand, Message<JsonObject> message, Charset charset) {
         this.charset = charset;
         this.message = message;
 
@@ -96,6 +96,23 @@ public final class Command {
         }
     }
 
+    public void arg(final OrOption options) throws RedisCommandError {
+        final Object arg0 = message.body.getField(options.o1.name);
+        if (arg0 == null) {
+            // first field does not exist, try the second
+            final Object arg1 = message.body.getField(options.o2.name);
+            if (arg1 != null) {
+                // secon field exists
+                raw(options.o2.name);
+            } else {
+                throw new RedisCommandError(options.o1.name + " or " + options.o2.name + " must not be null");
+            }
+        } else {
+            // first field exists
+            raw(options.o1.name);
+        }
+    }
+
     public void optArg(final OrOption options) {
         final Object arg0 = message.body.getField(options.o1.name);
         if (arg0 == null) {
@@ -108,6 +125,29 @@ public final class Command {
         } else {
             // first field exists
             raw(options.o1.name);
+        }
+    }
+
+    public void optArg(final NamedKeyValue namedKeyValue) throws RedisCommandError {
+        final Object arg = message.body.getField(namedKeyValue.name);
+        if (arg != null) {
+            if (arg instanceof JsonObject) {
+                raw(namedKeyValue.name);
+                final Object key = ((JsonObject) arg).getField(namedKeyValue.keyName);
+                if (key == null) {
+                    throw new RedisCommandError(namedKeyValue.keyName + " cannot be null");
+                } else {
+                    raw(key);
+                }
+                final Object value = ((JsonObject) arg).getField(namedKeyValue.valueName);
+                if (value == null) {
+                    throw new RedisCommandError(namedKeyValue.valueName + " cannot be null");
+                } else {
+                    raw(value);
+                }
+            } else {
+                throw new RedisCommandError(namedKeyValue.name + " must be a JsonObject");
+            }
         }
     }
 

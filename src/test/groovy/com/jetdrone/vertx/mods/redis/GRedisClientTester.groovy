@@ -559,7 +559,10 @@ class GRedisClientTester extends TestClientBase {
                 assertNumber(1, reply1)
 
                 redis([command: "hgetall", key: myhash]) { reply2 ->
-                    assertArray(["field1", "Hello", "field2", "World"], reply2)
+                    JsonObject obj = reply2.body.getObject("value")
+                    println obj
+                    tu.azzert("Hello".equals(obj.getField("field1")))
+                    tu.azzert("World".equals(obj.getField("field2")))
                     tu.testComplete()
                }
             }

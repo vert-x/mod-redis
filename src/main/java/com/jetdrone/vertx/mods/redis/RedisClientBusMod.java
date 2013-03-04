@@ -30,6 +30,9 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
 
     private static final NamedValue BY = new NamedValue("by");
     private static final NamedValue WEIGTHS = new NamedValue("weights");
+    private static final NamedValue STORE = new NamedValue("store");
+
+    private static final NamedKeyValue LIMIT = new NamedKeyValue("limit", "offset", "count");
 
     @Override
     public void start() {
@@ -63,10 +66,8 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
             return;
         }
 
-        final Command command = new Command(redisCommand, message, charset);
-
-        // helpers
-        Object limit;
+        final JSONCommand command = new JSONCommand(redisCommand, message, charset);
+        boolean array2object = false;
 
         try {
             switch (redisCommand) {
@@ -106,7 +107,6 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
                 case "get":
                 case "incr":
                 case "strlen":
-                case "hgetall":
                 case "hkeys":
                 case "hlen":
                 case "hvals":
@@ -125,6 +125,10 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
                 case "sinter":
                 case "sunion":
                 case "watch":
+                    command.arg("key");
+                    break;
+                case "hgetall":
+                    array2object = true;
                     command.arg("key");
                     break;
                 // argument "pattern"
@@ -454,7 +458,7 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
                 // arguments: key BEFORE|AFTER pivot value
                 case "linsert":
                     command.arg("key");
-                    command.optArg(BEFORE_OR_AFTER);
+                    command.arg(BEFORE_OR_AFTER);
                     command.arg("pivot");
                     command.arg("value");
                     break;
@@ -462,27 +466,7 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
                 case "sort":
                     command.arg("key");
                     command.optArg(BY);
-
-                    limit = message.body.getField("limit");
-                    if (limit != null) {
-                        if (limit instanceof JsonObject) {
-                            command.raw("limit");
-                            final Object offset = ((JsonObject) limit).getField("offset");
-                            if (offset == null) {
-                                throw new RedisCommandError("offset cannot be null");
-                            } else {
-                                command.raw(offset);
-                            }
-                            final Object count = ((JsonObject) limit).getField("count");
-                            if (count == null) {
-                                throw new RedisCommandError("count cannot be null");
-                            } else {
-                                command.raw(count);
-                            }
-                        } else {
-                            throw new RedisCommandError("limit must be a JsonObject");
-                        }
-                    }
+                    command.optArg(LIMIT);
 
                     final Object get = message.body.getField("get");
                     if (get != null) {
@@ -499,12 +483,7 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
 
                     command.optArg(ASC_OR_DESC);
                     command.optArg(ALPHA);
-
-                    final Object store = message.body.getField("store");
-                    if (store != null) {
-                        command.raw("store");
-                        command.raw(store);
-                    }
+                    command.optArg(STORE);
                     break;
                 // complex non generic: destination numkeys key [key ...] [WEIGHTS weight [weight ...]] [AGGREGATE SUM|MIN|MAX]
                 case "zinterstore":
@@ -529,57 +508,15 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
                     command.arg("key");
                     command.arg("min");
                     command.arg("max");
-
                     command.optArg(WITHSCORES);
-
-                    limit = message.body.getField("limit");
-                    if (limit != null) {
-                        if (limit instanceof JsonObject) {
-                            command.raw("limit");
-                            final Object offset = ((JsonObject) limit).getField("offset");
-                            if (offset == null) {
-                                throw new RedisCommandError("offset cannot be null");
-                            } else {
-                                command.raw(offset);
-                            }
-                            final Object count = ((JsonObject) limit).getField("count");
-                            if (count == null) {
-                                throw new RedisCommandError("count cannot be null");
-                            } else {
-                                command.raw(count);
-                            }
-                        } else {
-                            throw new RedisCommandError("limit must be a JsonObject");
-                        }
-                    }
+                    command.optArg(LIMIT);
                     break;
                 case "zrevrangebyscore":
                     command.arg("key");
                     command.arg("max");
                     command.arg("min");
-
                     command.optArg(WITHSCORES);
-
-                    limit = message.body.getField("limit");
-                    if (limit != null) {
-                        if (limit instanceof JsonObject) {
-                            command.raw("limit");
-                            final Object offset = ((JsonObject) limit).getField("offset");
-                            if (offset == null) {
-                                throw new RedisCommandError("offset cannot be null");
-                            } else {
-                                command.raw(offset);
-                            }
-                            final Object count = ((JsonObject) limit).getField("count");
-                            if (count == null) {
-                                throw new RedisCommandError("count cannot be null");
-                            } else {
-                                command.raw(count);
-                            }
-                        } else {
-                            throw new RedisCommandError("limit must be a JsonObject");
-                        }
-                    }
+                    command.optArg(LIMIT);
                     break;
                 // script numkeys key [key ...] arg [arg ...]
                 case "eval":
@@ -601,10 +538,11 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
             }
 
             // run redis command on server
+            final boolean finalArray2object = array2object;
             redisClient.send(command.args, new Handler<Reply>() {
                 @Override
                 public void handle(Reply reply) {
-                    processReply(message, reply);
+                    processReply(message, reply, finalArray2object);
                 }
             });
         } catch (RedisCommandError rce) {
@@ -612,7 +550,7 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
         }
     }
 
-    private void processReply(Message<JsonObject> message, Reply reply) {
+    private void processReply(Message<JsonObject> message, Reply reply, boolean array2Object) {
         JsonObject replyMessage;
 
         switch (reply.getType()) {
@@ -626,25 +564,29 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
                 return;
             case Bulk:
                 replyMessage = new JsonObject();
-                if (binary) {
-                    replyMessage.putBinary("value", ((BulkReply) reply).asByteArray());
-                } else {
-                    replyMessage.putString("value", ((BulkReply) reply).asString(charset));
-                }
+                replyMessage.putString("value", ((BulkReply) reply).asString(charset));
                 sendOK(message, replyMessage);
                 return;
             case MultiBulk:
                 replyMessage = new JsonObject();
                 MultiBulkReply mbreply = (MultiBulkReply) reply;
-                JsonArray bulk = new JsonArray();
-                for (Reply r : mbreply.data()) {
-                    if (binary) {
-                        bulk.addBinary(((BulkReply) r).asByteArray());
-                    } else {
+                if (array2Object) {
+                    JsonObject bulk = new JsonObject();
+                    Reply[] mbreplyData = mbreply.data();
+
+                    for (int i = 0; i < mbreplyData.length; i+=2) {
+                        BulkReply brKey = (BulkReply) mbreplyData[i];
+                        BulkReply brValue = (BulkReply) mbreplyData[i+1];
+                        bulk.putString(brKey.asString(charset), brValue.asString(charset));
+                    }
+                    replyMessage.putObject("value", bulk);
+                } else {
+                    JsonArray bulk = new JsonArray();
+                    for (Reply r : mbreply.data()) {
                         bulk.addString(((BulkReply) r).asString(charset));
                     }
+                    replyMessage.putArray("value", bulk);
                 }
-                replyMessage.putArray("value", bulk);
                 sendOK(message, replyMessage);
                 return;
             case Integer:
