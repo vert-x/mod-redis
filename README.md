@@ -16,7 +16,7 @@ This module requires a Redis server to be available on the network.
 
 ## Name
 
-The module name is `com.jetdrone.vertx.mods.redis`.
+The module name is `com.jetdrone.mod-redis-io`.
 
 ## Configuration
 
@@ -142,3 +142,18 @@ At the moment, commands can be specified only in lowercase. Minimal parsing is d
 Commands that return a single line reply return `java.lang.String`, integer replies return `java.lang.Number`,
 "bulk" replies return an array of `java.lang.String` using the specified encoding, and "multi bulk" replies return a
 array of `java.lang.String` again using the specified encoding. `hgetall` is returns a `JsonObject`.
+
+## Friendlier hash commands
+
+Most Redis commands take a single String or an Array of Strings as arguments, and replies are sent back as a single
+String or an Array of Strings. When dealing with hash values, there are a couple of useful exceptions to this.
+
+### command hgetall
+
+The reply from an `hgetall` command will be converted into a JSON Object.  That way you can interact with the responses
+using JSON syntax which is handy for the EventBus communication.
+
+### command hmset
+
+Multiple values in a hash can be set by supplying an object.Note however that key and value will be coerced to strings.
+NOTE: Not implemented yet!!!
