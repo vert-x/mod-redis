@@ -31,6 +31,8 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
     private static final NamedValue BY = new NamedValue("by");
     private static final NamedValue WEIGTHS = new NamedValue("weights");
     private static final NamedValue STORE = new NamedValue("store");
+    private static final NamedValue GET = new NamedValue("get");
+    private static final NamedValue AGGREGATE = new NamedValue("aggregate");
 
     private static final NamedKeyValue LIMIT = new NamedKeyValue("limit", "offset", "count");
 
@@ -42,6 +44,10 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
         int port = getOptionalIntConfig("port", 6379);
         String encoding = getOptionalStringConfig("encoding", null);
         binary = getOptionalBooleanConfig("binary", false);
+
+        if (binary) {
+            logger.warn("Binary mode is not implemented yet!!!");
+        }
 
         if (encoding != null) {
             charset = Charset.forName(encoding);
@@ -467,20 +473,7 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
                     command.arg("key");
                     command.optArg(BY);
                     command.optArg(LIMIT);
-
-                    final Object get = message.body.getField("get");
-                    if (get != null) {
-                        if (get instanceof JsonArray) {
-                            for (Object item : (JsonArray) get) {
-                                command.raw("get");
-                                command.raw(item);
-                            }
-                        } else {
-                            command.raw("get");
-                            command.raw(get);
-                        }
-                    }
-
+                    command.optArg(GET);
                     command.optArg(ASC_OR_DESC);
                     command.optArg(ALPHA);
                     command.optArg(STORE);
@@ -492,16 +485,7 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
                     command.arg("numkeys");
                     command.arg("key");
                     command.optArg(WEIGTHS);
-
-                    final Object aggregate = message.body.getField("aggregate");
-                    if (aggregate != null) {
-                        if ("sum".equals(aggregate) || "min".equals(aggregate) || "max".equals(aggregate)) {
-                            command.raw("aggregate");
-                            command.raw(aggregate);
-                        } else {
-                            throw new RedisCommandError("aggregate can only be sum,min,max");
-                        }
-                    }
+                    command.optArg(AGGREGATE);
                     break;
                 // key min max [WITHSCORES] [LIMIT offset count]
                 case "zrangebyscore":

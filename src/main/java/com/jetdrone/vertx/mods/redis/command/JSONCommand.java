@@ -51,8 +51,15 @@ public final class JSONCommand {
     public void optArg(final NamedValue namedValue) {
         final Object arg = message.body.getField(namedValue.name);
         if (arg != null) {
-            raw(namedValue.name);
-            raw(arg);
+            if (arg instanceof JsonArray) {
+                for (Object item : (JsonArray) arg) {
+                    raw(namedValue.name);
+                    raw(item);
+                }
+            } else {
+                raw(namedValue.name);
+                raw(arg);
+            }
         }
     }
 
