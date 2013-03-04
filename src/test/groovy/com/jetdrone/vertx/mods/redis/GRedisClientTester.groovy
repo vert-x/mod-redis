@@ -560,7 +560,6 @@ class GRedisClientTester extends TestClientBase {
 
                 redis([command: "hgetall", key: myhash]) { reply2 ->
                     JsonObject obj = reply2.body.getObject("value")
-                    println obj
                     tu.azzert("Hello".equals(obj.getField("field1")))
                     tu.azzert("World".equals(obj.getField("field2")))
                     tu.testComplete()
@@ -1519,7 +1518,20 @@ class GRedisClientTester extends TestClientBase {
     }
 
     void testSort() {
-        tu.testComplete()
+        def mykey = makeKey()
+        redis([command: "sadd", key: mykey, member: ["1", "2", "3"]]) { reply0 ->
+            assertNumber(3, reply0)
+            redis([command: "set", key: "${mykey}:1", value: "one"]) { reply1 ->
+                redis([command: "set", key: "${mykey}:2", value: "two"]) { reply2 ->
+                    redis([command: "set", key: "${mykey}:3", value: "three"]) { reply3 ->
+                        redis([command: "sort", key: mykey, desc: true, get: "${mykey}:*"]) { reply4 ->
+                            assertArray(["three", "two", "one"], reply4)
+                            tu.testComplete()
+                        }
+                    }
+                }
+            }
+        }
     }
 
     void testSpop() {
