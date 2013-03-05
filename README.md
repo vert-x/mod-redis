@@ -205,3 +205,15 @@ As demonstrated with the source code example above, the module can work in pub/s
 that you need to register a new handler for the address: `mod-redis-io-address.your_real_redis_address` At this moment
 all commands to `subscribe`, `psubscribe`, `unsubscribe` and `pusubscribe` will send the received messages to the right
 address.
+
+## Authentication
+
+The module will do authentication
+
+## Monitor
+
+The module will do monitoring
+
+## Server info
+
+The module will convert the info response to a friendly Json
