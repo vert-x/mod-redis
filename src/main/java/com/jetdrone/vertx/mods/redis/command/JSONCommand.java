@@ -78,27 +78,22 @@ public final class JSONCommand {
             arg(keyValue.keyName);
             arg(keyValue.valueName);
         } else {
-            if (arg instanceof JsonArray) {
-                // flatten the json array
-                for (Object item : (JsonArray) arg) {
-                    if (item instanceof JsonObject) {
-                        JsonObject jsonEntry = (JsonObject) item;
-                        Object key = jsonEntry.getField(keyValue.keyName);
-                        Object value = jsonEntry.getField(keyValue.valueName);
-                        // kv cannot be null
-                        if (key == null || value == null) {
-                            throw new RedisCommandError(keyValue.keyName + " or " + keyValue.valueName + " cannot be null");
-                        }
-
-                        raw(key);
-                        raw(value);
-                    } else {
-                        throw new RedisCommandError(keyValue.pairName + " expected to have JsonObjects");
+            if (arg instanceof JsonObject) {
+                // hash notation, needs to be flatten
+                JsonObject hash = (JsonObject) arg;
+                for (String fName : hash.getFieldNames()) {
+                    Object value = hash.getField(fName);
+                    // kv cannot be null
+                    if (value == null) {
+                        throw new RedisCommandError(fName + " cannot be null");
                     }
+
+                    raw(fName);
+                    raw(value);
                 }
             } else {
                 // error expected array of objects
-                throw new RedisCommandError(keyValue.pairName + " must be an array");
+                throw new RedisCommandError(keyValue.pairName + " must be an object");
             }
         }
     }

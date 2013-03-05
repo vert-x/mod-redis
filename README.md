@@ -146,10 +146,58 @@ String or an Array of Strings. When dealing with hash values, there are a couple
 The reply from an `hgetall` command will be converted into a JSON Object.  That way you can interact with the responses
 using JSON syntax which is handy for the EventBus communication.
 
+### command mset
+
+Multiple values in a hash can be set by supplying an object. Note however that key and value will be coerced to strings.
+
+    {
+        command: "mset",
+        key: "redis key",
+        keys: {
+            keyName: "value",
+            otherKeyName: "other value"
+        }
+    }
+
+### command msetnx
+
+Multiple values in a hash can be set by supplying an object. Note however that key and value will be coerced to strings.
+
+    {
+        command: "msetnx",
+        key: "redis key",
+        keys: {
+            keyName: "value",
+            otherKeyName: "other value"
+        }
+    }
+
 ### command hmset
 
-Multiple values in a hash can be set by supplying an object.Note however that key and value will be coerced to strings.
-NOTE: Not implemented yet!!!
+Multiple values in a hash can be set by supplying an object. Note however that key and value will be coerced to strings.
+
+    {
+        command: "hmset",
+        key: "redis key",
+        fields: {
+            fieldName: "value",
+            otherFieldName: "other value"
+        }
+    }
+
+### command zadd
+
+Multiple values in a hash can be set by supplying an object. Note however that key and value will be coerced to strings.
+
+    {
+        command: "zadd",
+        key: "redis key",
+        scores: {
+            score: "member",
+            otherScore: "other member"
+        }
+    }
+
 
 ## Pub/Sub
 

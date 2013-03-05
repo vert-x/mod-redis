@@ -664,7 +664,7 @@ class GRedisClientTester extends TestClientBase {
     void testHmset() {
         def myhash = makeKey()
 
-        redis([command: "hmset", key: myhash, fieldvalues: [[field: "field1", value: "Hello"],[field: "field2", value: "World"]]]) { reply0 ->
+        redis([command: "hmset", key: myhash, fields: [field1: "Hello", field2: "World"]]) { reply0 ->
             redis([command: "hget", key: myhash, field: "field1"]) { reply1 ->
                 assertString("Hello", reply1)
                 redis([command: "hget", key: myhash, field: "field2"]) { reply2 ->
@@ -773,7 +773,7 @@ class GRedisClientTester extends TestClientBase {
     }
 
     void testKeys() {
-        redis([command: "mset", keyvalues: [[key: "one", value: 1], [key: "two", value: 2], [key: "three", value: 3], [key: "four", value: 4]]]) { reply0 ->
+        redis([command: "mset", keys: [one: 1, two: 2, three: 3, four: 4]]) { reply0 ->
             redis([command: "keys", pattern: "*o*"]) { reply1 ->
                 def array = reply1.body.getArray("value")
                 // this is because there are leftovers from previous tests
@@ -1017,7 +1017,7 @@ class GRedisClientTester extends TestClientBase {
     void testMset() {
         def mykey1 = makeKey()
         def mykey2 = makeKey()
-        redis([command: "mset", keyvalues: [[key: mykey1, value: "Hello"], [key: mykey2, value: "World"]]]) { reply0 ->
+        redis([command: "mset", keys: [(mykey1): "Hello", (mykey2): "World"]]) { reply0 ->
             redis([command: "get", key: mykey1]) { reply1 ->
                 assertString("Hello", reply1)
                 redis([command: "get", key: mykey2]) { reply2 ->
@@ -1033,9 +1033,9 @@ class GRedisClientTester extends TestClientBase {
         def mykey2 = makeKey()
         def mykey3 = makeKey()
 
-        redis([command: "msetnx", keyvalues: [[key: mykey1, value: "Hello"], [key: mykey2, value: "there"]]]) { reply0 ->
+        redis([command: "msetnx", keys: [(mykey1): "Hello", (mykey2): "there"]]) { reply0 ->
             assertNumber(1, reply0)
-            redis([command: "msetnx", keyvalues: [[key: mykey2, value: "there"], [key: mykey3, value: "world"]]]) { reply1 ->
+            redis([command: "msetnx", keys: [(mykey2): "there", (mykey3): "world"]]) { reply1 ->
                 assertNumber(0, reply1)
                 redis([command: "mget", key: [mykey1, mykey2, mykey3]]) { reply2 ->
                     assertArray(["Hello", "there", null], reply2)

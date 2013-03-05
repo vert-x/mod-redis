@@ -19,9 +19,9 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
     private Charset charset;
     private String baseAddress;
 
-    private static final KeyValue KV = new KeyValue("key", "value", "keyvalues");
-    private static final KeyValue FV = new KeyValue("field", "value", "fieldvalues");
-    private static final KeyValue SM = new KeyValue("score", "member", "scoremembers");
+    private static final KeyValue KV = new KeyValue("key", "value", "keys");
+    private static final KeyValue FV = new KeyValue("field", "value", "fields");
+    private static final KeyValue SM = new KeyValue("score", "member", "scores");
 
     private static final Option WITHSCORES = new Option("withscores");
     private static final Option ALPHA = new Option("alpha");
@@ -235,7 +235,7 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
                 case "setnx":
                 case "lpushx":
                 case "rpushx":
-                    // arguments "key" "value" ["value"...]
+                // arguments "key" "value" ["value"...]
                 case "lpush":
                 case "rpush":
                     command.arg("key");
