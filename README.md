@@ -58,7 +58,7 @@ Simple example:
     config.putString("host", "localhost")
     config.putNumber("port", 6379)
 
-    container.deployModule("vertx.mods.redis", config, 1)
+    container.deployModule("com.jetdrone.mod-redis-io", config, 1)
 
     eb.send(address, [command: 'get', key: 'mykey']) { reply ->
         if (reply.body.status.equals('ok') {
@@ -78,8 +78,8 @@ Simple example with pub/sub mode:
     def subConfig = new JsonObject()
     subConfig.putString("address", 'redis.sub')
 
-    container.deployModule("vertx.mods.redis", pubConfig, 1)
-    container.deployModule("vertx.mods.redis", subConfig, 1)
+    container.deployModule("com.jetdrone.mod-redis-io", pubConfig, 1)
+    container.deployModule("com.jetdrone.mod-redis-io", subConfig, 1)
 
     // register a handler for the incoming message the naming the Redis module will use is base address + '.' + redis channel
     eb.registerHandler("redis.sub.ch1", new Handler<Message<JsonObject>>() {
