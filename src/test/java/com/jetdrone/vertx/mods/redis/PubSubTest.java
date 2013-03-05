@@ -17,4 +17,8 @@ public class PubSubTest extends TestBase {
     public void testPubSubPattern() {
         startTest(getMethodName());
     }
+
+    public void testLateJoin() {
+        startTest(getMethodName());
+    }
 }

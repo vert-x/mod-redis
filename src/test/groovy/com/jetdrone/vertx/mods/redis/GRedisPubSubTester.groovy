@@ -145,4 +145,47 @@ class GRedisPubSubTester extends TestClientBase {
             }
         }
     }
+
+    private void lateJoinHelper(String message) {
+        JsonObject subConfig2 = new JsonObject()
+        subConfig2.putString("address", "test.redis.sub2")
+
+        container.deployModule("mod-redis-io-vTEST", subConfig2, 1, new Handler<String>() {
+            public void handle(final String subDeploymentId) {
+                // on sub address subscribe to channel ch2
+                redis("test.redis.sub2", [command: 'subscribe', channel: 'ch2']) { subscribe ->
+                    assertArray(['subscribe', 'ch2', 1], subscribe)
+
+                    // on pub address publish a message
+                    redis(pubAddress, [command: 'publish', channel: 'ch2', message: message]) { publish ->
+                        assertNumber(2, publish)
+                    }
+                }
+            }
+        })
+    }
+
+    @Test
+    void testLateJoin() {
+        def message = makeKey()
+
+        // register a handler for the incoming message
+        eb.registerHandler("${subAddress}.ch2", new Handler<Message<JsonObject>>() {
+            @Override
+            void handle(Message<JsonObject> received) {
+                def value = received.body.getField('value')
+                tu.azzert('ch2'.equals(value.getField('channel')))
+                tu.azzert(message.equals(value.getField('message')))
+                testComplete()
+            }
+        });
+
+        // on sub address subscribe to channel ch2
+        redis(subAddress, [command: 'subscribe', channel: 'ch2']) { subscribe ->
+            assertArray(['subscribe', 'ch2', 1], subscribe)
+
+            // deploy a new sub
+            lateJoinHelper(message)
+        }
+    }
 }
