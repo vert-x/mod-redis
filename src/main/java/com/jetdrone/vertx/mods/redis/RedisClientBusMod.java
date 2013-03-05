@@ -14,8 +14,10 @@ import java.nio.charset.Charset;
 public class RedisClientBusMod extends BusModBase implements Handler<Message<JsonObject>> {
 
     private RedisClientBase redisClient;
+    private RedisSubscriptions redisSubscriptions;
+
     private Charset charset;
-    private boolean binary;
+    private String baseAddress;
 
     private static final KeyValue KV = new KeyValue("key", "value", "keyvalues");
     private static final KeyValue FV = new KeyValue("field", "value", "fieldvalues");
@@ -43,7 +45,7 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
         String host = getOptionalStringConfig("host", "localhost");
         int port = getOptionalIntConfig("port", 6379);
         String encoding = getOptionalStringConfig("encoding", null);
-        binary = getOptionalBooleanConfig("binary", false);
+        boolean binary = getOptionalBooleanConfig("binary", false);
 
         if (binary) {
             logger.warn("Binary mode is not implemented yet!!!");
@@ -55,11 +57,13 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
             charset = Charset.defaultCharset();
         }
 
-        redisClient = new RedisClientBase(vertx, logger, host, port);
+        redisSubscriptions = new RedisSubscriptions();
+
+        redisClient = new RedisClientBase(vertx, logger, host, port, redisSubscriptions);
         redisClient.connect(null);
         
-        String address = getOptionalStringConfig("address", "vertx.mod-redis-io");
-        eb.registerHandler(address, this);
+        baseAddress = getOptionalStringConfig("address", "vertx.mod-redis-io");
+        eb.registerHandler(baseAddress, this);
     }
     
     @Override
@@ -124,7 +128,7 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
                 case "spop":
                 case "zcard":
                 case "debug object":
-                    // arguments "key" ["key"...]
+                // arguments "key" ["key"...]
                 case "del":
                 case "mget":
                 case "sdiff":
@@ -139,9 +143,36 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
                     break;
                 // argument "pattern"
                 case "keys":
+                    command.arg("pattern");
+                    break;
                 // argument "pattern" ["pattern"...]
                 case "psubscribe":
                     command.arg("pattern");
+                    // in this case we need also to register handlers
+                    for (String registerChannel : command.getArg("pattern")) {
+                        // compose the listening address as base + . + channel
+                        final String vertxChannel = baseAddress + "." + registerChannel;
+                        redisSubscriptions.registerSubscribeHandler(registerChannel, new Handler<Reply>() {
+                            @Override
+                            public void handle(Reply reply) {
+                                if (reply instanceof MultiBulkReply) {
+                                    JsonObject replyMessage = new JsonObject();
+                                    replyMessage.putString("status", "ok");
+                                    Reply[] data = ((MultiBulkReply) reply).data();
+                                    JsonObject message = new JsonObject();
+                                    message.putString("pattern", ((BulkReply) data[1]).asString(charset));
+                                    message.putString("channel", ((BulkReply) data[2]).asString(charset));
+                                    message.putString("message", ((BulkReply) data[3]).asString(charset));
+                                    replyMessage.putObject("value", message);
+                                    eb.send(vertxChannel, replyMessage);
+                                } else {
+                                    JsonObject replyMessage = new JsonObject();
+                                    replyMessage.putString("status", "error");
+                                    replyMessage.putString("message", "expected a multiBulkReply but got " + reply.getType());
+                                }
+                            }
+                        });
+                    }
                     break;
                 // argument "password"
                 case "auth":
@@ -165,13 +196,37 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
                     break;
                 // argument "script"
                 case "script load":
-                    // argument "script" ["script"...]
+                // argument "script" ["script"...]
                 case "script exists":
                     command.arg("script");
                     break;
                 // argument "channel" ["channel"...]
                 case "subscribe":
                     command.arg("channel");
+                    // in this case we need also to register handlers
+                    for (String registerChannel : command.getArg("channel")) {
+                        // compose the listening address as base + . + channel
+                        final String vertxChannel = baseAddress + "." + registerChannel;
+                        redisSubscriptions.registerSubscribeHandler(registerChannel, new Handler<Reply>() {
+                            @Override
+                            public void handle(Reply reply) {
+                                if (reply instanceof MultiBulkReply) {
+                                    JsonObject replyMessage = new JsonObject();
+                                    replyMessage.putString("status", "ok");
+                                    Reply[] data = ((MultiBulkReply) reply).data();
+                                    JsonObject message = new JsonObject();
+                                    message.putString("channel", ((BulkReply) data[1]).asString(charset));
+                                    message.putString("message", ((BulkReply) data[2]).asString(charset));
+                                    replyMessage.putObject("value", message);
+                                    eb.send(vertxChannel, replyMessage);
+                                } else {
+                                    JsonObject replyMessage = new JsonObject();
+                                    replyMessage.putString("status", "error");
+                                    replyMessage.putString("message", "expected a multiBulkReply but got " + reply.getType());
+                                }
+                            }
+                        });
+                    }
                     break;
                 // arguments "key" "value"
                 case "append":
@@ -236,7 +291,7 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
                 // arguments "key" "field"
                 case "hexists":
                 case "hget":
-                    // arguments "key" "field" ["field"...]
+                // arguments "key" "field" ["field"...]
                 case "hdel":
                 case "hmget":
                     command.arg("key");
@@ -408,10 +463,30 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
                 // argument ["pattern" ["pattern"...]]
                 case "punsubscribe":
                     command.optArg("pattern");
+                    // unregister all channels
+                    String[] unsubscribePatterns = command.getArg("pattern");
+                    if (unsubscribePatterns == null) {
+                        // unsubscribe all
+                        redisSubscriptions.unregisterSubscribeHandler(null);
+                    } else {
+                        for (String unregisterPattern : unsubscribePatterns) {
+                            redisSubscriptions.unregisterSubscribeHandler(unregisterPattern);
+                        }
+                    }
                     break;
                 // argument ["channel" ["channel"...]]
                 case "unsubscribe":
                     command.optArg("channel");
+                    // unregister all channels
+                    String[] unsubscribeChannels = command.getArg("channel");
+                    if (unsubscribeChannels == null) {
+                        // unsubscribe all
+                        redisSubscriptions.unregisterSubscribeHandler(null);
+                    } else {
+                        for (String unregisterChannel : unsubscribeChannels) {
+                            redisSubscriptions.unregisterSubscribeHandler(unregisterChannel);
+                        }
+                    }
                     break;
                 // arguments "subcommand" ["argument"]
                 case "slowlog":

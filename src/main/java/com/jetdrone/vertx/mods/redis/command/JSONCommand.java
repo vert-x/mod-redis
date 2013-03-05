@@ -183,4 +183,36 @@ public final class JSONCommand {
 
         args.add(o.toString().getBytes(charset));
     }
+
+    public String[] getArg(final String argName) {
+        final Object arg = message.body.getField(argName);
+        if (arg == null) {
+            return null;
+        } else {
+            if (arg instanceof byte[]) {
+                return new String[] {
+                        new String((byte[]) arg)
+                };
+            }
+
+            if (arg instanceof JsonArray) {
+                JsonArray items = (JsonArray) arg;
+                String[] args = new String[items.size()];
+                for (int i = 0; i < items.size(); i++) {
+                    args[i] = items.get(i).toString();
+                }
+                return args;
+            }
+
+            if (arg instanceof String) {
+                return new String[] {
+                        (String) arg
+                };
+            }
+
+            return new String[] {
+                    arg.toString()
+            };
+        }
+    }
 }

@@ -69,41 +69,37 @@ Simple example:
     }
 ```
 
-Simple example with binary mode:
+Simple example with pub/sub mode:
 
 ```groovy
     def eb = vertx.eventBus()
-    def config = new JsonObject()
+    def pubConfig = new JsonObject()
+    pubConfig.putString("address", 'redis.pub')
+    def subConfig = new JsonObject()
+    subConfig.putString("address", 'redis.sub')
 
-    config.putString("address", address)
-    config.putString("host", "localhost")
-    config.putNumber("port", 6379)
-    config.putNumber("binary", true)
+    container.deployModule("vertx.mods.redis", pubConfig, 1)
+    container.deployModule("vertx.mods.redis", subConfig, 1)
 
-    container.deployModule("vertx.mods.redis", config, 1)
-
-    eb.send(address, [command: "del", key: key]) { reply0 ->
-
-        eb.send(address, [command: "append", key: key, value: "Hello".getBytes()]) { reply1 ->
-            assertNumber(5, reply1)
-
-                eb.send(address, [command: "append", key: key, value: " World".getBytes()]) { reply2 ->
-                    assertNumber(11, reply2)
-
-                    eb.send(address, [command: "get", key: key]) { reply3 ->
-                        def expected = "Hello World".getBytes()
-                        def result = reply3.body.getBinary("value")
-
-                        tu.azzert(expected.length == result.length)
-
-                        for (int i = 0; i < expected.length; i++) {
-                            tu.azzert(expected[i] == result[i])
-                        }
-                        tu.testComplete()
-                    }
-                }
-            }
+    // register a handler for the incoming message the naming the Redis module will use is base address + '.' + redis channel
+    eb.registerHandler("redis.sub.ch1", new Handler<Message<JsonObject>>() {
+        @Override
+        void handle(Message<JsonObject> received) {
+            // do whatever you need to do with your message
+            def value = received.body.getField('value')
+            // the value is a JSON doc with the following properties
+            // channel - The channel to which this message was sent
+            // pattern - Pattern is present if you use psubscribe command and is the pattern that matched this message channel
+            // message - The message payload
         }
+    });
+
+    // on sub address subscribe to channel ch1
+    eb.send('redis.sub', [command: 'subscribe', channel: 'ch1']) { subscribe ->
+    }
+
+    // on pub address publish a message
+    eb.send('redis.pub', [command: 'publish', channel: 'ch1', message: 'Hello World!']) { publish ->
     }
 ```
 
@@ -157,3 +153,10 @@ using JSON syntax which is handy for the EventBus communication.
 
 Multiple values in a hash can be set by supplying an object.Note however that key and value will be coerced to strings.
 NOTE: Not implemented yet!!!
+
+## Pub/Sub
+
+As demonstrated with the source code example above, the module can work in pub/sub mode too. The basic idea behind it is
+that you need to register a new handler for the address: `mod-redis-io-address.your_real_redis_address` At this moment
+all commands to `subscribe`, `psubscribe`, `unsubscribe` and `pusubscribe` will send the received messages to the right
+address.

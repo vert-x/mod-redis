@@ -19,6 +19,8 @@ public class MultiBulkReply implements Reply<Reply[]> {
     private final int size;
     private int index = 0;
 
+    private static final Charset CHARSET = Charset.defaultCharset();
+
     public MultiBulkReply(RedisDecoder rd, ChannelBuffer is) throws IOException {
         long l = RedisDecoder.readLong(is);
         if (l > Integer.MAX_VALUE) {
@@ -52,5 +54,27 @@ public class MultiBulkReply implements Reply<Reply[]> {
     @Override
     public ReplyType getType() {
         return ReplyType.MultiBulk;
+    }
+
+    @Override
+    public boolean isPubSubMessage() {
+        // pub/sub messages are always multibulk
+        // subscribe messages have a reply length of 3
+        // psubscribe messages have a reply length of 4
+        if (replies != null) {
+            // message
+            if (replies.length == 3) {
+                if (replies[0] instanceof BulkReply && "message".equals(((BulkReply) replies[0]).asString(CHARSET))) {
+                    return true;
+                }
+            }
+            // pmessage
+            else if (replies.length == 4) {
+                if (replies[0] instanceof BulkReply && "pmessage".equals(((BulkReply) replies[0]).asString(CHARSET))) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 }

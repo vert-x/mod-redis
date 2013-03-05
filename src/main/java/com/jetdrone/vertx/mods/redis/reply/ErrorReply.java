@@ -17,4 +17,9 @@ public class ErrorReply implements Reply<String> {
     public ReplyType getType() {
         return ReplyType.Error;
     }
+
+    @Override
+    public boolean isPubSubMessage() {
+        return false;
+    }
 }

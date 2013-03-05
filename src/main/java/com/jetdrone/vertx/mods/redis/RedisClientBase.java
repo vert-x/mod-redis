@@ -3,10 +3,11 @@ package com.jetdrone.vertx.mods.redis;
 import static com.jetdrone.vertx.mods.redis.util.Encoding.numToBytes;
 
 import java.io.IOException;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Queue;
+import java.nio.charset.Charset;
+import java.util.*;
 
+import com.jetdrone.vertx.mods.redis.reply.BulkReply;
+import com.jetdrone.vertx.mods.redis.reply.MultiBulkReply;
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.buffer.ChannelBuffers;
 import org.vertx.java.core.AsyncResult;
@@ -29,10 +30,12 @@ class RedisClientBase {
     public static final byte[] ARGS_PREFIX = "*".getBytes();
     public static final byte[] CRLF = "\r\n".getBytes();
     public static final byte[] BYTES_PREFIX = "$".getBytes();
+    private static final Charset CHARSET = Charset.defaultCharset();
 
-    private Vertx vertx;
-    private Logger logger;
+    private final Vertx vertx;
+    private final Logger logger;
     private final Queue<Handler<Reply>> replies = new LinkedList<>();
+    private final RedisSubscriptions subscriptions;
     private NetSocket netSocket;
     private String host;
     private int port;
@@ -45,11 +48,12 @@ class RedisClientBase {
 
     private State state = State.DISCONNECTED;
 
-    public RedisClientBase(Vertx vertx, final Logger logger, String host, int port) {
+    public RedisClientBase(Vertx vertx, final Logger logger, String host, int port, RedisSubscriptions subscriptions) {
         this.vertx = vertx;
         this.logger = logger;
         this.host = host;
         this.port = port;
+        this.subscriptions = subscriptions;
     }
 
     void connect(final AsyncResultHandler<Void> resultHandler) {
@@ -110,10 +114,8 @@ class RedisClientBase {
                 try {
                     // Attempt to decode a full reply from the channelbuffer
                     Reply receive = redisDecoder.receive(channelBuffer);
-                    // TODO: at this point we need to know if this is a pub/sub message or not.
-                    // TODO: if not then continue as usual
                     // If successful, grab the matching handler
-                    replies.poll().handle(receive);
+                    handleReply(receive);
                     // May be more to read
                     if (channelBuffer.readable()) {
                         // More than one message in the buffer, need to be careful
@@ -173,6 +175,35 @@ class RedisClientBase {
                     }
                 });
         }
+    }
+
+    void handleReply(Reply reply) throws IOException {
+        Handler<Reply> handler = replies.poll();
+
+        if (handler != null) {
+            // handler waits for this response
+            handler.handle(reply);
+            return;
+        }
+
+        if (reply instanceof MultiBulkReply) {
+            MultiBulkReply mbReply = (MultiBulkReply) reply;
+            // this was a pushed message
+            if (mbReply.isPubSubMessage()) {
+                // this is a pub sub message
+                Reply[] data = mbReply.data();
+                String channel = ((BulkReply) data[1]).asString(CHARSET);
+                handler = subscriptions.getHandler(channel);
+
+                if (handler != null) {
+                    // pub sub handler exists
+                    handler.handle(reply);
+                    return;
+                }
+            }
+        }
+
+        throw new IOException("Received a non pub/sub message while in pub/sub mode");
     }
 
     void disconnect() {
