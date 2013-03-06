@@ -216,4 +216,21 @@ The module will do monitoring
 
 ## Server info
 
-The module will convert the info response to a friendly Json
+The module converts the info response to a friendly Json
+
+    {
+        server: {
+            redis_version: "2.5.13",
+            redis_git_sha1: "2812b945",
+            redis_git_dirty: "0",
+            os: "Linux 2.6.32.16-linode28 i686",
+            arch_bits: "32",
+            multiplexing_api: "epoll",
+            gcc_version: "4.4.1",
+            process_id: "8107",
+            ...
+        },
+        memory: {...},
+        client: {...},
+        ...
+    }

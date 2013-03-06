@@ -767,7 +767,7 @@ class GRedisClientTester extends TestClientBase {
 
     void testInfo() {
         redis([command: "info" /*, section: "server"*/]) { reply0 ->
-            tu.azzert(reply0.body.getString("value").indexOf("redis_version") != -1)
+            tu.azzert(reply0.body.getObject("value") != null)
             tu.testComplete()
         }
     }

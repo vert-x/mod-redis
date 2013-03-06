@@ -38,6 +38,12 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
 
     private static final NamedKeyValue LIMIT = new NamedKeyValue("limit", "offset", "count");
 
+    private enum ResponseTransform {
+        NONE,
+        ARRAY_TO_OBJECT,
+        INFO
+    }
+
     @Override
     public void start() {
         super.start();
@@ -77,7 +83,7 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
         }
 
         final JSONCommand command = new JSONCommand(redisCommand, message, charset);
-        boolean array2object = false;
+        ResponseTransform transform = ResponseTransform.NONE;
 
         try {
             switch (redisCommand) {
@@ -138,7 +144,7 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
                     command.arg("key");
                     break;
                 case "hgetall":
-                    array2object = true;
+                    transform = ResponseTransform.ARRAY_TO_OBJECT;
                     command.arg("key");
                     break;
                 // argument "pattern"
@@ -459,6 +465,7 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
                 // argument ["section"]
                 case "info":
                     command.optArg("section");
+                    transform = ResponseTransform.INFO;
                     break;
                 // argument ["pattern" ["pattern"...]]
                 case "punsubscribe":
@@ -597,11 +604,12 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
             }
 
             // run redis command on server
-            final boolean finalArray2object = array2object;
+            final ResponseTransform finalTransform = transform;
+
             redisClient.send(command.args, new Handler<Reply>() {
                 @Override
                 public void handle(Reply reply) {
-                    processReply(message, reply, finalArray2object);
+                    processReply(message, reply, finalTransform);
                 }
             });
         } catch (RedisCommandError rce) {
@@ -609,9 +617,8 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
         }
     }
 
-    private void processReply(Message<JsonObject> message, Reply reply, boolean array2Object) {
+    private void processReply(Message<JsonObject> message, Reply reply, ResponseTransform transform) {
         JsonObject replyMessage;
-
         switch (reply.getType()) {
             case Error:
                 sendError(message, ((ErrorReply) reply).data());
@@ -623,13 +630,41 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
                 return;
             case Bulk:
                 replyMessage = new JsonObject();
-                replyMessage.putString("value", ((BulkReply) reply).asString(charset));
+                if (transform == ResponseTransform.INFO) {
+                    String info = ((BulkReply) reply).asString(charset);
+                    String lines[] = info.split("\\r?\\n");
+                    JsonObject value = new JsonObject();
+                    JsonObject section = null;
+                    for (String line : lines) {
+                        if (line.length() == 0) {
+                            continue;
+                        }
+
+                        if (line.charAt(0) == '#') {
+                            // begin section
+                            section = new JsonObject();
+                            // create a sub key with the section name
+                            value.putObject(line.substring(2).toLowerCase(), section);
+                        } else {
+                            // entry in section
+                            int split = line.indexOf(':');
+                            if (section == null) {
+                                value.putString(line.substring(0, split), line.substring(split + 1));
+                            } else {
+                                section.putString(line.substring(0, split), line.substring(split + 1));
+                            }
+                        }
+                    }
+                    replyMessage.putObject("value", value);
+                } else {
+                    replyMessage.putString("value", ((BulkReply) reply).asString(charset));
+                }
                 sendOK(message, replyMessage);
                 return;
             case MultiBulk:
                 replyMessage = new JsonObject();
                 MultiBulkReply mbreply = (MultiBulkReply) reply;
-                if (array2Object) {
+                if (transform == ResponseTransform.ARRAY_TO_OBJECT) {
                     JsonObject bulk = new JsonObject();
                     Reply[] mbreplyData = mbreply.data();
 

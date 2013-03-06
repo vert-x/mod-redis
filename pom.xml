@@ -2,7 +2,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.jetdrone</groupId>
     <artifactId>mod-redis-io</artifactId>
-    <version>1.0</version>
+    <version>1.1</version>
 
     <name>Redis busmod for Vert.x</name>
     <description>Asynchronous REDIS bus module for Vert.x</description>
@@ -60,7 +60,6 @@
             <version>${vertx.version}</version>
             <scope>test</scope>
         </dependency>
-
         <dependency>
             <groupId>org.codehaus.groovy</groupId>
             <artifactId>groovy-all</artifactId>
