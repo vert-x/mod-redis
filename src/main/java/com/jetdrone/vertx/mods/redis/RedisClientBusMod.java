@@ -637,6 +637,8 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
                     JsonObject section = null;
                     for (String line : lines) {
                         if (line.length() == 0) {
+                            // end of section
+                            section = null;
                             continue;
                         }
 

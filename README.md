@@ -206,6 +206,67 @@ that you need to register a new handler for the address: `mod-redis-io-address.y
 all commands to `subscribe`, `psubscribe`, `unsubscribe` and `pusubscribe` will send the received messages to the right
 address.
 
+The destination address is defined as a concatenation of the module address plus the redis address. This choice was made
+to keep the existing json to redis api as close as possible to the official documentation. For example lets say we have
+a module deployed at `mod.redis.pub` if we want to call the `[p]subscribe` method then first we should register an handler
+with the name of the redis channel/pattern we want to listen and then call the redis command.
+
+Seting up a subscription for a specific channel:
+
+```java
+    container.deployModule("com.jetdrone.mod-redis-io", new JsonObject().putString("address", "redis.subscription"), 1);
+
+    // register a handler for the incoming message
+    eb.registerHandler("redis.subscription.mychannel", new Handler<Message<JsonObject>>() {
+        @Override
+        void handle(Message<JsonObject> received) {
+            JsonObject value = received.body.getObject("value");
+            // the value is a JSON doc with the following properties
+            // channel - The channel to which this message was sent
+            // message - The message payload
+            ...
+        }
+    });
+
+    // subscribe to channel mychannel
+    eb.send("redis.sub", new JsonObject("{command: \"subscribe\", channel: \"mychannel\"}));
+```
+
+Setting up a subscription to a pattern:
+
+```java
+    container.deployModule("com.jetdrone.mod-redis-io", new JsonObject().putString("address", "redis.subscription"), 1);
+
+    // register a handler for the incoming message
+    eb.registerHandler("redis.subscription.news.*", new Handler<Message<JsonObject>>() {
+        @Override
+        void handle(Message<JsonObject> received) {
+            JsonObject value = received.body.getObject("value");
+            // the value is a JSON doc with the following properties
+            // channel - The channel to which this message was sent
+            // pattern - Pattern is present if you use psubscribe command and is the pattern that matched this message channel
+            // message - The message payload
+            ...
+        }
+    });
+
+    // subscribe to channel mychannel
+    eb.send("redis.sub", new JsonObject("{command: \"subscribe\", channel: \"news.*\"}));
+```
+
+Note that in the last example that you can receive messages published both to `news.sports` and `news.world`. In order to
+know better wich destination the message had on the handler the received message contains the following format:
+
+    {
+        channel: "String with the absolute channel name",
+        pattern: "String with the pattern that matched the channel and *only* present in psubscribe replies",
+        message: "The actual message payload"
+    }
+
+The fields `channel` and `message` are always present, however the field `pattern` is only present if you subscribed a
+channel with `psubscribe`.
+
+
 ## Authentication
 
 The module will do authentication
@@ -234,3 +295,8 @@ The module converts the info response to a friendly Json
         client: {...},
         ...
     }
+
+In order to make it easier to work with the `info` response you don't need to parse the data yourself and the module will
+return it in a easy to understand JSON format. The format is as follows: A JSON object for each section filled with
+properties that belong to that section. If for some reason there is no section the properties will be visible at the top
+level object.
