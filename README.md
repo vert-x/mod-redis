@@ -269,11 +269,15 @@ channel with `psubscribe`.
 
 ## Authentication
 
-The module will do authentication
+TODO: The module will do authentication.
+
+Authentication is done using the `auth` command. However the connection lifecycle is managed by the module so it is not
+trivial when to execute the command from the client side. The idea is that the module will call this method internally
+at the right time.
 
 ## Monitor
 
-The module will do monitoring
+TODO: The module will do monitoring
 
 ## Server info
 
@@ -300,3 +304,7 @@ In order to make it easier to work with the `info` response you don't need to pa
 return it in a easy to understand JSON format. The format is as follows: A JSON object for each section filled with
 properties that belong to that section. If for some reason there is no section the properties will be visible at the top
 level object.
+
+## Binary
+
+TODO: either using putBinary or other alternative...
