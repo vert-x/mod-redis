@@ -5,10 +5,6 @@ import org.jboss.netty.buffer.ChannelBuffer;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.util.*;
-
-import static com.jetdrone.vertx.mods.redis.util.Encoding.NEG_ONE_WITH_CRLF;
-import static com.jetdrone.vertx.mods.redis.util.Encoding.numToBytes;
 
 /**
  * Nested replies.

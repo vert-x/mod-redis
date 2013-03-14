@@ -308,3 +308,7 @@ level object.
 ## Binary
 
 TODO: either using putBinary or other alternative...
+
+## Transactions
+
+TODO: love or hate they must be supported! :)

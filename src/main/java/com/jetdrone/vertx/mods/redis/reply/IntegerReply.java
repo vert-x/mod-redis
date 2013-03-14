@@ -1,11 +1,5 @@
 package com.jetdrone.vertx.mods.redis.reply;
 
-import java.io.IOException;
-
-import org.jboss.netty.buffer.ChannelBuffer;
-
-import static com.jetdrone.vertx.mods.redis.util.Encoding.numToBytes;
-
 public class IntegerReply implements Reply<Long> {
     public static final char MARKER = ':';
     private final long integer;

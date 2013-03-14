@@ -16,7 +16,7 @@ public interface Reply<T> {
 
     /**
      * Returns true if this is a Multibulk reply with 3 elements and the first one is message
-     * @return
+     * @return boolean
      */
     boolean isPubSubMessage();
 }
