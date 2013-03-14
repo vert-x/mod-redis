@@ -1,6 +1,9 @@
 target
 .idea
 *.iml
+*.ipr
+*.iws
+.gradle/
 .classpath
 .project
 .settings/

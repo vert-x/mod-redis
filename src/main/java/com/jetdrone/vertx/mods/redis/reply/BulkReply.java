@@ -2,18 +2,18 @@ package com.jetdrone.vertx.mods.redis.reply;
 
 import java.nio.charset.Charset;
 
-import org.jboss.netty.buffer.ChannelBuffer;
+import io.netty.buffer.ByteBuf;
 
-public class BulkReply implements Reply<ChannelBuffer> {
+public class BulkReply implements Reply<ByteBuf> {
     public static final char MARKER = '$';
-    private final ChannelBuffer bytes;
+    private final ByteBuf bytes;
 
-    public BulkReply(ChannelBuffer bytes) {
+    public BulkReply(ByteBuf bytes) {
         this.bytes = bytes;
     }
 
     @Override
-    public ChannelBuffer data() {
+    public ByteBuf data() {
         return bytes;
     }
 

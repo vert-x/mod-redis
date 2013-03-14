@@ -8,8 +8,8 @@ import java.util.*;
 
 import com.jetdrone.vertx.mods.redis.reply.BulkReply;
 import com.jetdrone.vertx.mods.redis.reply.MultiBulkReply;
-import org.jboss.netty.buffer.ChannelBuffer;
-import org.jboss.netty.buffer.ChannelBuffers;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import org.vertx.java.core.AsyncResult;
 import org.vertx.java.core.AsyncResultHandler;
 import org.vertx.java.core.Handler;
@@ -64,7 +64,9 @@ class RedisClientBase {
                 public void handle(Exception e) {
                     logger.error("Net client error", e);
                     if (resultHandler != null) {
-                        resultHandler.handle(new AsyncResult<Void>(e));
+                        AsyncResult<Void> asyncResult = new AsyncResult<>();
+                        asyncResult.setFailure(e);
+                        resultHandler.handle(asyncResult);
                     }
                     disconnect();
                 }
@@ -88,7 +90,9 @@ class RedisClientBase {
                         }
                     });
                     if (resultHandler != null) {
-                        resultHandler.handle(new AsyncResult<>((Void) null));
+                        AsyncResult<Void> asyncResult = new AsyncResult<>();
+                        asyncResult.setResult(null);
+                        resultHandler.handle(asyncResult);
                     }
                 }
             });
@@ -100,34 +104,34 @@ class RedisClientBase {
         final RedisDecoder redisDecoder = new RedisDecoder();
         netSocket.dataHandler(new Handler<Buffer>() {
 
-            private ChannelBuffer read = null;
+            private ByteBuf read = null;
 
             @Override
             public void handle(Buffer buffer) {
                 // Should only get one callback at a time, no sychronization necessary
-                ChannelBuffer channelBuffer = buffer.getChannelBuffer();
+                ByteBuf byteBuf = buffer.getByteBuf();
                 if (read != null) {
                     // Merge the new buffer with the previous buffer
-                    channelBuffer = ChannelBuffers.copiedBuffer(read, channelBuffer);
+                    byteBuf = Unpooled.copiedBuffer(read, byteBuf);
                     read = null;
                 }
                 try {
                     // Attempt to decode a full reply from the channelbuffer
-                    Reply receive = redisDecoder.receive(channelBuffer);
+                    Reply receive = redisDecoder.receive(byteBuf);
                     // If successful, grab the matching handler
                     handleReply(receive);
                     // May be more to read
-                    if (channelBuffer.readable()) {
+                    if (byteBuf.isReadable()) {
                         // More than one message in the buffer, need to be careful
-                        handle(new Buffer(ChannelBuffers.copiedBuffer(channelBuffer)));
+                        handle(new Buffer(Unpooled.copiedBuffer(byteBuf)));
                     }
                 } catch (IOException e) {
                     logger.error("Error receiving data from redis", e);
                     disconnect();
                 } catch (IndexOutOfBoundsException th) {
                     // Got to catch decoding fails and try it again
-                    channelBuffer.resetReaderIndex();
-                    read = ChannelBuffers.copiedBuffer(channelBuffer);
+                    byteBuf.resetReaderIndex();
+                    read = Unpooled.copiedBuffer(byteBuf);
                 }
             }
         });
@@ -137,19 +141,18 @@ class RedisClientBase {
         switch (state) {
             case CONNECTED:
                 // Serialize the buffer before writing it
-                ChannelBuffer channelBuffer = ChannelBuffers.dynamicBuffer();
+                Buffer buffer = new Buffer();
 
-                channelBuffer.writeBytes(ARGS_PREFIX);
-                channelBuffer.writeBytes(numToBytes(command.size(), true));
+                buffer.appendBytes(ARGS_PREFIX);
+                buffer.appendBytes(numToBytes(command.size(), true));
 
                 for (byte[] arg : command) {
-                    channelBuffer.writeBytes(BYTES_PREFIX);
-                    channelBuffer.writeBytes(numToBytes(arg.length, true));
-                    channelBuffer.writeBytes(arg);
-                    channelBuffer.writeBytes(CRLF);
+                    buffer.appendBytes(BYTES_PREFIX);
+                    buffer.appendBytes(numToBytes(arg.length, true));
+                    buffer.appendBytes(arg);
+                    buffer.appendBytes(CRLF);
                 }
 
-                Buffer buffer = new Buffer(channelBuffer);
                 // The order read must match the order written, vertx guarantees
                 // that this is only called from a single thread.
                 netSocket.write(buffer);

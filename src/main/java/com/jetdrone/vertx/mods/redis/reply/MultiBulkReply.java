@@ -1,7 +1,7 @@
 package com.jetdrone.vertx.mods.redis.reply;
 
 import com.jetdrone.vertx.mods.redis.RedisDecoder;
-import org.jboss.netty.buffer.ChannelBuffer;
+import io.netty.buffer.ByteBuf;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -17,7 +17,7 @@ public class MultiBulkReply implements Reply<Reply[]> {
 
     private static final Charset CHARSET = Charset.defaultCharset();
 
-    public MultiBulkReply(RedisDecoder rd, ChannelBuffer is) throws IOException {
+    public MultiBulkReply(RedisDecoder rd, ByteBuf is) throws IOException {
         long l = RedisDecoder.readLong(is);
         if (l > Integer.MAX_VALUE) {
             throw new IllegalArgumentException("Java only supports arrays up to " + Integer.MAX_VALUE + " in size");
@@ -34,7 +34,7 @@ public class MultiBulkReply implements Reply<Reply[]> {
         }
     }
 
-    public void read(RedisDecoder rd, ChannelBuffer is) throws IOException {
+    public void read(RedisDecoder rd, ByteBuf is) throws IOException {
         for (int i = index; i < size; i++) {
             replies[i] = rd.receive(is);
             index = i + 1;

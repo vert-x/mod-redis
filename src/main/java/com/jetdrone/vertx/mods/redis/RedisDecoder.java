@@ -1,12 +1,10 @@
 package com.jetdrone.vertx.mods.redis;
 
 import com.jetdrone.vertx.mods.redis.reply.*;
-import org.jboss.netty.buffer.ChannelBuffer;
-import org.jboss.netty.buffer.ChannelBufferIndexFinder;
-import org.jboss.netty.channel.Channel;
-import org.jboss.netty.channel.ChannelHandlerContext;
-import org.jboss.netty.handler.codec.replay.ReplayingDecoder;
-import org.jboss.netty.handler.codec.replay.VoidEnum;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufIndexFinder;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.codec.ReplayingDecoder;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -15,7 +13,7 @@ import java.nio.charset.Charset;
  * Netty codec for Redis
  */
 
-public class RedisDecoder extends ReplayingDecoder<VoidEnum> {
+public class RedisDecoder extends ReplayingDecoder<Void> {
 
   public static final char CR = '\r';
   public static final char LF = '\n';
@@ -26,7 +24,7 @@ public class RedisDecoder extends ReplayingDecoder<VoidEnum> {
   // decode invocation.
   private MultiBulkReply reply;
 
-  public ChannelBuffer readBytes(ChannelBuffer is) throws IOException {
+  public ByteBuf readBytes(ByteBuf is) throws IOException {
     long size = readLong(is);
     if (size == -1) {
       return null;
@@ -34,7 +32,7 @@ public class RedisDecoder extends ReplayingDecoder<VoidEnum> {
     if (size > Integer.MAX_VALUE) {
       throw new IllegalArgumentException("Java only supports arrays up to " + Integer.MAX_VALUE + " in size");
     }
-    ChannelBuffer buffer = is.readSlice((int) size);
+    ByteBuf buffer = is.readSlice((int) size);
     int cr = is.readByte();
     int lf = is.readByte();
     if (cr != CR || lf != LF) {
@@ -43,7 +41,7 @@ public class RedisDecoder extends ReplayingDecoder<VoidEnum> {
     return buffer;
   }
 
-  public static long readLong(ChannelBuffer is) throws IOException {
+  public static long readLong(ByteBuf is) throws IOException {
     long size = 0;
     int sign = 1;
     int read = is.readByte();
@@ -69,16 +67,16 @@ public class RedisDecoder extends ReplayingDecoder<VoidEnum> {
     return size * sign;
   }
 
-  public Reply receive(final ChannelBuffer is) throws IOException {
+  public Reply receive(final ByteBuf is) throws IOException {
     int code = is.readByte();
     switch (code) {
       case StatusReply.MARKER: {
-        String status = is.readBytes(is.bytesBefore(ChannelBufferIndexFinder.CRLF)).toString(Charset.forName("UTF-8"));
+        String status = is.readBytes(is.bytesBefore(ByteBufIndexFinder.CRLF)).toString(Charset.forName("UTF-8"));
         is.skipBytes(2);
         return new StatusReply(status);
       }
       case ErrorReply.MARKER: {
-        String error = is.readBytes(is.bytesBefore(ChannelBufferIndexFinder.CRLF)).toString(Charset.forName("UTF-8"));
+        String error = is.readBytes(is.bytesBefore(ByteBufIndexFinder.CRLF)).toString(Charset.forName("UTF-8"));
         is.skipBytes(2);
         return new ErrorReply(error);
       }
@@ -102,12 +100,7 @@ public class RedisDecoder extends ReplayingDecoder<VoidEnum> {
     super.checkpoint();
   }
 
-  @Override
-  protected Object decode(ChannelHandlerContext channelHandlerContext, Channel channel, ChannelBuffer channelBuffer, VoidEnum anEnum) throws Exception {
-    return receive(channelBuffer);
-  }
-
-  public MultiBulkReply decodeMultiBulkReply(ChannelBuffer is) throws IOException {
+  public MultiBulkReply decodeMultiBulkReply(ByteBuf is) throws IOException {
     try {
       if (reply == null) {
         reply = new MultiBulkReply(this, is);
@@ -119,4 +112,9 @@ public class RedisDecoder extends ReplayingDecoder<VoidEnum> {
       reply = null;
     }
   }
+
+    @Override
+    protected Object decode(ChannelHandlerContext ctx, ByteBuf in) throws Exception {
+        return receive(in);
+    }
 }
