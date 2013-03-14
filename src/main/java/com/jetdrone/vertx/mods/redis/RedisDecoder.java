@@ -97,7 +97,9 @@ public class RedisDecoder extends ReplayingDecoder<Void> {
 
   @Override
   public void checkpoint() {
-    super.checkpoint();
+      if (internalBuffer() != null) {
+          super.checkpoint();
+      }
   }
 
   public MultiBulkReply decodeMultiBulkReply(ByteBuf is) throws IOException {
