@@ -6,16 +6,20 @@ import org.vertx.java.core.Handler
 import org.vertx.java.core.eventbus.EventBus
 import org.vertx.java.core.eventbus.Message
 import org.vertx.java.core.json.JsonObject
-import org.vertx.java.testframework.TestClientBase
+import org.vertx.testtools.TestVerticle
+import static org.vertx.testtools.VertxAssert.*
 
-class GRedisPubSubTester extends TestClientBase {
+class GRedisPubSubTester extends TestVerticle {
 
     private final String pubAddress = "test.redis.pub"
     private final String subAddress = "test.redis.sub"
     private EventBus eb
 
-    void start() {
+    private void appReady() {
         super.start()
+    }
+
+    void start() {
         eb = vertx.eventBus()
         JsonObject pubConfig = new JsonObject()
         pubConfig.putString("address", pubAddress)
@@ -23,10 +27,10 @@ class GRedisPubSubTester extends TestClientBase {
         subConfig.putString("address", subAddress)
 
         // deploy 1 module for publishing
-        container.deployModule("mod-redis-io-vTEST", pubConfig, 1, new Handler<String>() {
+        container.deployModule(System.getProperty("vertx.modulename"), pubConfig, 1, new Handler<String>() {
             public void handle(final String pubDeploymentId) {
                 // deploy 1 module for subscribing
-                container.deployModule("mod-redis-io-vTEST", subConfig, 1, new Handler<String>() {
+                container.deployModule(System.getProperty("vertx.modulename"), subConfig, 1, new Handler<String>() {
                     public void handle(final String subDeploymentId) {
                         appReady()
                     }
@@ -44,9 +48,9 @@ class GRedisPubSubTester extends TestClientBase {
         eb.send(address, new JsonObject(json), new Handler<Message<JsonObject>>() {
             public void handle(Message<JsonObject> reply) {
                 if (fail) {
-                    tu.azzert("error".equals(reply.body.getString("status")))
+                    assertEquals("error", reply.body.getString("status"))
                 } else {
-                    tu.azzert("ok".equals(reply.body.getString("status")))
+                    assertEquals("ok", reply.body.getString("status"))
                 }
 
                 closure.call(reply)
@@ -59,29 +63,21 @@ class GRedisPubSubTester extends TestClientBase {
     }
 
     void assertNumber(expected, value) {
-        tu.azzert(expected == value.body.getNumber("value"), "Expected: <" + expected + "> but got: <" + value.body.getNumber("value") + ">")
+        assertEquals(expected, value.body.getNumber("value"))
     }
 
     void assertArray(expected, value) {
         def array = value.body.getArray("value")
-        tu.azzert(null != array, "Expected: <!null> but got: <" + array + ">")
-        tu.azzert(expected.size() == array.size(), "Expected Length: <" + expected.size() + "> but got: <" + array.size() + ">")
+        assertNotNull(array)
+        assertEquals(expected.size(), array.size())
 
         for (int i = 0; i < array.size(); i++) {
             if (expected[i] == null) {
-                tu.azzert(null == array.get(i), "Expected: <null> but got: <" + array.get(i) + ">")
+                assertNull(array.get(i))
             } else {
-                tu.azzert(expected[i].equals(array.get(i)), "Expected at " + i + ": <" + expected[i] + "> but got: <" + array.get(i) + ">")
+                assertEquals(expected[i], array.get(i))
             }
         }
-    }
-
-    void appReady() {
-        tu.appReady();
-    }
-
-    void testComplete() {
-        tu.testComplete()
     }
 
     @Test
@@ -93,8 +89,8 @@ class GRedisPubSubTester extends TestClientBase {
             @Override
             void handle(Message<JsonObject> received) {
                 def value = received.body.getField('value')
-                tu.azzert('ch1'.equals(value.getField('channel')))
-                tu.azzert(message.equals(value.getField('message')))
+                assertEquals('ch1', value.getField('channel'))
+                assertEquals(message, value.getField('message'))
                 testComplete()
             }
         });
@@ -150,7 +146,7 @@ class GRedisPubSubTester extends TestClientBase {
         JsonObject subConfig2 = new JsonObject()
         subConfig2.putString("address", "test.redis.sub2")
 
-        container.deployModule("mod-redis-io-vTEST", subConfig2, 1, new Handler<String>() {
+        container.deployModule(System.getProperty("vertx.modulename"), subConfig2, 1, new Handler<String>() {
             public void handle(final String subDeploymentId) {
                 // on sub address subscribe to channel ch2
                 redis("test.redis.sub2", [command: 'subscribe', channel: 'ch2']) { subscribe ->
@@ -174,8 +170,8 @@ class GRedisPubSubTester extends TestClientBase {
             @Override
             void handle(Message<JsonObject> received) {
                 def value = received.body.getField('value')
-                tu.azzert('ch2'.equals(value.getField('channel')))
-                tu.azzert(message.equals(value.getField('message')))
+                assertEquals('ch2', value.getField('channel'))
+                assertEquals(message, value.getField('message'))
                 testComplete()
             }
         });

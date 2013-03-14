@@ -1,9 +1,10 @@
 target
+mods
 .idea
 *.iml
 *.ipr
 *.iws
-.gradle/
+.gradle
 .classpath
 .project
-.settings/
+.settings
