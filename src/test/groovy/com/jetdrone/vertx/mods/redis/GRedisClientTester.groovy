@@ -56,19 +56,19 @@ class GRedisClientTester extends TestVerticle {
         return UUID.randomUUID().toString()
     }
 
-    private void assertNumberValue(expected, value) {
+    private static void assertNumberValue(expected, value) {
         assertEquals(expected, value.body.getNumber("value"))
     }
 
-    private void assertStringValue(expected, value) {
+    private static void assertStringValue(expected, value) {
         assertEquals(expected, value.body.getString("value"))
     }
 
-    private void assertNullValue(value) {
+    private static void assertNullValue(value) {
         assertEquals(null, value.body.getField("value"))
     }
 
-    private void assertNotNullValue(value) {
+    private static void assertNotNullValue(value) {
         assertNotSame(null, value.body.getField("value"))
     }
 
@@ -86,7 +86,7 @@ class GRedisClientTester extends TestVerticle {
         }
     }
 
-    private void assertUnorderedArrayValue(expected, value) {
+    private static void assertUnorderedArrayValue(expected, value) {
         def array = value.body.getArray("value")
         assertNotNull(array)
         assertEquals(expected.size(), array.size())
@@ -336,19 +336,19 @@ class GRedisClientTester extends TestVerticle {
             redis([command: "dump", key: mykey]) { reply1 ->
                 byte[] data = reply1.body.getString("value").getBytes("ISO-8859-1")
 
-                assertEquals(data[0], 0)
-                assertEquals(data[1], (byte) 0xc0)
-                assertEquals(data[2], '\n')
-                assertEquals(data[3], 6)
-                assertEquals(data[4], 0)
-                assertEquals(data[5], (byte) 0xf8)
-                assertEquals(data[6], 'r')
-                assertEquals(data[7], '?')
-                assertEquals(data[8], (byte) 0xc5)
-                assertEquals(data[9], (byte) 0xfb)
-                assertEquals(data[10], (byte) 0xfb)
-                assertEquals(data[11], '_')
-                assertEquals(data[12], '(')
+                assertEquals((byte) data[0], (byte) 0)
+                assertEquals((byte) data[1], (byte) 0xc0)
+                assertEquals((byte) data[2], (byte) '\n')
+                assertEquals((byte) data[3], (byte) 6)
+                assertEquals((byte) data[4], (byte) 0)
+                assertEquals((byte) data[5], (byte) 0xf8)
+                assertEquals((byte) data[6], (byte) 'r')
+                assertEquals((byte) data[7], (byte) '?')
+                assertEquals((byte) data[8], (byte) 0xc5)
+                assertEquals((byte) data[9], (byte) 0xfb)
+                assertEquals((byte) data[10], (byte) 0xfb)
+                assertEquals((byte) data[11], (byte) '_')
+                assertEquals((byte) data[12], (byte) '(')
                 testComplete()
             }
         }
@@ -1633,12 +1633,18 @@ class GRedisClientTester extends TestVerticle {
     @Test
     void testSort() {
         def mykey = makeKey()
+
+        def k1 = "${mykey}:1".toString()
+        def k2 = "${mykey}:2".toString()
+        def k3 = "${mykey}:3".toString()
+        def kx = "${mykey}:*".toString()
+
         redis([command: "sadd", key: mykey, member: ["1", "2", "3"]]) { reply0 ->
             assertNumberValue(3, reply0)
-            redis([command: "set", key: "${mykey}:1", value: "one"]) { reply1 ->
-                redis([command: "set", key: "${mykey}:2", value: "two"]) { reply2 ->
-                    redis([command: "set", key: "${mykey}:3", value: "three"]) { reply3 ->
-                        redis([command: "sort", key: mykey, desc: true, get: "${mykey}:*"]) { reply4 ->
+            redis([command: "set", key: k1, value: "one"]) { reply1 ->
+                redis([command: "set", key: k2, value: "two"]) { reply2 ->
+                    redis([command: "set", key: k3, value: "three"]) { reply3 ->
+                        redis([command: "sort", key: mykey, desc: true, get: kx]) { reply4 ->
                             assertArrayValue(["three", "two", "one"], reply4)
                             testComplete()
                         }
