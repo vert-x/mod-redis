@@ -6,8 +6,7 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.*;
 
-import com.jetdrone.vertx.mods.redis.reply.BulkReply;
-import com.jetdrone.vertx.mods.redis.reply.MultiBulkReply;
+import com.jetdrone.vertx.mods.redis.reply.*;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import org.vertx.java.core.AsyncResult;
@@ -15,12 +14,10 @@ import org.vertx.java.core.AsyncResultHandler;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.Vertx;
 import org.vertx.java.core.buffer.Buffer;
+import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.core.logging.Logger;
 import org.vertx.java.core.net.NetClient;
 import org.vertx.java.core.net.NetSocket;
-
-import com.jetdrone.vertx.mods.redis.reply.ErrorReply;
-import com.jetdrone.vertx.mods.redis.reply.Reply;
 
 /**
  * Base class for Redis Vertx client. Generated client would use the facilties
@@ -34,6 +31,7 @@ class RedisClientBase {
 
     private final Vertx vertx;
     private final Logger logger;
+    private final String auth;
     private final Queue<Handler<Reply>> replies = new LinkedList<>();
     private final RedisSubscriptions subscriptions;
     private NetSocket netSocket;
@@ -48,11 +46,12 @@ class RedisClientBase {
 
     private State state = State.DISCONNECTED;
 
-    public RedisClientBase(Vertx vertx, final Logger logger, String host, int port, RedisSubscriptions subscriptions) {
+    public RedisClientBase(Vertx vertx, final Logger logger, String host, int port, String auth, RedisSubscriptions subscriptions) {
         this.vertx = vertx;
         this.logger = logger;
         this.host = host;
         this.port = port;
+        this.auth = auth;
         this.subscriptions = subscriptions;
     }
 
@@ -89,10 +88,35 @@ class RedisClientBase {
                             disconnect();
                         }
                     });
-                    if (resultHandler != null) {
-                        AsyncResult<Void> asyncResult = new AsyncResult<>();
-                        asyncResult.setResult(null);
-                        resultHandler.handle(asyncResult);
+                    if (auth != null) {
+                        // authenticate
+                        List<byte[]> cmd = new ArrayList<>();
+                        cmd.add("auth".getBytes());
+                        cmd.add(auth.getBytes(CHARSET));
+                        send(cmd, new Handler<Reply>() {
+                            @Override
+                            public void handle(Reply reply) {
+                                AsyncResult<Void> asyncResult = new AsyncResult<>();
+                                switch (reply.getType()) {
+                                    case Error:
+                                        asyncResult.setFailure(new RedisCommandError(((ErrorReply) reply).data()));
+                                        disconnect();
+                                        break;
+                                    case Status:
+                                        asyncResult.setResult(null);
+                                        break;
+                                }
+                                if (resultHandler != null) {
+                                    resultHandler.handle(asyncResult);
+                                }
+                            }
+                        });
+                    } else {
+                        if (resultHandler != null) {
+                            AsyncResult<Void> asyncResult = new AsyncResult<>();
+                            asyncResult.setResult(null);
+                            resultHandler.handle(asyncResult);
+                        }
                     }
                 }
             });

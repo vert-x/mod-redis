@@ -52,6 +52,7 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
         int port = getOptionalIntConfig("port", 6379);
         String encoding = getOptionalStringConfig("encoding", null);
         boolean binary = getOptionalBooleanConfig("binary", false);
+        String auth = getOptionalStringConfig("auth", null);
 
         if (binary) {
             logger.warn("Binary mode is not implemented yet!!!");
@@ -65,7 +66,7 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
 
         redisSubscriptions = new RedisSubscriptions();
 
-        redisClient = new RedisClientBase(vertx, logger, host, port, redisSubscriptions);
+        redisClient = new RedisClientBase(vertx, logger, host, port, auth, redisSubscriptions);
         redisClient.connect(null);
         
         baseAddress = getOptionalStringConfig("address", "vertx.mod-redis-io");

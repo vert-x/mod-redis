@@ -24,7 +24,8 @@ The module takes the following configuration:
         "host": <host>,
         "port": <port>,
         "encoding": <charset>,
-        "binary": <boolean>
+        "binary": <boolean>,
+        "auth": <password>
     }
 
 For example:
@@ -42,7 +43,7 @@ Let's take a look at each field in turn:
 * `port` Port at which the Redis instance is listening. Defaults to `6379`.
 * `encoding` The character encoding for string conversions (e.g.: `UTF-8`, `ISO-8859-1`, `US-ASCII`). Defaults to the platform default.
 * `binary` To be implemented. In this case messages are expected to be in binary format.
-
+* `auth` The password to authenticate the client connection. Since the module manages the connection using the `AUTH` command could not have the desired result due to concurrency.
 ## Usage
 
 Simple example:
@@ -269,11 +270,9 @@ channel with `psubscribe`.
 
 ## Authentication
 
-TODO: The module will do authentication.
-
 Authentication is done using the `auth` command. However the connection lifecycle is managed by the module so it is not
-trivial when to execute the command from the client side. The idea is that the module will call this method internally
-at the right time.
+trivial when to execute the command from the client side. The module will call this method internally at the right time.
+
 
 ## Monitor
 
