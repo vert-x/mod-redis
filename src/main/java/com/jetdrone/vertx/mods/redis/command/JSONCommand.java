@@ -33,7 +33,7 @@ public final class JSONCommand {
     }
 
     public void arg(final String argName) throws RedisCommandError {
-        final Object arg = message.body.getField(argName);
+        final Object arg = message.body().getField(argName);
         if (arg == null) {
             throw new RedisCommandError(argName + " cannot be null");
         } else {
@@ -42,14 +42,14 @@ public final class JSONCommand {
     }
 
     public void optArg(final String argName) {
-        final Object arg = message.body.getField(argName);
+        final Object arg = message.body().getField(argName);
         if (arg != null) {
             raw(arg);
         }
     }
 
     public void optArg(final NamedValue namedValue) {
-        final Object arg = message.body.getField(namedValue.name);
+        final Object arg = message.body().getField(namedValue.name);
         if (arg != null) {
             if (arg instanceof JsonArray) {
                 for (Object item : (JsonArray) arg) {
@@ -64,7 +64,7 @@ public final class JSONCommand {
     }
 
     public void optArg(final Option option) {
-        final Object arg = message.body.getField(option.name);
+        final Object arg = message.body().getField(option.name);
 
         if (arg != null) {
             raw(option.name);
@@ -72,7 +72,7 @@ public final class JSONCommand {
     }
 
     public void arg(final KeyValue keyValue) throws RedisCommandError {
-        final Object arg = message.body.getField(keyValue.pairName);
+        final Object arg = message.body().getField(keyValue.pairName);
         if (arg == null) {
             // process single pair
             arg(keyValue.keyName);
@@ -99,10 +99,10 @@ public final class JSONCommand {
     }
 
     public void arg(final OrOption options) throws RedisCommandError {
-        final Object arg0 = message.body.getField(options.o1.name);
+        final Object arg0 = message.body().getField(options.o1.name);
         if (arg0 == null) {
             // first field does not exist, try the second
-            final Object arg1 = message.body.getField(options.o2.name);
+            final Object arg1 = message.body().getField(options.o2.name);
             if (arg1 != null) {
                 // secon field exists
                 raw(options.o2.name);
@@ -116,10 +116,10 @@ public final class JSONCommand {
     }
 
     public void optArg(final OrOption options) {
-        final Object arg0 = message.body.getField(options.o1.name);
+        final Object arg0 = message.body().getField(options.o1.name);
         if (arg0 == null) {
             // first field does not exist, try the second
-            final Object arg1 = message.body.getField(options.o2.name);
+            final Object arg1 = message.body().getField(options.o2.name);
             if (arg1 != null) {
                 // secon field exists
                 raw(options.o2.name);
@@ -131,7 +131,7 @@ public final class JSONCommand {
     }
 
     public void optArg(final NamedKeyValue namedKeyValue) throws RedisCommandError {
-        final Object arg = message.body.getField(namedKeyValue.name);
+        final Object arg = message.body().getField(namedKeyValue.name);
         if (arg != null) {
             if (arg instanceof JsonObject) {
                 raw(namedKeyValue.name);
@@ -180,7 +180,7 @@ public final class JSONCommand {
     }
 
     public String[] getArg(final String argName) {
-        final Object arg = message.body.getField(argName);
+        final Object arg = message.body().getField(argName);
         if (arg == null) {
             return null;
         } else {

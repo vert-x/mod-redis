@@ -1,6 +1,8 @@
 package com.jetdrone.vertx.mods.redis
 
 import org.junit.Test
+import org.vertx.java.core.AsyncResult
+import org.vertx.java.core.AsyncResultHandler
 import org.vertx.java.core.Handler
 import org.vertx.java.core.eventbus.EventBus
 import org.vertx.java.core.eventbus.Message
@@ -26,8 +28,9 @@ class GRedisClientTester extends TestVerticle {
         config.putNumber("port", 6379)
         config.putString("encoding", "ISO-8859-1")
 
-        container.deployModule(System.getProperty("vertx.modulename"), config, 1, new Handler<String>() {
-            public void handle(String res) {
+        container.deployModule(System.getProperty("vertx.modulename"), config, 1, new AsyncResultHandler<String>() {
+            @Override
+            void handle(AsyncResult<String> event) {
                 appReady()
             }
         })

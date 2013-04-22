@@ -76,7 +76,7 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
     @Override
     public void handle(final Message<JsonObject> message) {
 
-        String redisCommand = message.body.getString("command");
+        String redisCommand = message.body().getString("command");
 
         if (redisCommand == null) {
             sendError(message, "command must be specified");

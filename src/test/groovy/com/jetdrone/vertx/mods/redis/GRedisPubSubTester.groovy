@@ -1,7 +1,8 @@
 package com.jetdrone.vertx.mods.redis
 
 import org.junit.Test
-
+import org.vertx.java.core.AsyncResult
+import org.vertx.java.core.AsyncResultHandler
 import org.vertx.java.core.Handler
 import org.vertx.java.core.eventbus.EventBus
 import org.vertx.java.core.eventbus.Message
@@ -27,11 +28,13 @@ class GRedisPubSubTester extends TestVerticle {
         subConfig.putString("address", subAddress)
 
         // deploy 1 module for publishing
-        container.deployModule(System.getProperty("vertx.modulename"), pubConfig, 1, new Handler<String>() {
-            public void handle(final String pubDeploymentId) {
+        container.deployModule(System.getProperty("vertx.modulename"), pubConfig, 1, new AsyncResultHandler<String>() {
+            @Override
+            void handle(AsyncResult<String> event1) {
                 // deploy 1 module for subscribing
-                container.deployModule(System.getProperty("vertx.modulename"), subConfig, 1, new Handler<String>() {
-                    public void handle(final String subDeploymentId) {
+                container.deployModule(System.getProperty("vertx.modulename"), subConfig, 1, new AsyncResultHandler<String>() {
+                    @Override
+                    void handle(AsyncResult<String> event2) {
                         appReady()
                     }
                 })
@@ -146,8 +149,8 @@ class GRedisPubSubTester extends TestVerticle {
         JsonObject subConfig2 = new JsonObject()
         subConfig2.putString("address", "test.redis.sub2")
 
-        container.deployModule(System.getProperty("vertx.modulename"), subConfig2, 1, new Handler<String>() {
-            public void handle(final String subDeploymentId) {
+        container.deployModule(System.getProperty("vertx.modulename"), subConfig2, 1, new AsyncResultHandler<String>() {
+            public void handle(final AsyncResult<String> subDeploymentId) {
                 // on sub address subscribe to channel ch2
                 redis("test.redis.sub2", [command: 'subscribe', channel: 'ch2']) { subscribe ->
                     assertArray(['subscribe', 'ch2', 1], subscribe)

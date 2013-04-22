@@ -58,63 +58,119 @@ class RedisClientBase {
         if (state == State.DISCONNECTED) {
             state = State.CONNECTING;
             NetClient client = vertx.createNetClient();
-            client.exceptionHandler(new Handler<Exception>() {
-                public void handle(Exception e) {
-                    logger.error("Net client error", e);
-                    if (resultHandler != null) {
-                        AsyncResult<Void> asyncResult = new AsyncResult<>();
-                        asyncResult.setFailure(e);
-                        resultHandler.handle(asyncResult);
-                    }
-                    disconnect();
-                }
-            });
-            client.connect(port, host, new Handler<NetSocket>() {
+            client.connect(port, host, new AsyncResultHandler<NetSocket>() {
                 @Override
-                public void handle(NetSocket socket) {
-                    state = State.CONNECTED;
-                    netSocket = socket;
-                    init(netSocket);
-                    socket.exceptionHandler(new Handler<Exception>() {
-                        public void handle(Exception e) {
-                            logger.error("Socket client error", e);
-                            disconnect();
-                        }
-                    });
-                    socket.closedHandler(new Handler<Void>() {
-                        public void handle(Void arg0) {
-                            logger.info("Socket closed");
-                            disconnect();
-                        }
-                    });
-                    if (auth != null) {
-                        // authenticate
-                        List<byte[]> cmd = new ArrayList<>();
-                        cmd.add("auth".getBytes());
-                        cmd.add(auth.getBytes(CHARSET));
-                        send(cmd, new Handler<Reply>() {
-                            @Override
-                            public void handle(Reply reply) {
-                                AsyncResult<Void> asyncResult = new AsyncResult<>();
-                                switch (reply.getType()) {
-                                    case Error:
-                                        asyncResult.setFailure(new RedisCommandError(((ErrorReply) reply).data()));
-                                        disconnect();
-                                        break;
-                                    case Status:
-                                        asyncResult.setResult(null);
-                                        break;
+                public void handle(final AsyncResult<NetSocket> asyncResult) {
+                    if (asyncResult.failed()) {
+                        logger.error("Net client error", asyncResult.cause());
+                        if (resultHandler != null) {
+                            resultHandler.handle(new AsyncResult<Void>() {
+                                @Override
+                                public Void result() {
+                                    return null;
                                 }
-                                if (resultHandler != null) {
-                                    resultHandler.handle(asyncResult);
+
+                                @Override
+                                public Throwable cause() {
+                                    return asyncResult.cause();
                                 }
+
+                                @Override
+                                public boolean succeeded() {
+                                    return false;
+                                }
+
+                                @Override
+                                public boolean failed() {
+                                    return true;
+                                }
+                            });
+                        }
+                        disconnect();
+                    } else {
+                        state = State.CONNECTED;
+                        netSocket = asyncResult.result();
+                        init(netSocket);
+                        netSocket.exceptionHandler(new Handler<Throwable>() {
+                            public void handle(Throwable e) {
+                                logger.error("Socket client error", e);
+                                disconnect();
                             }
                         });
-                    } else {
-                        if (resultHandler != null) {
-                            AsyncResult<Void> asyncResult = new AsyncResult<>();
-                            asyncResult.setResult(null);
-                            resultHandler.handle(asyncResult);
+                        netSocket.closeHandler(new Handler<Void>() {
+                            public void handle(Void arg0) {
+                                logger.info("Socket closed");
+                                disconnect();
+                            }
+                        });
+                        if (auth != null) {
+                            // authenticate
+                            List<byte[]> cmd = new ArrayList<>();
+                            cmd.add("auth".getBytes());
+                            cmd.add(auth.getBytes(CHARSET));
+                            send(cmd, new Handler<Reply>() {
+                                @Override
+                                public void handle(Reply reply) {
+                                    final ErrorReply error;
+                                    switch (reply.getType()) {
+                                        case Error:
+                                            error = (ErrorReply) reply;
+                                            disconnect();
+                                            break;
+                                        default:
+                                            error = null;
+                                            break;
+                                    }
+                                    if (resultHandler != null) {
+                                        resultHandler.handle(new AsyncResult<Void>() {
+                                            final Throwable ex = error == null ? null : new RedisCommandError(error.data());
+                                            @Override
+                                            public Void result() {
+                                                return null;
+                                            }
+
+                                            @Override
+                                            public Throwable cause() {
+                                                return ex;
+                                            }
+
+                                            @Override
+                                            public boolean succeeded() {
+                                                return ex == null;
+                                            }
+
+                                            @Override
+                                            public boolean failed() {
+                                                return ex != null;
+                                            }
+                                        });
+                                    }
+                                }
+                            });
+                        } else {
+                            if (resultHandler != null) {
+                                resultHandler.handle(new AsyncResult<Void>() {
+                                    @Override
+                                    public Void result() {
+                                        return null;
+                                    }
+
+                                    @Override
+                                    public Throwable cause() {
+                                        return null;
+                                    }
+
+                                    @Override
+                                    public boolean succeeded() {
+                                        return true;
+                                    }
+
+                                    @Override
+                                    public boolean failed() {
+                                        return false;
+                                    }
+                                });
+                            }
                         }
                     }
                 }
