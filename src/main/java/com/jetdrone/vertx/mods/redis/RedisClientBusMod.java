@@ -29,12 +29,15 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
     private static final OrOption ASC_OR_DESC = new OrOption(new Option("asc"), new Option("desc"));
     private static final OrOption BEFORE_OR_AFTER = new OrOption(new Option("before"), new Option("after"));
     private static final OrOption SAVE_OR_NOSAVE = new OrOption(new Option("save"), new Option("nosave"));
+    private static final OrOption NX_OR_XX = new OrOption(new Option("nx"), new Option("xx"));
 
     private static final NamedValue BY = new NamedValue("by");
     private static final NamedValue WEIGTHS = new NamedValue("weights");
     private static final NamedValue STORE = new NamedValue("store");
     private static final NamedValue GET = new NamedValue("get");
     private static final NamedValue AGGREGATE = new NamedValue("aggregate");
+    private static final NamedValue EX = new NamedValue("ex");
+    private static final NamedValue PX = new NamedValue("px");
 
     private static final NamedKeyValue LIMIT = new NamedKeyValue("limit", "offset", "count");
 
@@ -238,7 +241,6 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
                 // arguments "key" "value"
                 case "append":
                 case "getset":
-                case "set":
                 case "setnx":
                 case "lpushx":
                 case "rpushx":
@@ -247,6 +249,15 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
                 case "rpush":
                     command.arg("key");
                     command.arg("value");
+                    break;
+                // arguments "key" "value" [EX seconds] [PX milliseconds] [NX|XX]
+                case "set":
+                    command.arg("key");
+                    command.arg("value");
+                    command.optArg(EX);
+                    command.optArg(PX);
+                    command.optArg(NX_OR_XX);
+
                     break;
                 // argumens "key" "seconds"
                 case "expire":
