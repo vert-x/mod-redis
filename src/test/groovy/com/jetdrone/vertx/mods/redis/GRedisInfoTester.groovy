@@ -43,9 +43,9 @@ class GRedisInfoTester extends TestVerticle {
         eb.send(address, new JsonObject(json), new Handler<Message<JsonObject>>() {
             public void handle(Message<JsonObject> reply) {
                 if (fail) {
-                    assertEquals("error", reply.body.getString("status"))
+                    assertEquals("error", reply.body().getString("status"))
                 } else {
-                    assertEquals("ok", reply.body.getString("status"))
+                    assertEquals("ok", reply.body().getString("status"))
                 }
 
                 closure.call(reply)
@@ -56,7 +56,10 @@ class GRedisInfoTester extends TestVerticle {
     @Test
     void testInfo() {
         redis([command: "info" /*, section: "server"*/]) { reply0 ->
-            def server = reply0.body.getObject('value').getObject('server')
+            def server = reply0.body().getObject('value').getObject('server')
+            if (server == null) {
+                server = reply0.body().getObject('value')
+            }
             assertTrue(server.getString('redis_version').startsWith('2.'))
             testComplete()
         }
