@@ -1,4 +1,5 @@
-import org.vertx.java.core.Handler
+import org.vertx.java.core.AsyncResult
+import org.vertx.java.core.AsyncResultHandler
 import org.vertx.java.platform.PlatformLocator
 import org.vertx.java.platform.impl.ModuleClassLoader
 
@@ -54,7 +55,7 @@ configurations {
 }
 
 repositories {
-  if (System.getenv("JENKINS_HOME") == null) {
+  if (System.getenv("VERTX_DISABLE_MAVENLOCAL") == null) {
     // We don't want to use mavenLocal when running on CI - mavenLocal is only useful in Gradle for
     // publishing artifacts locally for development purposes - maven local is also not threadsafe when there
     // are concurrent builds
@@ -75,7 +76,12 @@ dependencies {
 buildscript {
 
   repositories {
-    mavenLocal()
+    if (System.getenv("VERTX_DISABLE_MAVENLOCAL") == null) {
+      // We don't want to use mavenLocal when running on CI - mavenLocal is only useful in Gradle for
+      // publishing artifacts locally for development purposes - maven local is also not threadsafe when there
+      // are concurrent builds
+      mavenLocal()
+    }
     maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
     mavenCentral()
   }
@@ -93,7 +99,7 @@ sourceSets {
 }
 
 task copyMod( type:Copy, dependsOn: 'classes', description: 'Assemble the module into the local mods directory' ) {
-  into "mods/$moduleName"
+  into "build/mods/$moduleName"
   from compileJava
   from 'src/main/resources'
   into( 'lib' ) {
@@ -114,6 +120,8 @@ task sourcesJar(type: Jar, dependsOn: classes) {
   classifier = 'sources'
 }
 
+javadoc.classpath += configurations.provided
+
 task javadocJar(type: Jar, dependsOn: javadoc) {
   classifier = 'javadoc'
   from javadoc.destinationDir
@@ -123,14 +131,6 @@ artifacts {
   archives modZip
   archives sourcesJar
   archives javadocJar
-}
-
-task cleanModsDir(type: Delete) {
-  delete 'mods'
-}
-
-clean {
-  dependsOn cleanModsDir
 }
 
 test {
@@ -143,18 +143,22 @@ test {
   testLogging.showStandardStreams = true
 
   testLogging { exceptionFormat "full" }
+
+  systemProperty 'vertx.loadWithPlatformCL', "false"
+  systemProperty 'vertx.mods', "build/mods"
 }
 
 task runMod(dependsOn: copyMod, description: 'Run the module using all the build dependencies (not using installed vertx') << {
-  ModuleClassLoader.reverseLoadOrder = false
+  setSysProps()
   def pm = PlatformLocator.factory.createPlatformManager()
   def latch = new CountDownLatch(1)
-  pm.deployModule(moduleName, null, 1, new Handler<String>() {
-    public void handle(String deploymentID) {
-      if (deploymentID != null) {
+  pm.deployModule(moduleName, null, 1, new AsyncResultHandler<String>() {
+    public void handle(AsyncResult<String> asyncResult) {
+      if (asyncResult.succeeded()) {
         println "CTRL-C to stop server"
       } else {
         println "Failed to deploy module"
+        asyncResult.cause().printStackTrace()
         latch.countDown()
       }
     }
@@ -164,14 +168,29 @@ task runMod(dependsOn: copyMod, description: 'Run the module using all the build
 
 task pullInDeps(dependsOn: copyMod, description: 'Pull in all the module dependencies for the module into the nested mods directory') << {
   if (pullInDeps == 'true') {
+    setSysProps()
     def pm = PlatformLocator.factory.createPlatformManager()
+    def latch = new CountDownLatch(1)
     println "Pulling in dependencies for module $moduleName. Please wait"
-    if (pm.pullInDependencies(moduleName)) {
-      println "Dependencies pulled into mods directory of module"
-    } else {
-      println "Failed to pull in dependencies"
-    }
+    pm.pullInDependencies(moduleName, new AsyncResultHandler<Void>() {
+      public void handle(AsyncResult<Void> asyncResult) {
+        if (asyncResult.succeeded()) {
+          println "Dependencies pulled in successfully"
+          latch.countDown()
+        } else {
+          println "Failed to pull in dependencies"
+          asyncResult.cause().printStackTrace()
+          latch.countDown()
+        }
+      }
+    })
+    latch.await(Long.MAX_VALUE, TimeUnit.MILLISECONDS);
   }
+}
+
+def setSysProps() {
+  System.setProperty("vertx.mods", "build/mods")
+  System.setProperty("vertx.loadWithPlatformCL", "false");
 }
 
 def loadProperties(String sourceFileName) {

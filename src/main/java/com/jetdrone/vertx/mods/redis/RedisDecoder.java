@@ -3,8 +3,6 @@ package com.jetdrone.vertx.mods.redis;
 import com.jetdrone.vertx.mods.redis.reply.*;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufIndexFinder;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.codec.ReplayingDecoder;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -13,7 +11,7 @@ import java.nio.charset.Charset;
  * Netty codec for Redis
  */
 
-public class RedisDecoder extends ReplayingDecoder<Void> {
+public class RedisDecoder {
 
   public static final char CR = '\r';
   public static final char LF = '\n';
@@ -95,13 +93,6 @@ public class RedisDecoder extends ReplayingDecoder<Void> {
     }
   }
 
-  @Override
-  public void checkpoint() {
-      if (internalBuffer() != null) {
-          super.checkpoint();
-      }
-  }
-
   public MultiBulkReply decodeMultiBulkReply(ByteBuf is) throws IOException {
     try {
       if (reply == null) {
@@ -114,9 +105,4 @@ public class RedisDecoder extends ReplayingDecoder<Void> {
       reply = null;
     }
   }
-
-    @Override
-    protected Object decode(ChannelHandlerContext ctx, ByteBuf in) throws Exception {
-        return receive(in);
-    }
 }
