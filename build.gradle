@@ -70,6 +70,7 @@ Please edit the details below.
  */
 def configurePom(def pom) {
   pom.project {
+    name 'mod-redis-io'
     description 'Asynchronous REDIS bus module for Vert.x'
     inceptionYear '2013'
     packaging 'zip'
