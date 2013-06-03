@@ -280,7 +280,7 @@ class RedisClientBase {
 
     // Handle 'message', 'pmessage', 'subscribe', 'unsubscribe', 'psubscribe' and 'punsubscribe' messages
     // See http://redis.io/topics/pubsub
-    // Returns if the message was handled
+    // Returns true if the message was handled
     boolean handlePushedPubSubMessage(Reply reply) {
         // Pub/sub messages are always multi-bulk
         if (reply instanceof MultiBulkReply) {

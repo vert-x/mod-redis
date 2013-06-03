@@ -9,8 +9,8 @@ public class RedisSubscriptions {
 
     private final Map<String, MessageHandler> subscribers = new HashMap<String, MessageHandler>();
 
-    public void registerSubscribeHandler(String channel, MessageHandler messageHandler) {
-        subscribers.put(channel, messageHandler);
+    public void registerSubscribeHandler(String channelOrPattern, MessageHandler messageHandler) {
+        subscribers.put(channelOrPattern, messageHandler);
     }
 
     public void unregisterSubscribeHandler(String channelOrPattern) {
