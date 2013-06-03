@@ -18,9 +18,4 @@ public class IntegerReply implements Reply<Long> {
     public Long data() {
         return integer;
     }
-
-    @Override
-    public boolean isPubSubMessage() {
-        return false;
-    }
 }

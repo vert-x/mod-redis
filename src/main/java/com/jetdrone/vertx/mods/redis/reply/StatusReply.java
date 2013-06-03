@@ -17,9 +17,4 @@ public class StatusReply implements Reply<String> {
     public ReplyType getType() {
         return ReplyType.Status;
     }
-
-    @Override
-    public boolean isPubSubMessage() {
-        return false;
-    }
 }

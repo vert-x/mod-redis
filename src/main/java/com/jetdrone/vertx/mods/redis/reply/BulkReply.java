@@ -22,11 +22,6 @@ public class BulkReply implements Reply<ByteBuf> {
         return ReplyType.Bulk;
     }
 
-    @Override
-    public boolean isPubSubMessage() {
-        return false;
-    }
-
     public String asString(Charset charset) {
         if (bytes == null) return null;
         return bytes.toString(charset);

@@ -7,6 +7,7 @@ import java.nio.charset.Charset;
 import java.util.*;
 
 import com.jetdrone.vertx.mods.redis.reply.*;
+import com.jetdrone.vertx.mods.redis.util.MessageHandler;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import org.vertx.java.core.AsyncResult;
@@ -32,7 +33,8 @@ class RedisClientBase {
     private final Logger logger;
     private final String auth;
     private final Queue<Handler<Reply>> replies = new LinkedList<>();
-    private final RedisSubscriptions subscriptions;
+    private final RedisSubscriptions channelSubscriptions;
+    private final RedisSubscriptions patternSubscriptions;
     private NetSocket netSocket;
     private String host;
     private int port;
@@ -45,13 +47,14 @@ class RedisClientBase {
 
     private State state = State.DISCONNECTED;
 
-    public RedisClientBase(Vertx vertx, final Logger logger, String host, int port, String auth, RedisSubscriptions subscriptions) {
+    public RedisClientBase(Vertx vertx, final Logger logger, String host, int port, String auth, RedisSubscriptions channelSubscriptions, RedisSubscriptions patternSubscriptions) {
         this.vertx = vertx;
         this.logger = logger;
         this.host = host;
         this.port = port;
         this.auth = auth;
-        this.subscriptions = subscriptions;
+        this.channelSubscriptions = channelSubscriptions;
+        this.patternSubscriptions = patternSubscriptions;
     }
 
     void connect(final AsyncResultHandler<Void> resultHandler) {
@@ -260,32 +263,94 @@ class RedisClientBase {
     }
 
     void handleReply(Reply reply) throws IOException {
-        Handler<Reply> handler = replies.poll();
 
+        if (handlePushedPubSubMessage(reply)) {
+            return;
+        }
+        
+        Handler<Reply> handler = replies.poll();
         if (handler != null) {
             // handler waits for this response
             handler.handle(reply);
             return;
         }
 
+        throw new IOException("Received a non pub/sub message without reply handler waiting:"+reply.toString());
+    }
+
+    // Handle 'message', 'pmessage', 'subscribe', 'unsubscribe', 'psubscribe' and 'punsubscribe' messages
+    // See http://redis.io/topics/pubsub
+    // Returns if the message was handled
+    boolean handlePushedPubSubMessage(Reply reply) {
+        // Pub/sub messages are always multi-bulk
         if (reply instanceof MultiBulkReply) {
             MultiBulkReply mbReply = (MultiBulkReply) reply;
-            // this was a pushed message
-            if (mbReply.isPubSubMessage()) {
-                // this is a pub sub message
-                Reply[] data = mbReply.data();
-                String channel = ((BulkReply) data[1]).asString(CHARSET);
-                handler = subscriptions.getHandler(channel);
-
-                if (handler != null) {
-                    // pub sub handler exists
-                    handler.handle(reply);
-                    return;
+            Reply[] data = mbReply.data();
+            // All pub/sub messages have at least 3 parts
+            if (data != null && data.length > 2 && data[0] instanceof BulkReply) {
+                String messageKind = ((BulkReply) data[0]).asString(CHARSET);
+                switch (messageKind)
+                {
+                    case "message":
+                        if (data.length == 3)
+                        {
+                            String channel = ((BulkReply) data[1]).asString(CHARSET);
+                            MessageHandler handler = channelSubscriptions.getHandler(channel);
+                            if (handler != null)
+                            {
+                                handler.handle(channel, data);
+                            }                       
+                            // It is possible to get a message after removing subscription in the client but before Redis command executes,
+                            // so ignoring message here (consumer already is not interested in it)
+                            return true;
+                        }
+                        break;
+                    case "pmessage":
+                        if (data.length == 4)
+                        {
+                            String pattern = ((BulkReply) data[1]).asString(CHARSET);
+                            MessageHandler handler = patternSubscriptions.getHandler(pattern);
+                            if (handler != null)
+                            {
+                                handler.handle(pattern, data);
+                            }                       
+                            // It is possible to get a message after removing subscription in the client but before Redis command executes,
+                            // so ignoring message here (consumer already is not interested in it)
+                            return true;
+                        }
+                        break;
+                    case "subscribe":
+                        if (data.length == 3)
+                        {
+                            // Ignore subscription confirmations
+                            return true;
+                        }
+                        break;
+                    case "psubscribe":
+                        if (data.length == 3)
+                        {
+                            // Ignore subscription confirmations
+                            return true;
+                        }
+                        break;
+                    case "unsubscribe":
+                        if (data.length == 3)
+                        {
+                            // Ignore unsubscription confirmations
+                            return true;
+                        }
+                        break;
+                    case "punsubscribe":
+                        if (data.length == 3)
+                        {
+                            // Ignore unsubscription confirmations
+                            return true;
+                        }
+                        break;
                 }
             }
         }
-
-        throw new IOException("Received a non pub/sub message while in pub/sub mode");
+        return false;
     }
 
     void disconnect() {
