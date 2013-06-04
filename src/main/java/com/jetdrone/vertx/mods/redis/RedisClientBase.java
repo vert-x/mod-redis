@@ -111,7 +111,7 @@ class RedisClientBase {
                             List<byte[]> cmd = new ArrayList<>();
                             cmd.add("auth".getBytes());
                             cmd.add(auth.getBytes(CHARSET));
-                            send(cmd, new Handler<Reply>() {
+                            send(cmd, 1, new Handler<Reply>() {
                                 @Override
                                 public void handle(Reply reply) {
                                     final ErrorReply error;
@@ -219,7 +219,10 @@ class RedisClientBase {
         });
     }
 
-    void send(final List<byte[]> command, final Handler<Reply> replyHandler) {
+    // Redis 'subscribe', 'unsubscribe', 'psubscribe' and 'punsubscribe' commands can have multiple (including zero) replies
+    // See http://redis.io/topics/pubsub
+    // In all cases we want to have a handler to report errors
+    void send(final List<byte[]> command, final int expectedReplies, final Handler<Reply> replyHandler) {
         switch (state) {
             case CONNECTED:
                 // Serialize the buffer before writing it
@@ -238,14 +241,16 @@ class RedisClientBase {
                 // The order read must match the order written, vertx guarantees
                 // that this is only called from a single thread.
                 netSocket.write(buffer);
-                replies.offer(replyHandler);
+                for (int i = 0; i < expectedReplies; ++i) {
+                    replies.offer(replyHandler);
+                }
                 break;
             case DISCONNECTED:
                 logger.info("Got request when disconnected. Trying to connect.");
                 connect(new AsyncResultHandler<Void>() {
                     public void handle(AsyncResult<Void> connection) {
                         if (connection.succeeded()) {
-                            send(command, replyHandler);
+                            send(command, expectedReplies, replyHandler);
                         } else {
                             replyHandler.handle(new ErrorReply("Unable to connect"));
                         }
@@ -256,7 +261,7 @@ class RedisClientBase {
                 logger.debug("Got send request while connecting. Will try again in a while.");
                 vertx.setTimer(100, new Handler<Long>() {
                     public void handle(Long event) {
-                        send(command, replyHandler);
+                        send(command, expectedReplies, replyHandler);
                     }
                 });
         }
@@ -264,6 +269,8 @@ class RedisClientBase {
 
     void handleReply(Reply reply) throws IOException {
 
+        // Important to have this first - 'message' and 'pmessage' can be pushed at any moment, 
+        // so they must be filtered out before checking replies queue
         if (handlePushedPubSubMessage(reply)) {
             return;
         }
@@ -278,75 +285,43 @@ class RedisClientBase {
         throw new IOException("Received a non pub/sub message without reply handler waiting:"+reply.toString());
     }
 
-    // Handle 'message', 'pmessage', 'subscribe', 'unsubscribe', 'psubscribe' and 'punsubscribe' messages
+    // Handle 'message' and 'pmessage' messages; returns true if the message was handled
+    // Appropriate number of handlers for 'subscribe', 'unsubscribe', 'psubscribe' and 'punsubscribe' is inserted when these commands are sent
     // See http://redis.io/topics/pubsub
-    // Returns true if the message was handled
     boolean handlePushedPubSubMessage(Reply reply) {
         // Pub/sub messages are always multi-bulk
         if (reply instanceof MultiBulkReply) {
             MultiBulkReply mbReply = (MultiBulkReply) reply;
+
             Reply[] data = mbReply.data();
-            // All pub/sub messages have at least 3 parts
-            if (data != null && data.length > 2 && data[0] instanceof BulkReply) {
-                String messageKind = ((BulkReply) data[0]).asString(CHARSET);
-                switch (messageKind)
-                {
-                    case "message":
-                        if (data.length == 3)
+            if (data != null) {
+                // message
+                if (data.length == 3) {
+                    if (data[0] instanceof BulkReply && "message".equals(((BulkReply) data[0]).asString(CHARSET))) {
+                        String channel = ((BulkReply) data[1]).asString(CHARSET);
+                        MessageHandler handler = channelSubscriptions.getHandler(channel);
+                        if (handler != null)
                         {
-                            String channel = ((BulkReply) data[1]).asString(CHARSET);
-                            MessageHandler handler = channelSubscriptions.getHandler(channel);
-                            if (handler != null)
-                            {
-                                handler.handle(channel, data);
-                            }                       
-                            // It is possible to get a message after removing subscription in the client but before Redis command executes,
-                            // so ignoring message here (consumer already is not interested in it)
-                            return true;
-                        }
-                        break;
-                    case "pmessage":
-                        if (data.length == 4)
+                            handler.handle(channel, data);
+                        }                       
+                        // It is possible to get a message after removing subscription in the client but before Redis command executes,
+                        // so ignoring message here (consumer already is not interested in it)
+                        return true;
+                    }
+                } 
+                // pmessage
+                else if (data.length == 4) {
+                    if (data[0] instanceof BulkReply && "pmessage".equals(((BulkReply) data[0]).asString(CHARSET))) {
+                        String pattern = ((BulkReply) data[1]).asString(CHARSET);
+                        MessageHandler handler = patternSubscriptions.getHandler(pattern);
+                        if (handler != null)
                         {
-                            String pattern = ((BulkReply) data[1]).asString(CHARSET);
-                            MessageHandler handler = patternSubscriptions.getHandler(pattern);
-                            if (handler != null)
-                            {
-                                handler.handle(pattern, data);
-                            }                       
-                            // It is possible to get a message after removing subscription in the client but before Redis command executes,
-                            // so ignoring message here (consumer already is not interested in it)
-                            return true;
-                        }
-                        break;
-                    case "subscribe":
-                        if (data.length == 3)
-                        {
-                            // Ignore subscription confirmations
-                            return true;
-                        }
-                        break;
-                    case "psubscribe":
-                        if (data.length == 3)
-                        {
-                            // Ignore subscription confirmations
-                            return true;
-                        }
-                        break;
-                    case "unsubscribe":
-                        if (data.length == 3)
-                        {
-                            // Ignore unsubscription confirmations
-                            return true;
-                        }
-                        break;
-                    case "punsubscribe":
-                        if (data.length == 3)
-                        {
-                            // Ignore unsubscription confirmations
-                            return true;
-                        }
-                        break;
+                            handler.handle(pattern, data);
+                        }                       
+                        // It is possible to get a message after removing subscription in the client but before Redis command executes,
+                        // so ignoring message here (consumer already is not interested in it)
+                        return true;
+                    }
                 }
             }
         }

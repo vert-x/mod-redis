@@ -24,4 +24,8 @@ public class RedisSubscriptions {
     public MessageHandler getHandler(String channelOrPattern) {
         return subscribers.get(channelOrPattern);
     }
+
+    public int size() {
+        return subscribers.size();
+    }
 }

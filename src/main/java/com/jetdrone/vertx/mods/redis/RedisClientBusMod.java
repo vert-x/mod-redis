@@ -92,6 +92,9 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
         final JSONCommand command = new JSONCommand(redisCommand, message, charset);
         ResponseTransform transform = ResponseTransform.NONE;
 
+        // subscribe/psubscribe and unsubscribe/punsubscribe commands can have multiple (including zero) replies
+        int expectedReplies = 1; 
+
         try {
             switch (redisCommand) {
                 // no argument
@@ -162,7 +165,9 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
                 case "psubscribe":
                     command.arg("pattern");
                     // in this case we need also to register handlers
-                    for (String registerChannel : command.getArg("pattern")) {
+                    String[] psubPatterns = command.getArg("pattern");
+                    expectedReplies = psubPatterns.length;
+                    for (String registerChannel : psubPatterns) {
                         // compose the listening address as base + . + channel
                         final String vertxChannel = baseAddress + "." + registerChannel;
                         redisPatternSubscriptions.registerSubscribeHandler(registerChannel, new MessageHandler() {
@@ -210,7 +215,9 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
                 case "subscribe":
                     command.arg("channel");
                     // in this case we need also to register handlers
-                    for (String registerChannel : command.getArg("channel")) {
+                    String[] subChannels = command.getArg("channel");
+                    expectedReplies = subChannels.length;
+                    for (String registerChannel : subChannels) {
                         // compose the listening address as base + . + channel
                         final String vertxChannel = baseAddress + "." + registerChannel;
                         redisChannelSubscriptions.registerSubscribeHandler(registerChannel, new MessageHandler() {
@@ -475,8 +482,10 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
                     String[] unsubscribePatterns = command.getArg("pattern");
                     if (unsubscribePatterns == null) {
                         // unsubscribe all
+                        expectedReplies = redisPatternSubscriptions.size();
                         redisPatternSubscriptions.unregisterSubscribeHandler(null);
                     } else {
+                        expectedReplies = unsubscribePatterns.length;
                         for (String unregisterPattern : unsubscribePatterns) {
                             redisPatternSubscriptions.unregisterSubscribeHandler(unregisterPattern);
                         }
@@ -489,8 +498,10 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
                     String[] unsubscribeChannels = command.getArg("channel");
                     if (unsubscribeChannels == null) {
                         // unsubscribe all
+                        expectedReplies = redisChannelSubscriptions.size();
                         redisChannelSubscriptions.unregisterSubscribeHandler(null);
                     } else {
+                        expectedReplies = unsubscribeChannels.length;
                         for (String unregisterChannel : unsubscribeChannels) {
                             redisChannelSubscriptions.unregisterSubscribeHandler(unregisterChannel);
                         }
@@ -607,7 +618,7 @@ public class RedisClientBusMod extends BusModBase implements Handler<Message<Jso
             // run redis command on server
             final ResponseTransform finalTransform = transform;
 
-            redisClient.send(command.args, new Handler<Reply>() {
+            redisClient.send(command.args, expectedReplies, new Handler<Reply>() {
                 @Override
                 public void handle(Reply reply) {
                     processReply(message, reply, finalTransform);
