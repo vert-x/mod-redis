@@ -24,8 +24,7 @@ class GRedisClientTester extends TestVerticle {
         JsonObject config = new JsonObject()
 
         config.putString("address", address)
-//        config.putString("host", "localhost")
-        config.putString("host","10.30.0.83")
+        config.putString("host", "localhost")
         config.putNumber("port", 6379)
         config.putString("encoding", "ISO-8859-1")
 
