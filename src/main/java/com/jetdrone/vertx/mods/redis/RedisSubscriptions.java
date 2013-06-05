@@ -1,28 +1,31 @@
 package com.jetdrone.vertx.mods.redis;
 
-import com.jetdrone.vertx.mods.redis.reply.Reply;
-import org.vertx.java.core.Handler;
+import com.jetdrone.vertx.mods.redis.util.MessageHandler;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public class RedisSubscriptions {
 
-    private final Map<String, Handler<Reply>> subscribers = new HashMap<>();
+    private final Map<String, MessageHandler> subscribers = new HashMap<String, MessageHandler>();
 
-    public void registerSubscribeHandler(String channel, Handler<Reply> replyHandler) {
-        subscribers.put(channel, replyHandler);
+    public void registerSubscribeHandler(String channelOrPattern, MessageHandler messageHandler) {
+        subscribers.put(channelOrPattern, messageHandler);
     }
 
-    public void unregisterSubscribeHandler(String channel) {
-        if (channel == null) {
+    public void unregisterSubscribeHandler(String channelOrPattern) {
+        if (channelOrPattern == null) {
             subscribers.clear();
         } else {
-            subscribers.remove(channel);
+            subscribers.remove(channelOrPattern);
         }
     }
 
-    public Handler<Reply> getHandler(String channel) {
-        return subscribers.get(channel);
+    public MessageHandler getHandler(String channelOrPattern) {
+        return subscribers.get(channelOrPattern);
+    }
+
+    public int size() {
+        return subscribers.size();
     }
 }

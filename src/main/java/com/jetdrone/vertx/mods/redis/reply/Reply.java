@@ -8,10 +8,4 @@ public interface Reply<T> {
      * @return enum
      */
     ReplyType getType();
-
-    /**
-     * Returns true if this is a Multibulk reply with 3 elements and the first one is message
-     * @return boolean
-     */
-    boolean isPubSubMessage();
 }
