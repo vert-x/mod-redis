@@ -117,8 +117,22 @@ task modZip( type: Zip, dependsOn: 'pullInDeps', description: 'Package the modul
   from copyMod
 }
 
+task sourcesJar(type: Jar, dependsOn: classes) {
+  from sourceSets.main.allSource
+  classifier = 'sources'
+}
+
+javadoc.classpath += configurations.provided
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+  classifier = 'javadoc'
+  from javadoc.destinationDir
+}
+
 artifacts {
   archives modZip
+  archives sourcesJar
+  archives javadocJar
 }
 
 test {
