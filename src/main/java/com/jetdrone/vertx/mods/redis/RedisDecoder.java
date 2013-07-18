@@ -2,7 +2,6 @@ package com.jetdrone.vertx.mods.redis;
 
 import com.jetdrone.vertx.mods.redis.reply.*;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufIndexFinder;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -69,12 +68,14 @@ public class RedisDecoder {
     int code = is.readByte();
     switch (code) {
       case StatusReply.MARKER: {
-        String status = is.readBytes(is.bytesBefore(ByteBufIndexFinder.CRLF)).toString(Charset.forName("UTF-8"));
+        // TODO: should verify if it is really \r\n
+        String status = is.readBytes(is.bytesBefore((byte) '\r')).toString(Charset.forName("UTF-8"));
         is.skipBytes(2);
         return new StatusReply(status);
       }
       case ErrorReply.MARKER: {
-        String error = is.readBytes(is.bytesBefore(ByteBufIndexFinder.CRLF)).toString(Charset.forName("UTF-8"));
+        // TODO: should verify if it is really \r\n
+        String error = is.readBytes(is.bytesBefore((byte) '\r')).toString(Charset.forName("UTF-8"));
         is.skipBytes(2);
         return new ErrorReply(error);
       }
