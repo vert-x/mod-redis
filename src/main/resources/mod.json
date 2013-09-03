@@ -1,11 +1,11 @@
 {
-  "main": "com.jetdrone.vertx.mods.redis.RedisClientBusMod",
+  "main": "io.vertx.redis.RedisClient",
 
-  "description": "Asynchronous REDIS bus module for Vert.x",
+  "description": "Asynchronous REDIS module for Vert.x",
   "licenses": ["The Apache Software License Version 2.0"],
   "author": "Paulo Lopes <pmlopes@gmail.com>",
 
   "developers": ["pmlopes"],
   "keywords": ["redis", "eventbus", "connector", "client", "asynchronous"],
-  "homepage": "https://github.com/pmlopes/mod-redis-io"
+  "homepage": "https://github.com/vert-x/mod-redis"
 }

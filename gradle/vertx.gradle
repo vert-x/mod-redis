@@ -1,7 +1,6 @@
 import org.vertx.java.core.AsyncResult
 import org.vertx.java.core.AsyncResultHandler
 import org.vertx.java.platform.PlatformLocator
-import org.vertx.java.platform.impl.ModuleClassLoader
 
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -32,7 +31,7 @@ apply plugin: 'eclipse'
 // a shared Maven local and using Gradle wrapper concurrently
 loadProperties("${System.getProperty('user.home')}/.gradle/gradle.properties")
 
-apply from: "$rootDir/gradle/maven.gradle"
+apply from: "gradle/maven.gradle"
 
 group = modowner
 archivesBaseName = modname
@@ -43,6 +42,13 @@ sourceCompatibility = '1.7'
 targetCompatibility = '1.7'
 
 project.ext.moduleName = "$modowner~$modname~$version"
+
+if (produceJar == 'false') {
+  jar.enabled = false
+  assert configurations.archives.artifacts.removeAll { it.file == jar.archivePath }
+} else {
+
+}
 
 configurations {
   provided
@@ -111,22 +117,8 @@ task modZip( type: Zip, dependsOn: 'pullInDeps', description: 'Package the modul
   from copyMod
 }
 
-task sourcesJar(type: Jar, dependsOn: classes) {
-  from sourceSets.main.allSource
-  classifier = 'sources'
-}
-
-javadoc.classpath += configurations.provided
-
-task javadocJar(type: Jar, dependsOn: javadoc) {
-    classifier = 'javadoc'
-    from javadoc.destinationDir
-}
-
 artifacts {
   archives modZip
-  archives sourcesJar
-  archives javadocJar
 }
 
 test {
@@ -179,9 +171,10 @@ task runMod(dependsOn: copyMod, description: 'Run the module using all the build
   setSysProps()
   def pm = PlatformLocator.factory.createPlatformManager()
   def latch = new CountDownLatch(1)
+    
   pm.deployModule(moduleName, null, 1, new AsyncResultHandler<String>() {
     public void handle(AsyncResult<String> asyncResult) {
-      if (asyncResult.succeeded()) {
+      if (asyncResult.succeeded()) {        
         println "CTRL-C to stop server"
       } else {
         println "Failed to deploy module"
@@ -216,7 +209,7 @@ task pullInDeps(dependsOn: copyMod, description: 'Pull in all the module depende
 }
 
 def setSysProps() {
-  System.setProperty("vertx.mods", "build/mods")
+  System.setProperty("vertx.mods", "build/mods")    
 }
 
 def loadProperties(String sourceFileName) {

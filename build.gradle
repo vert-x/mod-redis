@@ -33,6 +33,12 @@ runMod - runs the module. This is similar to executing vertx runmod from the com
          not use the version of Vert.x installed and on the PATH to run it. Instead it uses the version of Vert.x
          that the module was compiled and tested against.
 
+runModIDEA - run the module from the project resources in IDEA. This allows you to run the module without building it
+first!
+
+runModEclipse - run the module from the project resources in Eclipse. This allows you to run the module without
+building it  first!
+
 pullInDeps - pulls in all dependencies of the module into a nested module directory
 
 uploadArchives - upload the module zip file (and jar if one has been created) to Nexus. You will need to
@@ -70,11 +76,12 @@ Please edit the details below.
  */
 def configurePom(def pom) {
   pom.project {
-    name 'mod-redis-io'
-    description 'Asynchronous REDIS bus module for Vert.x'
+    name 'mod-redis'
+    description 'Asynchronous REDIS module for Vert.x'
     inceptionYear '2013'
-    packaging 'zip'
-    url 'https://github.com/pmlopes/mod-redis-io'
+    packaging produceJar == 'false' ? 'pom' : 'jar'
+
+    url 'https://github.com/vert-x/mod-redis'
 
     developers {
       developer {
@@ -85,12 +92,12 @@ def configurePom(def pom) {
     }
 
     scm {
-      url 'https://github.com/pmlopes/mod-redis-io.git'
+      url 'https://github.com/vert-x/mod-redis'
     }
 
     licenses {
       license {
-        name 'Apache Software License, Version 2.0'
+        name 'The Apache Software License, Version 2.0'
         url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
         distribution 'repo'
       }
