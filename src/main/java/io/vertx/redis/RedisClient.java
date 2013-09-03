@@ -75,7 +75,7 @@ public class RedisClient extends BusModBase implements Handler<Message<JsonObjec
         redisClient = new RedisClientBase(vertx, logger, host, port, auth, redisChannelSubscriptions, redisPatternSubscriptions);
         redisClient.connect(null);
         
-        baseAddress = getOptionalStringConfig("address", "vertx.mod-redis-io");
+        baseAddress = getOptionalStringConfig("address", "io.vertx.mod-redis");
         eb.registerHandler(baseAddress, this);
     }
     

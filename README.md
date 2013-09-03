@@ -13,7 +13,7 @@ This module requires a Redis server to be available on the network.
 
 ## Name
 
-The module name is `com.jetdrone.mod-redis-io`.
+The module name is `io.vertx.mod-redis`.
 
 ## Configuration
 
@@ -38,7 +38,7 @@ For example:
 
 Let's take a look at each field in turn:
 
-* `address` The main address for the module. Every module has a main address. Defaults to `vertx.mod-redis-io`.
+* `address` The main address for the module. Every module has a main address. Defaults to `io.vertx.mod-redis`.
 * `host` Host name or ip address of the Redis instance. Defaults to `localhost`.
 * `port` Port at which the Redis instance is listening. Defaults to `6379`.
 * `encoding` The character encoding for string conversions (e.g.: `UTF-8`, `ISO-8859-1`, `US-ASCII`). Defaults to the platform default.
@@ -56,7 +56,7 @@ Simple example:
     config.putString("host", "localhost")
     config.putNumber("port", 6379)
 
-    container.deployModule("com.jetdrone.mod-redis-io", config, 1)
+    container.deployModule("io.redis.mod-redis", config, 1)
 
     eb.send(address, [command: 'get', key: 'mykey']) { reply ->
         if (reply.body.status.equals('ok') {
@@ -76,8 +76,8 @@ Simple example with pub/sub mode:
     def subConfig = new JsonObject()
     subConfig.putString("address", 'redis.sub')
 
-    container.deployModule("com.jetdrone.mod-redis-io", pubConfig, 1)
-    container.deployModule("com.jetdrone.mod-redis-io", subConfig, 1)
+    container.deployModule("io.vertx.mod-redis", pubConfig, 1)
+    container.deployModule("io.vertx.mod-redis", subConfig, 1)
 
     // register a handler for the incoming message the naming the Redis module will use is base address + '.' + redis channel
     eb.registerHandler("redis.sub.ch1", new Handler<Message<JsonObject>>() {
@@ -215,7 +215,7 @@ with the name of the redis channel/pattern we want to listen and then call the r
 Seting up a subscription for a specific channel:
 
 ```java
-    container.deployModule("com.jetdrone.mod-redis-io", new JsonObject().putString("address", "redis.subscription"), 1);
+    container.deployModule("io.vertx.mod-redis", new JsonObject().putString("address", "redis.subscription"), 1);
 
     // register a handler for the incoming message
     eb.registerHandler("redis.subscription.mychannel", new Handler<Message<JsonObject>>() {
@@ -236,7 +236,7 @@ Seting up a subscription for a specific channel:
 Setting up a subscription to a pattern:
 
 ```java
-    container.deployModule("com.jetdrone.mod-redis-io", new JsonObject().putString("address", "redis.subscription"), 1);
+    container.deployModule("io.vertx.mod-redis", new JsonObject().putString("address", "redis.subscription"), 1);
 
     // register a handler for the incoming message
     eb.registerHandler("redis.subscription.news.*", new Handler<Message<JsonObject>>() {
@@ -311,7 +311,3 @@ TODO: either using putBinary or other alternative...
 ## Transactions
 
 TODO: love or hate they must be supported! :)
-
-## Support the development of this module
-
-[![Click here to lend your support to: Support com.jetdrone Vert.x modules and make a donation at www.pledgie.com !](http://www.pledgie.com/campaigns/19785.png?skin_name=chrome)](http://www.pledgie.com/campaigns/19785)
