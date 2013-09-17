@@ -1,7 +1,6 @@
 package io.vertx.redis.reply;
 
 public class ErrorReply implements Reply<String> {
-    public static final char MARKER = '-';
     private final String error;
 
     public ErrorReply(String error) {
@@ -14,7 +13,7 @@ public class ErrorReply implements Reply<String> {
     }
 
     @Override
-    public ReplyType getType() {
-        return ReplyType.Error;
+    public byte getType() {
+        return '-';
     }
 }

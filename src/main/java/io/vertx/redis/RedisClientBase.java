@@ -2,14 +2,12 @@ package io.vertx.redis;
 
 import static io.vertx.redis.util.Encoding.numToBytes;
 
-import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.*;
 
+import io.vertx.redis.reply.ReplyParser;
 import io.vertx.redis.reply.*;
 import io.vertx.redis.util.MessageHandler;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 import org.vertx.java.core.AsyncResult;
 import org.vertx.java.core.AsyncResultHandler;
 import org.vertx.java.core.Handler;
@@ -23,10 +21,10 @@ import org.vertx.java.core.net.NetSocket;
  * Base class for Redis Vertx client. Generated client would use the facilties
  * in this class to implement typed commands.
  */
-class RedisClientBase {
-    public static final byte[] ARGS_PREFIX = "*".getBytes();
-    public static final byte[] CRLF = "\r\n".getBytes();
-    public static final byte[] BYTES_PREFIX = "$".getBytes();
+public class RedisClientBase {
+    private static final byte[] ARGS_PREFIX = "*".getBytes();
+    private static final byte[] CRLF = "\r\n".getBytes();
+    private static final byte[] BYTES_PREFIX = "$".getBytes();
     private static final Charset CHARSET = Charset.defaultCharset();
 
     private final Vertx vertx;
@@ -36,8 +34,8 @@ class RedisClientBase {
     private final RedisSubscriptions channelSubscriptions;
     private final RedisSubscriptions patternSubscriptions;
     private NetSocket netSocket;
-    private String host;
-    private int port;
+    private final String host;
+    private final int port;
 
     private static enum State {
         DISCONNECTED,
@@ -116,7 +114,7 @@ class RedisClientBase {
                                 public void handle(Reply reply) {
                                     final ErrorReply error;
                                     switch (reply.getType()) {
-                                        case Error:
+                                        case '-':   // Error
                                             error = (ErrorReply) reply;
                                             disconnect();
                                             break;
@@ -183,40 +181,7 @@ class RedisClientBase {
 
     private void init(NetSocket netSocket) {
         this.netSocket = netSocket;
-        final RedisDecoder redisDecoder = new RedisDecoder();
-        netSocket.dataHandler(new Handler<Buffer>() {
-
-            private ByteBuf read = null;
-
-            @Override
-            public void handle(Buffer buffer) {
-                // Should only get one callback at a time, no sychronization necessary
-                ByteBuf byteBuf = buffer.getByteBuf();
-                if (read != null) {
-                    // Merge the new buffer with the previous buffer
-                    byteBuf = Unpooled.copiedBuffer(read, byteBuf);
-                    read = null;
-                }
-                try {
-                    // Attempt to decode a full reply from the channelbuffer
-                    Reply receive = redisDecoder.receive(byteBuf);
-                    // If successful, grab the matching handler
-                    handleReply(receive);
-                    // May be more to read
-                    if (byteBuf.isReadable()) {
-                        // More than one message in the buffer, need to be careful
-                        handle(new Buffer(Unpooled.copiedBuffer(byteBuf)));
-                    }
-                } catch (IOException e) {
-                    logger.error("Error receiving data from redis", e);
-                    disconnect();
-                } catch (IndexOutOfBoundsException th) {
-                    // Got to catch decoding fails and try it again
-                    byteBuf.resetReaderIndex();
-                    read = Unpooled.copiedBuffer(byteBuf);
-                }
-            }
-        });
+        netSocket.dataHandler(new ReplyParser(this));
     }
 
     // Redis 'subscribe', 'unsubscribe', 'psubscribe' and 'punsubscribe' commands can have multiple (including zero) replies
@@ -267,7 +232,7 @@ class RedisClientBase {
         }
     }
 
-    void handleReply(Reply reply) throws IOException {
+    public void handleReply(Reply reply) {
 
         // Important to have this first - 'message' and 'pmessage' can be pushed at any moment, 
         // so they must be filtered out before checking replies queue
@@ -282,7 +247,7 @@ class RedisClientBase {
             return;
         }
 
-        throw new IOException("Received a non pub/sub message without reply handler waiting:"+reply.toString());
+        throw new RuntimeException("Received a non pub/sub message without reply handler waiting:"+reply.toString());
     }
 
     // Handle 'message' and 'pmessage' messages; returns true if the message was handled

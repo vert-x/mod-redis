@@ -4,15 +4,15 @@ package io.vertx.redis.util;
  * Shared encoding code.
  */
 public class Encoding {
-  public static final byte[] NEG_ONE = convert(-1, false);
-  public static final byte[] NEG_ONE_WITH_CRLF = convert(-1, true);
-  public static final char LF = '\n';
-  public static final char CR = '\r';
+  private static final byte[] NEG_ONE = convert(-1, false);
+  private static final byte[] NEG_ONE_WITH_CRLF = convert(-1, true);
+  private static final char LF = '\n';
+  private static final char CR = '\r';
 
   // Cache 256 number conversions. That should cover a huge
   // percentage of numbers passed over the wire.
   private static final int NUM_MAP_LENGTH = 256;
-  private static byte[][] numMap = new byte[NUM_MAP_LENGTH][];
+  private static final byte[][] numMap = new byte[NUM_MAP_LENGTH][];
 
   static {
     for (int i = 0; i < NUM_MAP_LENGTH; i++) {
@@ -20,7 +20,7 @@ public class Encoding {
     }
   }
 
-  private static byte[][] numMapWithCRLF = new byte[NUM_MAP_LENGTH][];
+  private static final byte[][] numMapWithCRLF = new byte[NUM_MAP_LENGTH][];
 
   static {
     for (int i = 0; i < NUM_MAP_LENGTH; i++) {

@@ -1,7 +1,6 @@
 package io.vertx.redis.reply;
 
 public class StatusReply implements Reply<String> {
-    public static final char MARKER = '+';
     private final String status;
 
     public StatusReply(String status) {
@@ -14,7 +13,7 @@ public class StatusReply implements Reply<String> {
     }
 
     @Override
-    public ReplyType getType() {
-        return ReplyType.Status;
+    public byte getType() {
+        return '+';
     }
 }

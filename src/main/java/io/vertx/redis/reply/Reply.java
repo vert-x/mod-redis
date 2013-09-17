@@ -7,5 +7,5 @@ public interface Reply<T> {
      * Return the type of instance of this Reply. Useful to avoid checks against instanceof
      * @return enum
      */
-    ReplyType getType();
+    byte getType();
 }

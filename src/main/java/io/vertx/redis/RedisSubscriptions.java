@@ -7,7 +7,7 @@ import java.util.Map;
 
 public class RedisSubscriptions {
 
-    private final Map<String, MessageHandler> subscribers = new HashMap<String, MessageHandler>();
+    private final Map<String, MessageHandler> subscribers = new HashMap<>();
 
     public void registerSubscribeHandler(String channelOrPattern, MessageHandler messageHandler) {
         subscribers.put(channelOrPattern, messageHandler);

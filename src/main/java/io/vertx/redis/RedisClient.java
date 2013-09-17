@@ -632,15 +632,15 @@ public class RedisClient extends BusModBase implements Handler<Message<JsonObjec
     private void processReply(Message<JsonObject> message, Reply reply, ResponseTransform transform) {
         JsonObject replyMessage;
         switch (reply.getType()) {
-            case Error:
+            case '-': // Error
                 sendError(message, ((ErrorReply) reply).data());
                 return;
-            case Status:
+            case '+':   // Status
                 replyMessage = new JsonObject();
                 replyMessage.putString("value", ((StatusReply) reply).data());
                 sendOK(message, replyMessage);
                 return;
-            case Bulk:
+            case '$':  // Bulk
                 replyMessage = new JsonObject();
                 if (transform == ResponseTransform.INFO) {
                     String info = ((BulkReply) reply).asString(charset);
@@ -675,7 +675,7 @@ public class RedisClient extends BusModBase implements Handler<Message<JsonObjec
                 }
                 sendOK(message, replyMessage);
                 return;
-            case MultiBulk:
+            case '*': // MultiBulk
                 replyMessage = new JsonObject();
                 MultiBulkReply mbreply = (MultiBulkReply) reply;
                 if (transform == ResponseTransform.ARRAY_TO_OBJECT) {
@@ -683,17 +683,17 @@ public class RedisClient extends BusModBase implements Handler<Message<JsonObjec
                     Reply[] mbreplyData = mbreply.data();
 
                     for (int i = 0; i < mbreplyData.length; i+=2) {
-                        if (mbreplyData[i].getType() != ReplyType.Bulk) {
+                        if (mbreplyData[i].getType() != '$') {
                             sendError(message, "Expected String as key type in multibulk: " + mbreplyData[i].getType());
                             return;
                         }
                         BulkReply brKey = (BulkReply) mbreplyData[i];
                         Reply brValue = mbreplyData[i+1];
                         switch (brValue.getType()) {
-                            case Bulk:
+                            case '$':   // Bulk
                                 bulk.putString(brKey.asString(charset), ((BulkReply) brValue).asString(charset));
                                 break;
-                            case Integer:
+                            case ':':   // Integer
                                 bulk.putNumber(brKey.asString(charset), ((IntegerReply) brValue).data());
                                 break;
                             default:
@@ -707,10 +707,10 @@ public class RedisClient extends BusModBase implements Handler<Message<JsonObjec
                     JsonArray bulk = new JsonArray();
                     for (Reply r : mbreply.data()) {
                         switch (r.getType()) {
-                            case Bulk:
+                            case '$':   // Bulk
                                 bulk.addString(((BulkReply) r).asString(charset));
                                 break;
-                            case Integer:
+                            case ':':   // Integer
                                 bulk.addNumber(((IntegerReply) r).data());
                                 break;
                             default:
@@ -722,7 +722,7 @@ public class RedisClient extends BusModBase implements Handler<Message<JsonObjec
                 }
                 sendOK(message, replyMessage);
                 return;
-            case Integer:
+            case ':':   // Integer
                 replyMessage = new JsonObject();
                 replyMessage.putNumber("value", ((IntegerReply) reply).data());
                 sendOK(message, replyMessage);

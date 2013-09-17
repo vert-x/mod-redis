@@ -1,7 +1,6 @@
 package io.vertx.redis.reply;
 
 public class IntegerReply implements Reply<Long> {
-    public static final char MARKER = ':';
     private final long integer;
 
     public IntegerReply(long integer) {
@@ -9,10 +8,9 @@ public class IntegerReply implements Reply<Long> {
     }
 
     @Override
-    public ReplyType getType() {
-        return ReplyType.Integer;
+    public byte getType() {
+        return ':';
     }
-
 
     @Override
     public Long data() {

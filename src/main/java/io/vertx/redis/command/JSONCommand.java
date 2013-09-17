@@ -14,8 +14,8 @@ public final class JSONCommand {
     private static final byte[] EMPTY_BYTES = new byte[0];
 
     public final List<byte[]> args = new ArrayList<>();
-    final Message<JsonObject> message;
-    final Charset charset;
+    private final Message<JsonObject> message;
+    private final Charset charset;
 
     public JSONCommand(String redisCommand, Message<JsonObject> message, Charset charset) {
         this.charset = charset;
