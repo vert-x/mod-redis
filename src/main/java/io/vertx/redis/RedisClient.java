@@ -18,6 +18,7 @@ public class RedisClient extends BusModBase implements Handler<Message<JsonObjec
     private RedisSubscriptions redisChannelSubscriptions;
     private RedisSubscriptions redisPatternSubscriptions;
 
+    private String encoding;
     private Charset charset;
     private String baseAddress;
 
@@ -64,10 +65,13 @@ public class RedisClient extends BusModBase implements Handler<Message<JsonObjec
         }
 
         if (encoding != null) {
-            charset = Charset.forName(encoding);
+            this.encoding = encoding;
         } else {
-            charset = Charset.defaultCharset();
+            this.encoding = "UTF-8";
         }
+
+        // cache the charset
+        this.charset = Charset.forName(this.encoding);
 
         redisChannelSubscriptions = new RedisSubscriptions();
         redisPatternSubscriptions = new RedisSubscriptions();
@@ -177,8 +181,8 @@ public class RedisClient extends BusModBase implements Handler<Message<JsonObjec
                                     replyMessage.putString("status", "ok");
                                     JsonObject message = new JsonObject();
                                     message.putString("pattern", pattern); 
-                                    message.putString("channel", ((BulkReply) replyData[2]).asString(charset));
-                                    message.putString("message", ((BulkReply) replyData[3]).asString(charset));
+                                    message.putString("channel", ((BulkReply) replyData[2]).asString(encoding));
+                                    message.putString("message", ((BulkReply) replyData[3]).asString(encoding));
                                     replyMessage.putObject("value", message);
                                     eb.send(vertxChannel, replyMessage);
                                 }
@@ -227,7 +231,7 @@ public class RedisClient extends BusModBase implements Handler<Message<JsonObjec
                                     replyMessage.putString("status", "ok");
                                     JsonObject message = new JsonObject();
                                     message.putString("channel", channel); 
-                                    message.putString("message", ((BulkReply) replyData[2]).asString(charset));
+                                    message.putString("message", ((BulkReply) replyData[2]).asString(encoding));
                                     replyMessage.putObject("value", message);
                                     eb.send(vertxChannel, replyMessage);
                             }
@@ -643,7 +647,7 @@ public class RedisClient extends BusModBase implements Handler<Message<JsonObjec
             case '$':  // Bulk
                 replyMessage = new JsonObject();
                 if (transform == ResponseTransform.INFO) {
-                    String info = ((BulkReply) reply).asString(charset);
+                    String info = ((BulkReply) reply).asString(encoding);
                     String lines[] = info.split("\\r?\\n");
                     JsonObject value = new JsonObject();
                     JsonObject section = null;
@@ -671,7 +675,7 @@ public class RedisClient extends BusModBase implements Handler<Message<JsonObjec
                     }
                     replyMessage.putObject("value", value);
                 } else {
-                    replyMessage.putString("value", ((BulkReply) reply).asString(charset));
+                    replyMessage.putString("value", ((BulkReply) reply).asString(encoding));
                 }
                 sendOK(message, replyMessage);
                 return;
@@ -691,10 +695,10 @@ public class RedisClient extends BusModBase implements Handler<Message<JsonObjec
                         Reply brValue = mbreplyData[i+1];
                         switch (brValue.getType()) {
                             case '$':   // Bulk
-                                bulk.putString(brKey.asString(charset), ((BulkReply) brValue).asString(charset));
+                                bulk.putString(brKey.asString(encoding), ((BulkReply) brValue).asString(encoding));
                                 break;
                             case ':':   // Integer
-                                bulk.putNumber(brKey.asString(charset), ((IntegerReply) brValue).data());
+                                bulk.putNumber(brKey.asString(encoding), ((IntegerReply) brValue).data());
                                 break;
                             default:
                                 sendError(message, "Unknown sub message type in multibulk: " + mbreplyData[i+1].getType());
@@ -708,7 +712,7 @@ public class RedisClient extends BusModBase implements Handler<Message<JsonObjec
                     for (Reply r : mbreply.data()) {
                         switch (r.getType()) {
                             case '$':   // Bulk
-                                bulk.addString(((BulkReply) r).asString(charset));
+                                bulk.addString(((BulkReply) r).asString(encoding));
                                 break;
                             case ':':   // Integer
                                 bulk.addNumber(((IntegerReply) r).data());

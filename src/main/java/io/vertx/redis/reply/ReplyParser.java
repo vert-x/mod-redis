@@ -83,7 +83,7 @@ public class ReplyParser implements Handler<Buffer> {
                 throw new IncompleteReadBuffer("Wait for more data.");
             }
 
-            return new BulkReply(_buffer.getBytes(start, end));
+            return new BulkReply(_buffer.getBuffer(start, end));
         } else if (type == '*') {
             offset = _offset;
             packetSize = parsePacketSize();

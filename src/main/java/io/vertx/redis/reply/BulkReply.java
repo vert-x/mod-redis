@@ -1,17 +1,17 @@
 package io.vertx.redis.reply;
 
-import java.nio.charset.Charset;
+import org.vertx.java.core.buffer.Buffer;
 
-public class BulkReply implements Reply<byte[]> {
-    private final byte[] bytes;
+public class BulkReply implements Reply<Buffer> {
+    private final Buffer buffer;
 
-    public BulkReply(byte[] bytes) {
-        this.bytes = bytes;
+    public BulkReply(Buffer buffer) {
+        this.buffer = buffer;
     }
 
     @Override
-    public byte[] data() {
-        return bytes;
+    public Buffer data() {
+        return buffer;
     }
 
     @Override
@@ -19,8 +19,8 @@ public class BulkReply implements Reply<byte[]> {
         return '$';
     }
 
-    public String asString(Charset charset) {
-        if (bytes == null) return null;
-        return new String(bytes, charset);
+    public String asString(String encoding) {
+        if (buffer == null) return null;
+        return buffer.toString(encoding);
     }
 }

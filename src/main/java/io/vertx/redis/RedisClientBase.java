@@ -2,7 +2,6 @@ package io.vertx.redis;
 
 import static io.vertx.redis.util.Encoding.numToBytes;
 
-import java.nio.charset.Charset;
 import java.util.*;
 
 import io.vertx.redis.impl.RedisAsyncResult;
@@ -26,7 +25,6 @@ public class RedisClientBase {
     private static final byte[] ARGS_PREFIX = "*".getBytes();
     private static final byte[] CRLF = "\r\n".getBytes();
     private static final byte[] BYTES_PREFIX = "$".getBytes();
-    private static final Charset CHARSET = Charset.defaultCharset();
 
     private final Vertx vertx;
     private final Logger logger;
@@ -96,7 +94,7 @@ public class RedisClientBase {
                             // authenticate
                             List<byte[]> cmd = new ArrayList<>();
                             cmd.add("auth".getBytes());
-                            cmd.add(auth.getBytes(CHARSET));
+                            cmd.add(auth.getBytes());
                             send(cmd, 1, new Handler<Reply>() {
                                 @Override
                                 public void handle(Reply reply) {
@@ -207,8 +205,8 @@ public class RedisClientBase {
             if (data != null) {
                 // message
                 if (data.length == 3) {
-                    if (data[0] instanceof BulkReply && "message".equals(((BulkReply) data[0]).asString(CHARSET))) {
-                        String channel = ((BulkReply) data[1]).asString(CHARSET);
+                    if (data[0] instanceof BulkReply && "message".equals(((BulkReply) data[0]).asString("UTF-8"))) {
+                        String channel = ((BulkReply) data[1]).asString("UTF-8");
                         MessageHandler handler = channelSubscriptions.getHandler(channel);
                         if (handler != null)
                         {
@@ -221,8 +219,8 @@ public class RedisClientBase {
                 } 
                 // pmessage
                 else if (data.length == 4) {
-                    if (data[0] instanceof BulkReply && "pmessage".equals(((BulkReply) data[0]).asString(CHARSET))) {
-                        String pattern = ((BulkReply) data[1]).asString(CHARSET);
+                    if (data[0] instanceof BulkReply && "pmessage".equals(((BulkReply) data[0]).asString("UTF-8"))) {
+                        String pattern = ((BulkReply) data[1]).asString("UTF-8");
                         MessageHandler handler = patternSubscriptions.getHandler(pattern);
                         if (handler != null)
                         {
