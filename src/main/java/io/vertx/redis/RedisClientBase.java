@@ -5,6 +5,7 @@ import static io.vertx.redis.util.Encoding.numToBytes;
 import java.nio.charset.Charset;
 import java.util.*;
 
+import io.vertx.redis.impl.RedisAsyncResult;
 import io.vertx.redis.reply.ReplyParser;
 import io.vertx.redis.reply.*;
 import io.vertx.redis.util.MessageHandler;
@@ -31,6 +32,7 @@ public class RedisClientBase {
     private final Logger logger;
     private final String auth;
     private final Queue<Handler<Reply>> replies = new LinkedList<>();
+    // TODO: merge this 2 objects into a single one
     private final RedisSubscriptions channelSubscriptions;
     private final RedisSubscriptions patternSubscriptions;
     private NetSocket netSocket;
@@ -58,6 +60,9 @@ public class RedisClientBase {
     void connect(final AsyncResultHandler<Void> resultHandler) {
         if (state == State.DISCONNECTED) {
             state = State.CONNECTING;
+            // instantiate a parser for the connection
+            final ReplyParser replyParser = new ReplyParser(this);
+
             NetClient client = vertx.createNetClient();
             client.connect(port, host, new AsyncResultHandler<NetSocket>() {
                 @Override
@@ -65,39 +70,22 @@ public class RedisClientBase {
                     if (asyncResult.failed()) {
                         logger.error("Net client error", asyncResult.cause());
                         if (resultHandler != null) {
-                            resultHandler.handle(new AsyncResult<Void>() {
-                                @Override
-                                public Void result() {
-                                    return null;
-                                }
-
-                                @Override
-                                public Throwable cause() {
-                                    return asyncResult.cause();
-                                }
-
-                                @Override
-                                public boolean succeeded() {
-                                    return false;
-                                }
-
-                                @Override
-                                public boolean failed() {
-                                    return true;
-                                }
-                            });
+                            resultHandler.handle(new RedisAsyncResult<Void>(asyncResult.cause()));
                         }
                         disconnect();
                     } else {
                         state = State.CONNECTED;
                         netSocket = asyncResult.result();
-                        init(netSocket);
+                        // set the data handler (the reply parser)
+                        netSocket.dataHandler(replyParser);
+                        // set the exception handler
                         netSocket.exceptionHandler(new Handler<Throwable>() {
                             public void handle(Throwable e) {
                                 logger.error("Socket client error", e);
                                 disconnect();
                             }
                         });
+                        // set the close handler
                         netSocket.closeHandler(new Handler<Void>() {
                             public void handle(Void arg0) {
                                 logger.info("Socket closed");
@@ -123,65 +111,21 @@ public class RedisClientBase {
                                             break;
                                     }
                                     if (resultHandler != null) {
-                                        resultHandler.handle(new AsyncResult<Void>() {
-                                            final Throwable ex = error == null ? null : new RedisCommandError(error.data());
-                                            @Override
-                                            public Void result() {
-                                                return null;
-                                            }
-
-                                            @Override
-                                            public Throwable cause() {
-                                                return ex;
-                                            }
-
-                                            @Override
-                                            public boolean succeeded() {
-                                                return ex == null;
-                                            }
-
-                                            @Override
-                                            public boolean failed() {
-                                                return ex != null;
-                                            }
-                                        });
+                                        resultHandler.handle(new RedisAsyncResult<Void>(error == null ? null : new RedisCommandError(error.data())));
                                     }
                                 }
                             });
                         } else {
                             if (resultHandler != null) {
-                                resultHandler.handle(new AsyncResult<Void>() {
-                                    @Override
-                                    public Void result() {
-                                        return null;
-                                    }
-
-                                    @Override
-                                    public Throwable cause() {
-                                        return null;
-                                    }
-
-                                    @Override
-                                    public boolean succeeded() {
-                                        return true;
-                                    }
-
-                                    @Override
-                                    public boolean failed() {
-                                        return false;
-                                    }
-                                });
+                                resultHandler.handle(new RedisAsyncResult<Void>(null));
                             }
                         }
+
+                        // TODO: process waiting queue (for messages that have been requested while the connection was not totally established
                     }
                 }
             });
         }
-    }
-
-    private void init(NetSocket netSocket) {
-        this.netSocket = netSocket;
-        netSocket.dataHandler(new ReplyParser(this));
     }
 
     // Redis 'subscribe', 'unsubscribe', 'psubscribe' and 'punsubscribe' commands can have multiple (including zero) replies
@@ -224,6 +168,7 @@ public class RedisClientBase {
                 break;
             case CONNECTING:
                 logger.debug("Got send request while connecting. Will try again in a while.");
+                // TODO: queue this instead of adding timers
                 vertx.setTimer(100, new Handler<Long>() {
                     public void handle(Long event) {
                         send(command, expectedReplies, replyHandler);
