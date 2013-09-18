@@ -1,7 +1,6 @@
 package io.vertx.redis.reply;
 
 import io.vertx.redis.RedisClientBase;
-import io.vertx.redis.reply.*;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.buffer.Buffer;
 
@@ -28,7 +27,7 @@ public class ReplyParser implements Handler<Buffer> {
         int start, end, offset;
         int packetSize;
 
-        if (type == 43 || type == 45) { // + or -
+        if (type == '+' || type == '-') {
             // up to the delimiter
             end = packetEndOffset() - 1;
             start = _offset;
@@ -41,12 +40,12 @@ public class ReplyParser implements Handler<Buffer> {
                 throw new IncompleteReadBuffer("Wait for more data.");
             }
 
-            if (type == 43) {
+            if (type == '+') {
                 return new StatusReply(_buffer.getString(start, end, _encoding));
             } else {
                 return new ErrorReply(_buffer.getString(start, end, _encoding));
             }
-        } else if (type == 58) { // :
+        } else if (type == ':') {
             // up to the delimiter
             end = packetEndOffset() - 1;
             start = _offset;
@@ -61,7 +60,7 @@ public class ReplyParser implements Handler<Buffer> {
 
             // return the coerced numeric value
             return new IntegerReply(Long.parseLong(_buffer.getString(start, end)));
-        } else if (type == 36) { // $
+        } else if (type == '$') {
             // set a rewind point, as the packet could be larger than the
             // buffer in memory
             offset = _offset - 1;
@@ -85,7 +84,7 @@ public class ReplyParser implements Handler<Buffer> {
             }
 
             return new BulkReply(_buffer.getBytes(start, end));
-        } else if (type == 42) { // *
+        } else if (type == '*') {
             offset = _offset;
             packetSize = parsePacketSize();
 
@@ -126,7 +125,7 @@ public class ReplyParser implements Handler<Buffer> {
         Reply ret;
         int offset;
 
-        while (true) {
+        loop: while (true) {
             offset = _offset;
             try {
                 // at least 4 bytes: :1\r\n
@@ -136,46 +135,23 @@ public class ReplyParser implements Handler<Buffer> {
 
                 type = _buffer.getByte(_offset++);
 
-                if (type == 43) { // +
-                    ret = parseResult(type);
+                switch (type) {
+                    case '*':
+                        // set a rewind point. if a failure occurs,
+                        // wait for the next handle()/append() and try again
+                        offset = _offset - 1;
+                    case '+':
+                    case '-':
+                    case ':':
+                    case '$':
+                        ret = parseResult(type);
 
-                    if (ret == null) {
+                        if (ret == null) {
+                            break loop;
+                        }
+
+                        client.handleReply(ret);
                         break;
-                    }
-
-                    client.handleReply(ret);
-                } else if (type == 45) { // -
-                    ret = parseResult(type);
-
-                    if (ret == null) {
-                        break;
-                    }
-
-                    client.handleReply(ret);
-                } else if (type == 58) { // :
-                    ret = parseResult(type);
-
-                    if (ret == null) {
-                        break;
-                    }
-
-                    client.handleReply(ret);
-                } else if (type == 36) { // $
-                    ret = parseResult(type);
-
-                    if (ret == null) {
-                        break;
-                    }
-
-                    client.handleReply(ret);
-                } else if (type == 42) { // *
-                    // set a rewind point. if a failure occurs,
-                    // wait for the next execute()/append() and try again
-                    offset = _offset - 1;
-
-                    ret = parseResult(type);
-
-                    client.handleReply(ret);
                 }
             } catch (IncompleteReadBuffer err) {
                 // catch the error (not enough data), rewind, and wait
@@ -207,7 +183,9 @@ public class ReplyParser implements Handler<Buffer> {
         }
 
         // very large packet
-        _buffer = _buffer.getBuffer(_offset, _buffer.length());
+        if (_offset > 0) {
+            _buffer = _buffer.getBuffer(_offset, _buffer.length());
+        }
         _buffer.appendBuffer(newBuffer);
 
         _offset = 0;
@@ -234,7 +212,7 @@ public class ReplyParser implements Handler<Buffer> {
     private int packetEndOffset() throws IncompleteReadBuffer {
         int offset = _offset;
 
-        while (_buffer.getByte(offset) != 0x0d && _buffer.getByte(offset + 1) != 0x0a) {
+        while (_buffer.getByte(offset) != '\r' && _buffer.getByte(offset + 1) != '\n') {
             offset++;
 
             if (offset >= _buffer.length()) {
