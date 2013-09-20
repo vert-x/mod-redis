@@ -99,11 +99,11 @@ class GRedisPubSubTester extends TestVerticle {
         });
 
         // on sub address subscribe to channel ch1
-        redis(subAddress, [command: 'subscribe', channel: 'ch1']) { subscribe ->
+        redis(subAddress, [command: 'subscribe', args: ['ch1']]) { subscribe ->
             assertArray(['subscribe', 'ch1', 1], subscribe)
 
             // on pub address publish a message
-            redis(pubAddress, [command: 'publish', channel: 'ch1', message: message]) { publish ->
+            redis(pubAddress, [command: 'publish', args: ['ch1', message]]) { publish ->
                 assertNumber(1, publish)
             }
         }
@@ -131,15 +131,15 @@ class GRedisPubSubTester extends TestVerticle {
         });
 
         // on sub address subscribe to channels news.*
-        redis(subAddress, [command: 'psubscribe', pattern: 'news.*']) { subscribe ->
+        redis(subAddress, [command: 'psubscribe', args: ['news.*']]) { subscribe ->
             assertArray(['psubscribe', 'news.*', 1], subscribe)
 
             // on pub address publish a message to news.wold
-            redis(pubAddress, [command: 'publish', channel: 'news.world', message: worldNews]) { publish ->
+            redis(pubAddress, [command: 'publish', args: ['news.world', worldNews]]) { publish ->
                 assertNumber(1, publish)
             }
             // on pub address publish a message to news.technology
-            redis(pubAddress, [command: 'publish', channel: 'news.technology', message: technologyNews]) { publish ->
+            redis(pubAddress, [command: 'publish', args: ['news.technology', technologyNews]]) { publish ->
                 assertNumber(1, publish)
             }
         }
@@ -152,11 +152,11 @@ class GRedisPubSubTester extends TestVerticle {
         container.deployModule(System.getProperty("vertx.modulename"), subConfig2, 1, new AsyncResultHandler<String>() {
             public void handle(final AsyncResult<String> subDeploymentId) {
                 // on sub address subscribe to channel ch2
-                redis("test.redis.sub2", [command: 'subscribe', channel: 'ch2']) { subscribe ->
+                redis("test.redis.sub2", [command: 'subscribe', args: ['ch2']]) { subscribe ->
                     assertArray(['subscribe', 'ch2', 1], subscribe)
 
                     // on pub address publish a message
-                    redis(pubAddress, [command: 'publish', channel: 'ch2', message: message]) { publish ->
+                    redis(pubAddress, [command: 'publish', args: ['ch2', message]]) { publish ->
                         assertNumber(2, publish)
                     }
                 }
@@ -180,7 +180,7 @@ class GRedisPubSubTester extends TestVerticle {
         });
 
         // on sub address subscribe to channel ch2
-        redis(subAddress, [command: 'subscribe', channel: 'ch2']) { subscribe ->
+        redis(subAddress, [command: 'subscribe', args: ['ch2']]) { subscribe ->
             assertArray(['subscribe', 'ch2', 1], subscribe)
 
             // deploy a new sub

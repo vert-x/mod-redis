@@ -29,7 +29,7 @@ public class RedisClient extends AbstractRedisClient {
    * <% print cmd.value.summary %>
    * @since <% print cmd.value.since %>
    */
-  public void <% print cmd.key.toLowerCase().replace(' ', '_') %>(Object... args) {send("<% print cmd.key.toLowerCase().replace(' ', '_') %>", args);}
+  public void <% print cmd.key.toLowerCase().replace(' ', '_') %>(Object... args) {send("<% print cmd.key %>", args);}
 
 <%}%>
 }

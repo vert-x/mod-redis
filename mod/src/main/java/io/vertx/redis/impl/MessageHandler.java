@@ -1,4 +1,4 @@
-package io.vertx.redis.util;
+package io.vertx.redis.impl;
 
 import io.vertx.redis.reply.*;
 

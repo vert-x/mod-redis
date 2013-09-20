@@ -47,8 +47,8 @@ public class RedisClientTester extends TestVerticle {
      * @param json message
      * @param handler response handler
      */
-    void redis(final String json, final boolean fail, final Handler<Message<JsonObject>> handler) {
-        eb.send(address, new JsonObject(json), new Handler<Message<JsonObject>>() {
+    void redis(final JsonObject json, final boolean fail, final Handler<Message<JsonObject>> handler) {
+        eb.send(address, json, new Handler<Message<JsonObject>>() {
             public void handle(Message<JsonObject> reply) {
                 if (fail) {
                     assertEquals("error", reply.body().getString("status"));
@@ -119,21 +119,34 @@ public class RedisClientTester extends TestVerticle {
         }
     }
 
+    private static JsonObject json(String command, Object... args) {
+        JsonObject json = new JsonObject();
+        json.putString("command", command);
+        if (args != null) {
+            JsonArray jsonArgs = new JsonArray();
+            for (Object o : args) {
+                jsonArgs.add(o);
+            }
+            json.putArray("args", jsonArgs);
+        }
+        return json;
+    }
+
     @Test
     public void testGet() {
         final String nonexisting = makeKey();
         final String mykey = makeKey();
 
-        redis("{\"command\": \"get\", \"key\": \"" + nonexisting + "\"}", false, new Handler<Message<JsonObject>>() {
+        redis(json("get", nonexisting), false, new Handler<Message<JsonObject>>() {
             @Override
             public void handle(Message<JsonObject> reply) {
                 assertNullValue(reply);
 
-                redis("{\"command\": \"set\", \"key\": \"" + mykey + "\", \"value\": \"Hello\"}", false, new Handler<Message<JsonObject>>() {
+                redis(json("set", mykey, "Hello"), false, new Handler<Message<JsonObject>>() {
                     @Override
                     public void handle(Message<JsonObject> reply) {
 
-                        redis("{\"command\": \"get\", \"key\": \"" + mykey + "\"}", false, new Handler<Message<JsonObject>>() {
+                        redis(json("get", mykey), false, new Handler<Message<JsonObject>>() {
                             @Override
                             public void handle(Message<JsonObject> reply) {
 

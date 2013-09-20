@@ -12,7 +12,7 @@ import org.vertx.testtools.TestVerticle;
 
 import static org.vertx.testtools.VertxAssert.*;
 
-public class RedisClientTest extends TestVerticle {
+public class RedisModTest extends TestVerticle {
 
     private final String address = "test.redis.api.client";
     private EventBus eb;

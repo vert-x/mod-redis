@@ -12,7 +12,7 @@ import static org.vertx.testtools.VertxAssert.*
 
 class GRedisClientTester extends TestVerticle {
 
-    private final String address = "test.my_redisclient"
+    private final String address = 'test.my_redisclient'
     private EventBus eb
 
     private void appReady() {
@@ -23,12 +23,12 @@ class GRedisClientTester extends TestVerticle {
         eb = vertx.eventBus()
         JsonObject config = new JsonObject()
 
-        config.putString("address", address)
-        config.putString("host", "localhost")
-        config.putNumber("port", 6379)
-        config.putString("encoding", "ISO-8859-1")
+        config.putString('address', address)
+        config.putString('host', 'localhost')
+        config.putNumber('port', 6379)
+        config.putString('encoding', 'ISO-8859-1')
 
-        container.deployModule(System.getProperty("vertx.modulename"), config, 1, new AsyncResultHandler<String>() {
+        container.deployModule(System.getProperty('vertx.modulename'), config, 1, new AsyncResultHandler<String>() {
             @Override
             void handle(AsyncResult<String> event) {
                 appReady()
@@ -45,9 +45,10 @@ class GRedisClientTester extends TestVerticle {
         eb.send(address, new JsonObject(json), new Handler<Message<JsonObject>>() {
             public void handle(Message<JsonObject> reply) {
                 if (fail) {
-                    assertEquals("error", reply.body.getString("status"))
+                    println reply.body()
+                    assertEquals('error', reply.body.getString('status'))
                 } else {
-                    assertEquals("ok", reply.body.getString("status"))
+                    assertEquals('ok', reply.body.getString('status'))
                 }
 
                 closure.call(reply)
@@ -60,23 +61,23 @@ class GRedisClientTester extends TestVerticle {
     }
 
     private static void assertNumberValue(expected, value) {
-        assertEquals(expected, value.body.getNumber("value"))
+        assertEquals(expected, value.body.getNumber('value'))
     }
 
     private static void assertStringValue(expected, value) {
-        assertEquals(expected, value.body.getString("value"))
+        assertEquals(expected, value.body.getString('value'))
     }
 
     private static void assertNullValue(value) {
-        assertEquals(null, value.body.getField("value"))
+        assertEquals(null, value.body.getField('value'))
     }
 
     private static void assertNotNullValue(value) {
-        assertNotSame(null, value.body.getField("value"))
+        assertNotSame(null, value.body.getField('value'))
     }
 
     void assertArrayValue(expected, value) {
-        def array = value.body.getArray("value")
+        def array = value.body.getArray('value')
         assertNotNull(array)
         assertEquals(expected.size(), array.size())
 
@@ -90,7 +91,7 @@ class GRedisClientTester extends TestVerticle {
     }
 
     private static void assertUnorderedArrayValue(expected, value) {
-        def array = value.body.getArray("value")
+        def array = value.body.getArray('value')
         assertNotNull(array)
         assertEquals(expected.size(), array.size())
 
@@ -109,7 +110,7 @@ class GRedisClientTester extends TestVerticle {
                 }
             }
 
-            assertTrue("Expected one of: <" + expected + "> but got: <" + array.get(i) + ">", found)
+            assertTrue('Expected one of: <' + expected + '> but got: <' + array.get(i) + '>', found)
         }
     }
 
@@ -117,16 +118,16 @@ class GRedisClientTester extends TestVerticle {
     void testAppend() {
         def key = makeKey()
 
-        redis([command: "del", key: key]) { reply0 ->
+        redis([command: 'del', args: [key]]) { reply0 ->
 
-            redis([command: "append", key: key, value: "Hello"]) { reply1 ->
+            redis([command: 'append', args: [key, 'Hello']]) { reply1 ->
                 assertNumberValue(5, reply1)
 
-                redis([command: "append", key: key, value: " World"]) { reply2 ->
+                redis([command: 'append', args: [key, ' World']]) { reply2 ->
                     assertNumberValue(11, reply2)
 
-                    redis([command: "get", key: key]) { reply3 ->
-                        assertStringValue("Hello World", reply3)
+                    redis([command: 'get', args: [key]]) { reply3 ->
+                        assertStringValue('Hello World', reply3)
                         testComplete()
                     }
                 }
@@ -153,15 +154,15 @@ class GRedisClientTester extends TestVerticle {
     void testBitcount() {
         def key = makeKey()
 
-        redis([command: "set", key: key, value: "foobar"]) { reply0 ->
+        redis([command: 'set', args: [key, 'foobar']]) { reply0 ->
 
-            redis([command: "bitcount", key: key]) { reply1 ->
+            redis([command: 'bitcount', args: [key]]) { reply1 ->
                 assertNumberValue(26, reply1)
 
-                redis([command: "bitcount", key: key, start: 0, end: 0]) { reply2 ->
+                redis([command: 'bitcount', args: [key, 0, 0]]) { reply2 ->
                     assertNumberValue(4, reply2)
 
-                    redis([command: "bitcount", key: key, start: 1, end: 1]) { reply3 ->
+                    redis([command: 'bitcount', args: [key, 1, 1]]) { reply3 ->
                         assertNumberValue(6, reply3)
                         testComplete()
                     }
@@ -176,10 +177,10 @@ class GRedisClientTester extends TestVerticle {
         def key2 = makeKey()
         def destkey = makeKey()
 
-        redis([command: "set", key: key1, value: "foobar"]) { reply0 ->
-            redis([command: "set", key: key2, value: "abcdef"]) { reply1 ->
-                redis([command: "bitop", operation: "and", destkey: destkey, key: [key1, key2]]) { reply2 ->
-                    redis([command: "get", key: destkey]) { reply3 ->
+        redis([command: 'set', args: [key1, 'foobar']]) { reply0 ->
+            redis([command: 'set', args: [key2, 'abcdef']]) { reply1 ->
+                redis([command: 'bitop', args: ['and', destkey, key1, key2]]) { reply2 ->
+                    redis([command: 'get', args: [destkey]]) { reply3 ->
                         testComplete()
                     }
                 }
@@ -192,13 +193,13 @@ class GRedisClientTester extends TestVerticle {
         def list1 = makeKey()
         def list2 = makeKey()
 
-        redis([command: "del", key: [list1, list2]]) { reply0 ->
+        redis([command: 'del', args: [list1, list2]]) { reply0 ->
 
-            redis([command: "rpush", key: list1, value: ["a", "b", "c"]]) { reply1 ->
+            redis([command: 'rpush', args: [list1, 'a', 'b', 'c']]) { reply1 ->
                 assertNumberValue(3, reply1)
 
-                redis([command: "blpop", key: [list1, list2], timeout: 0]) { reply2 ->
-                    assertArrayValue([list1, "a"], reply2)
+                redis([command: 'blpop', args: [list1, list2, 0]]) { reply2 ->
+                    assertArrayValue([list1, 'a'], reply2)
                     testComplete()
                 }
             }
@@ -210,13 +211,13 @@ class GRedisClientTester extends TestVerticle {
         def list1 = makeKey()
         def list2 = makeKey()
 
-        redis([command: "del", key: [list1, list2]]) { reply0 ->
+        redis([command: 'del', args: [list1, list2]]) { reply0 ->
 
-            redis([command: "rpush", key: list1, value: ["a", "b", "c"]]) { reply1 ->
+            redis([command: 'rpush', args: [list1, 'a', 'b', 'c']]) { reply1 ->
                 assertNumberValue(3, reply1)
 
-                redis([command: "brpop", key: [list1, list2], timeout: 0]) { reply2 ->
-                    assertArrayValue([list1, "c"], reply2)
+                redis([command: 'brpop', args: [list1, list2, 0]]) { reply2 ->
+                    assertArrayValue([list1, 'c'], reply2)
                     testComplete()
                 }
             }
@@ -250,13 +251,13 @@ class GRedisClientTester extends TestVerticle {
 
     @Test
     void testConfigGet() {
-        redis([command: "config get", parameter: "*max-*-entries*"]) { reply0 ->
-            // 1) "hash-max-zipmap-entries"
-            // 2) "512"
-            // 3) "list-max-ziplist-entries"
-            // 4) "512"
-            // 5) "set-max-intset-entries"
-            // 6) "512"
+        redis([command: 'config get', args: ['*max-*-entries*']]) { reply0 ->
+            // 1) 'hash-max-zipmap-entries'
+            // 2) '512'
+            // 3) 'list-max-ziplist-entries'
+            // 4) '512'
+            // 5) 'set-max-intset-entries'
+            // 6) '512'
             testComplete()
         }
     }
@@ -290,8 +291,8 @@ class GRedisClientTester extends TestVerticle {
     void testDecr() {
         def mykey = makeKey()
 
-        redis([command: "set", key: mykey, value: "10"]) { reply0 ->
-            redis([command: "decr", key: mykey]) { reply1 ->
+        redis([command: 'set', args: [mykey, '10']]) { reply0 ->
+            redis([command: 'decr', args: [mykey]]) { reply1 ->
                 assertNumberValue(9, reply1)
                 testComplete()
             }
@@ -302,8 +303,8 @@ class GRedisClientTester extends TestVerticle {
     void testDecrby() {
         def mykey = makeKey()
 
-        redis([command: "set", key: mykey, value: "10"]) { reply0 ->
-            redis([command: "decrby", key: mykey, decrement: 5]) { reply1 ->
+        redis([command: 'set', args: [mykey, '10']]) { reply0 ->
+            redis([command: 'decrby', args: [mykey, 5]]) { reply1 ->
                 assertNumberValue(5, reply1)
                 testComplete()
             }
@@ -316,9 +317,9 @@ class GRedisClientTester extends TestVerticle {
         def key2 = makeKey()
         def key3 = makeKey()
 
-        redis([command: "set", key: key1, value: "Hello"]) { reply0 ->
-            redis([command: "set", key: key2, value: "World"]) { reply1 ->
-                redis([command: "del", key: [key1, key2, key3]]) { reply2 ->
+        redis([command: 'set', args: [key1, 'Hello']]) { reply0 ->
+            redis([command: 'set', args: [key2, 'World']]) { reply1 ->
+                redis([command: 'del', args: [key1, key2, key3]]) { reply2 ->
                     assertNumberValue(2, reply2)
                     testComplete()
                 }
@@ -335,9 +336,9 @@ class GRedisClientTester extends TestVerticle {
     void testDump() {
         def mykey = makeKey()
 
-        redis([command: "set", key: mykey, value: 10]) { reply0 ->
-            redis([command: "dump", key: mykey]) { reply1 ->
-                byte[] data = reply1.body.getString("value").getBytes("ISO-8859-1")
+        redis([command: 'set', args: [mykey, 10]]) { reply0 ->
+            redis([command: 'dump', args: [mykey]]) { reply1 ->
+                byte[] data = reply1.body.getString('value').getBytes('ISO-8859-1')
 
                 assertEquals((byte) data[0], (byte) 0)
                 assertEquals((byte) data[1], (byte) 0xc0)
@@ -359,8 +360,8 @@ class GRedisClientTester extends TestVerticle {
 
     @Test
     void testEcho() {
-        redis([command: "echo", message: "Hello World!"]) { reply0 ->
-            assertStringValue("Hello World!", reply0)
+        redis([command: 'echo', args: ['Hello World!']]) { reply0 ->
+            assertStringValue('Hello World!', reply0)
             testComplete()
         }
     }
@@ -370,8 +371,8 @@ class GRedisClientTester extends TestVerticle {
         def key1 = makeKey()
         def key2 = makeKey()
 
-        redis([command: "eval", script: "return {KEYS[1],KEYS[2],ARGV[1],ARGV[2]}", numkeys: 2, key: [key1, key2], arg: ["first", "second"]]) { reply0 ->
-            assertArrayValue([key1, key2, "first", "second"], reply0)
+        redis([command: 'eval', args: ['return {KEYS[1],KEYS[2],ARGV[1],ARGV[2]}', 2, key1, key2, 'first', 'second']]) { reply0 ->
+            assertArrayValue([key1, key2, 'first', 'second'], reply0)
             testComplete()
         }
     }
@@ -391,11 +392,11 @@ class GRedisClientTester extends TestVerticle {
         def key1 = makeKey()
         def key2 = makeKey()
 
-        redis([command: "set", key: key1, value: "Hello"]) {reply0 ->
-            redis([command: "exists", key: key1]) {reply1 ->
+        redis([command: 'set', args: [key1, 'Hello']]) {reply0 ->
+            redis([command: 'exists', args: [key1]]) {reply1 ->
                 assertNumberValue(1, reply1)
 
-                redis([command: "exists", key: key2]) {reply2 ->
+                redis([command: 'exists', args: [key2]]) {reply2 ->
                     assertNumberValue(0, reply2)
                     testComplete()
                 }
@@ -407,15 +408,15 @@ class GRedisClientTester extends TestVerticle {
     void testExpire() {
         def mykey = makeKey()
 
-        redis([command: "set", key: mykey, value: "Hello"]) { reply0 ->
-            redis([command: "expire", key: mykey, seconds: 10]) { reply1 ->
+        redis([command: 'set', args: [mykey, 'Hello']]) { reply0 ->
+            redis([command: 'expire', args: [mykey, 10]]) { reply1 ->
                 assertNumberValue(1, reply1)
 
-                redis([command: "ttl", key: mykey]) { reply2 ->
+                redis([command: 'ttl', args: [mykey]]) { reply2 ->
                     assertNumberValue(10, reply2)
 
-                    redis([command: "set", key: mykey, value: "Hello World"]) { reply3 ->
-                        redis([command: "ttl", key: mykey]) { reply4 ->
+                    redis([command: 'set', args: [mykey, 'Hello World']]) { reply3 ->
+                        redis([command: 'ttl', args: [mykey]]) { reply4 ->
                             assertNumberValue(-1, reply4)
                             testComplete()
                         }
@@ -429,14 +430,14 @@ class GRedisClientTester extends TestVerticle {
     void testExpireat() {
         def mykey = makeKey()
 
-        redis([command: "set", key: mykey, value: "Hello"]) { reply0 ->
-            redis([command: "exists", key: mykey]) { reply1 ->
+        redis([command: 'set', args: [mykey, 'Hello']]) { reply0 ->
+            redis([command: 'exists', args: [mykey]]) { reply1 ->
                 assertNumberValue(1, reply1)
 
-                redis([command: "expireat", key: mykey, timestamp: 1293840000]) { reply2 ->
+                redis([command: 'expireat', args: [mykey, 1293840000]]) { reply2 ->
                     assertNumberValue(1, reply2)
 
-                    redis([command: "exists", key: mykey]) { reply3 ->
+                    redis([command: 'exists', args: [mykey]]) { reply3 ->
                         assertNumberValue(0, reply3)
                         testComplete()
                     }
@@ -460,12 +461,12 @@ class GRedisClientTester extends TestVerticle {
         def nonexisting = makeKey()
         def mykey = makeKey()
 
-        redis([command: "get", key: nonexisting]) { reply0 ->
+        redis([command: 'get', args: [nonexisting]]) { reply0 ->
             assertNullValue(reply0)
 
-            redis([command: "set", key: mykey, value: "Hello"]) { reply1 ->
-                redis([command: "get", key: mykey]) { reply2 ->
-                    assertStringValue("Hello", reply2)
+            redis([command: 'set', args: [mykey, 'Hello']]) { reply1 ->
+                redis([command: 'get', args: [mykey]]) { reply2 ->
+                    assertStringValue('Hello', reply2)
                     testComplete()
                 }
             }
@@ -476,16 +477,16 @@ class GRedisClientTester extends TestVerticle {
     void testGetbit() {
         def mykey = makeKey()
 
-        redis([command: "setbit", key: mykey, offset: 7, value: 1]) { reply0 ->
+        redis([command: 'setbit', args: [mykey, 7, 1]]) { reply0 ->
             assertNumberValue(0, reply0)
 
-            redis([command: "getbit", key: mykey, offset: 0]) { reply1 ->
+            redis([command: 'getbit', args: [mykey, 0]]) { reply1 ->
                 assertNumberValue(0, reply1)
 
-                redis([command: "getbit", key: mykey, offset: 7]) { reply2 ->
+                redis([command: 'getbit', args: [mykey, 7]]) { reply2 ->
                     assertNumberValue(1, reply2)
 
-                    redis([command: "getbit", key: mykey, offset: 100]) { reply3 ->
+                    redis([command: 'getbit', args: [mykey, 100]]) { reply3 ->
                         assertNumberValue(0, reply3)
                         testComplete()
                     }
@@ -498,18 +499,18 @@ class GRedisClientTester extends TestVerticle {
     void testGetrange() {
         def mykey = makeKey()
 
-        redis([command: "set", key: mykey, value: "This is a string"]) { reply0 ->
-            redis([command: "getrange", key: mykey, start:  0, end: 3]) { reply1 ->
-                assertStringValue("This", reply1)
+        redis([command: 'set', args: [mykey, 'This is a string']]) { reply0 ->
+            redis([command: 'getrange', args: [mykey, 0, 3]]) { reply1 ->
+                assertStringValue('This', reply1)
 
-                redis([command: "getrange", key: mykey, start:  -3, end: -1]) { reply2 ->
-                    assertStringValue("ing", reply2)
+                redis([command: 'getrange', args: [mykey, -3, -1]]) { reply2 ->
+                    assertStringValue('ing', reply2)
 
-                    redis([command: "getrange", key: mykey, start:  0, end: -1]) { reply3 ->
-                        assertStringValue("This is a string", reply3)
+                    redis([command: 'getrange', args: [mykey, 0, -1]]) { reply3 ->
+                        assertStringValue('This is a string', reply3)
 
-                        redis([command: "getrange", key: mykey, start: 10, end: 100]) { reply4 ->
-                            assertStringValue("string", reply4)
+                        redis([command: 'getrange', args: [mykey, 10, 100]]) { reply4 ->
+                            assertStringValue('string', reply4)
                             testComplete()
                         }
                     }
@@ -522,14 +523,14 @@ class GRedisClientTester extends TestVerticle {
     void testGetset() {
         def mycounter = makeKey()
 
-        redis([command: "incr", key: mycounter]) { reply0 ->
+        redis([command: 'incr', args: [mycounter]]) { reply0 ->
             assertNumberValue(1, reply0)
 
-            redis([command: "getset", key: mycounter, value: "0"]) { reply1 ->
-                assertStringValue("1", reply1)
+            redis([command: 'getset', args: [mycounter, '0']]) { reply1 ->
+                assertStringValue('1', reply1)
 
-                redis([command: "get", key: mycounter]) { reply2 ->
-                    assertStringValue("0", reply2)
+                redis([command: 'get', args: [mycounter]]) { reply2 ->
+                    assertStringValue('0', reply2)
                     testComplete()
                 }
             }
@@ -540,13 +541,13 @@ class GRedisClientTester extends TestVerticle {
     void testHdel() {
         def myhash = makeKey()
 
-        redis([command: "hset", key: myhash, field: "field1", value: "foo"]) { reply0 ->
+        redis([command: 'hset', args: [myhash, 'field1', 'foo']]) { reply0 ->
             assertNumberValue(1, reply0)
 
-            redis([command: "hdel", key: myhash, field: "field1"]) { reply1 ->
+            redis([command: 'hdel', args: [myhash, 'field1']]) { reply1 ->
                 assertNumberValue(1, reply1)
 
-                redis([command: "hdel", key: myhash, field: "field2"]) { reply2 ->
+                redis([command: 'hdel', args: [myhash, 'field2']]) { reply2 ->
                     assertNumberValue(0, reply2)
                     testComplete()
                 }
@@ -558,13 +559,13 @@ class GRedisClientTester extends TestVerticle {
     void testHexists() {
         def myhash = makeKey()
 
-        redis([command: "hset", key: myhash, field: "field1", value: "foo"]) { reply0 ->
+        redis([command: 'hset', args: [myhash, 'field1', 'foo']]) { reply0 ->
             assertNumberValue(1, reply0)
 
-            redis([command: "hexists", key: myhash, field: "field1"]) { reply1 ->
+            redis([command: 'hexists', args: [myhash, 'field1']]) { reply1 ->
                 assertNumberValue(1, reply1)
 
-                redis([command: "hexists", key: myhash, field: "field2"]) { reply2 ->
+                redis([command: 'hexists', args: [myhash, 'field2']]) { reply2 ->
                     assertNumberValue(0, reply2)
                     testComplete()
                 }
@@ -576,13 +577,13 @@ class GRedisClientTester extends TestVerticle {
     void testHget() {
         def myhash = makeKey()
 
-        redis([command: "hset", key: myhash, field: "field1", value: "foo"]) { reply0 ->
+        redis([command: 'hset', args: [myhash, 'field1', 'foo']]) { reply0 ->
             assertNumberValue(1, reply0)
 
-            redis([command: "hget", key: myhash, field: "field1"]) { reply1 ->
-                assertStringValue("foo", reply1)
+            redis([command: 'hget', args: [myhash, 'field1']]) { reply1 ->
+                assertStringValue('foo', reply1)
 
-                redis([command: "hget", key: myhash, field: "field2"]) { reply2 ->
+                redis([command: 'hget', args: [myhash, 'field2']]) { reply2 ->
                     assertNullValue(reply2)
                     testComplete()
                 }
@@ -594,16 +595,16 @@ class GRedisClientTester extends TestVerticle {
     void testHgetall() {
         def myhash = makeKey()
 
-        redis([command: "hset", key: myhash, field: "field1", value: "Hello"]) { reply0 ->
+        redis([command: 'hset', args: [myhash, 'field1', 'Hello']]) { reply0 ->
             assertNumberValue(1, reply0)
 
-            redis([command: "hset", key: myhash, field: "field2", value: "World"]) { reply1 ->
+            redis([command: 'hset', args: [myhash, 'field2', 'World']]) { reply1 ->
                 assertNumberValue(1, reply1)
 
-                redis([command: "hgetall", key: myhash]) { reply2 ->
-                    JsonObject obj = reply2.body.getObject("value")
-                    assertEquals("Hello", obj.getField("field1"))
-                    assertEquals("World", obj.getField("field2"))
+                redis([command: 'hgetall', args: [myhash]]) { reply2 ->
+                    JsonObject obj = reply2.body.getObject('value')
+                    assertEquals('Hello', obj.getField('field1'))
+                    assertEquals('World', obj.getField('field2'))
                     testComplete()
                }
             }
@@ -614,16 +615,16 @@ class GRedisClientTester extends TestVerticle {
     void testHincrby() {
         def myhash = makeKey()
 
-        redis([command: "hset", key: myhash, field: "field", value: 5]) { reply0 ->
+        redis([command: 'hset', args: [myhash, 'field', 5]]) { reply0 ->
             assertNumberValue(1, reply0)
 
-            redis([command: "hincrby", key: myhash, field: "field", increment: 1]) { reply1 ->
+            redis([command: 'hincrby', args: [myhash, 'field', 1]]) { reply1 ->
                 assertNumberValue(6, reply1)
 
-                redis([command: "hincrby", key: myhash, field: "field", increment: -1]) { reply2 ->
+                redis([command: 'hincrby', args: [myhash, 'field', -1]]) { reply2 ->
                     assertNumberValue(5, reply2)
 
-                    redis([command: "hincrby", key: myhash, field: "field", increment: -10]) { reply3 ->
+                    redis([command: 'hincrby', args: [myhash, 'field', -10]]) { reply3 ->
                         assertNumberValue(-5, reply3)
                         testComplete()
                     }
@@ -636,17 +637,17 @@ class GRedisClientTester extends TestVerticle {
     void testHIncrbyfloat() {
         def mykey = makeKey()
 
-        redis([command: "hset", key: mykey, field: "field", value: 10.50]) { reply0 ->
+        redis([command: 'hset', args: [mykey, 'field', 10.50]]) { reply0 ->
             assertNumberValue(1, reply0)
 
-            redis([command: "hincrbyfloat", key: mykey, field: "field", increment: 0.1]) { reply1 ->
-                assertStringValue("10.6", reply1)
+            redis([command: 'hincrbyfloat', args: [mykey, 'field', 0.1]]) { reply1 ->
+                assertStringValue('10.6', reply1)
 
-                redis([command: "hset", key: mykey, field: "field", value: 5.0e3]) { reply2 ->
+                redis([command: 'hset', args: [mykey, 'field', 5.0e3]]) { reply2 ->
                     assertNumberValue(0, reply2)
 
-                    redis([command: "hincrbyfloat", key: mykey, field: "field", increment: 2.0e2]) { reply3 ->
-                        assertStringValue("5200", reply3)
+                    redis([command: 'hincrbyfloat', args: [mykey, 'field', 2.0e2]]) { reply3 ->
+                        assertStringValue('5200', reply3)
                         testComplete()
                     }
                 }
@@ -658,14 +659,14 @@ class GRedisClientTester extends TestVerticle {
     void testHkeys() {
         def myhash = makeKey()
 
-        redis([command: "hset", key: myhash, field: "field1", value: "Hello"]) { reply0 ->
+        redis([command: 'hset', args: [myhash, 'field1', 'Hello']]) { reply0 ->
             assertNumberValue(1, reply0)
 
-            redis([command: "hset", key: myhash, field: "field2", value: "World"]) { reply1 ->
+            redis([command: 'hset', args: [myhash, 'field2', 'World']]) { reply1 ->
                 assertNumberValue(1, reply1)
 
-                redis([command: "hkeys", key: myhash]) { reply2 ->
-                    assertArrayValue(["field1", "field2"], reply2)
+                redis([command: 'hkeys', args: [myhash]]) { reply2 ->
+                    assertArrayValue(['field1', 'field2'], reply2)
                     testComplete()
                 }
             }
@@ -676,13 +677,13 @@ class GRedisClientTester extends TestVerticle {
     void testHlen() {
         def myhash = makeKey()
 
-        redis([command: "hset", key: myhash, field: "field1", value: "Hello"]) { reply0 ->
+        redis([command: 'hset', args: [myhash, 'field1', 'Hello']]) { reply0 ->
             assertNumberValue(1, reply0)
 
-            redis([command: "hset", key: myhash, field: "field2", value: "World"]) { reply1 ->
+            redis([command: 'hset', args: [myhash, 'field2', 'World']]) { reply1 ->
                 assertNumberValue(1, reply1)
 
-                redis([command: "hlen", key: myhash]) { reply2 ->
+                redis([command: 'hlen', args: [myhash]]) { reply2 ->
                     assertNumberValue(2, reply2)
                     testComplete()
                 }
@@ -694,14 +695,14 @@ class GRedisClientTester extends TestVerticle {
     void testHmget() {
         def myhash = makeKey()
 
-        redis([command: "hset", key: myhash, field: "field1", value: "Hello"]) { reply0 ->
+        redis([command: 'hset', args: [myhash, 'field1', 'Hello']]) { reply0 ->
             assertNumberValue(1, reply0)
 
-            redis([command: "hset", key: myhash, field: "field2", value: "World"]) { reply1 ->
+            redis([command: 'hset', args: [myhash, 'field2', 'World']]) { reply1 ->
                 assertNumberValue(1, reply1)
 
-                redis([command: "hmget", key: myhash, field: ["field1", "field2", "nofield"]]) { reply2 ->
-                    assertArrayValue(["Hello", "World", null], reply2)
+                redis([command: 'hmget', args: [myhash, 'field1', 'field2', 'nofield']]) { reply2 ->
+                    assertArrayValue(['Hello', 'World', null], reply2)
                     testComplete()
                 }
             }
@@ -712,11 +713,11 @@ class GRedisClientTester extends TestVerticle {
     void testHmset() {
         def myhash = makeKey()
 
-        redis([command: "hmset", key: myhash, fields: [field1: "Hello", field2: "World"]]) { reply0 ->
-            redis([command: "hget", key: myhash, field: "field1"]) { reply1 ->
-                assertStringValue("Hello", reply1)
-                redis([command: "hget", key: myhash, field: "field2"]) { reply2 ->
-                    assertStringValue("World", reply2)
+        redis([command: 'hmset', args: [myhash, 'field1', 'Hello', 'field2', 'World']]) { reply0 ->
+            redis([command: 'hget', args: [myhash, 'field1']]) { reply1 ->
+                assertStringValue('Hello', reply1)
+                redis([command: 'hget', args: [myhash, 'field2']]) { reply2 ->
+                    assertStringValue('World', reply2)
                     testComplete()
                 }
             }
@@ -727,11 +728,11 @@ class GRedisClientTester extends TestVerticle {
     void testHset() {
         def myhash = makeKey()
 
-        redis([command: "hset", key: myhash, field: "field1", value: "Hello"]) { reply0 ->
+        redis([command: 'hset', args: [myhash, 'field1', 'Hello']]) { reply0 ->
             assertNumberValue(1, reply0)
 
-            redis([command: "hget", key: myhash, field: "field1"]) { reply1 ->
-                assertStringValue("Hello", reply1)
+            redis([command: 'hget', args: [myhash, 'field1']]) { reply1 ->
+                assertStringValue('Hello', reply1)
                 testComplete()
             }
         }
@@ -741,14 +742,14 @@ class GRedisClientTester extends TestVerticle {
     void testHsetnx() {
         def myhash = makeKey()
 
-        redis([command: "hsetnx", key: myhash, field: "field", value: "Hello"]) { reply0 ->
+        redis([command: 'hsetnx', args: [myhash, 'field', 'Hello']]) { reply0 ->
             assertNumberValue(1, reply0)
 
-            redis([command: "hsetnx", key: myhash, field: "field", value: "World"]) { reply1 ->
+            redis([command: 'hsetnx', args: [myhash, 'field', 'World']]) { reply1 ->
                 assertNumberValue(0, reply1)
 
-                redis([command: "hget", key: myhash, field: "field"]) { reply2 ->
-                    assertStringValue("Hello", reply2)
+                redis([command: 'hget', args: [myhash, 'field']]) { reply2 ->
+                    assertStringValue('Hello', reply2)
                     testComplete()
                 }
             }
@@ -759,14 +760,14 @@ class GRedisClientTester extends TestVerticle {
     void testHvals() {
         def myhash = makeKey()
 
-        redis([command: "hset", key: myhash, field: "field1", value: "Hello"]) { reply0 ->
+        redis([command: 'hset', args: [myhash, 'field1', 'Hello']]) { reply0 ->
             assertNumberValue(1, reply0)
 
-            redis([command: "hset", key: myhash, field: "field2", value: "World"]) { reply1 ->
+            redis([command: 'hset', args: [myhash, 'field2', 'World']]) { reply1 ->
                 assertNumberValue(1, reply1)
 
-                redis([command: "hvals", key: myhash]) { reply2 ->
-                    assertArrayValue(["Hello", "World"], reply2)
+                redis([command: 'hvals', args: [myhash]]) { reply2 ->
+                    assertArrayValue(['Hello', 'World'], reply2)
                     testComplete()
                 }
             }
@@ -777,12 +778,12 @@ class GRedisClientTester extends TestVerticle {
     void testIncr() {
         def mykey = makeKey()
 
-        redis([command: "set", key: mykey, value: "10"]) { reply0 ->
-            redis([command: "incr", key: mykey]) { reply1 ->
+        redis([command: 'set', args: [mykey, '10']]) { reply0 ->
+            redis([command: 'incr', args: [mykey]]) { reply1 ->
                 assertNumberValue(11, reply1)
 
-                redis([command: "get", key: mykey]) { reply2 ->
-                    assertStringValue("11", reply2)
+                redis([command: 'get', args: [mykey]]) { reply2 ->
+                    assertStringValue('11', reply2)
                     testComplete()
                 }
             }
@@ -793,8 +794,8 @@ class GRedisClientTester extends TestVerticle {
     void testIncrby() {
         def mykey = makeKey()
 
-        redis([command: "set", key: mykey, value: "10"]) { reply0 ->
-            redis([command: "incrby", key: mykey, increment: 5]) { reply1 ->
+        redis([command: 'set', args: [mykey, '10']]) { reply0 ->
+            redis([command: 'incrby', args: [mykey, 5]]) { reply1 ->
                 assertNumberValue(15, reply1)
                 testComplete()
             }
@@ -805,13 +806,13 @@ class GRedisClientTester extends TestVerticle {
     void testIncrbyfloat() {
         def mykey = makeKey()
 
-        redis([command: "set", key: mykey, value: 10.50]) { reply0 ->
-            redis([command: "incrbyfloat", key: mykey, increment: 0.1]) { reply1 ->
-                assertStringValue("10.6", reply1)
+        redis([command: 'set', args: [mykey, 10.50]]) { reply0 ->
+            redis([command: 'incrbyfloat', args: [mykey, 0.1]]) { reply1 ->
+                assertStringValue('10.6', reply1)
 
-                redis([command: "set", key: mykey, value: 5.0e3]) { reply2 ->
-                    redis([command: "incrbyfloat", key: mykey, increment: 2.0e2]) { reply3 ->
-                        assertStringValue("5200", reply3)
+                redis([command: 'set', args: [mykey, 5.0e3]]) { reply2 ->
+                    redis([command: 'incrbyfloat', args: [mykey, 2.0e2]]) { reply3 ->
+                        assertStringValue('5200', reply3)
                         testComplete()
                     }
                 }
@@ -821,7 +822,7 @@ class GRedisClientTester extends TestVerticle {
 
     @Test
     void testInfo() {
-        redis([command: "info" /*, section: "server"*/]) { reply0 ->
+        redis([command: 'info' /*, section: 'server'*/]) { reply0 ->
             assertNotNullValue(reply0)
             testComplete()
         }
@@ -829,18 +830,18 @@ class GRedisClientTester extends TestVerticle {
 
     @Test
     void testKeys() {
-        redis([command: "mset", keys: [one: 1, two: 2, three: 3, four: 4]]) { reply0 ->
-            redis([command: "keys", pattern: "*o*"]) { reply1 ->
-                def array = reply1.body.getArray("value")
+        redis([command: 'mset', args: ['one', 1, 'two', 2, 'three', 3, 'four', 4]]) { reply0 ->
+            redis([command: 'keys', args: ['*o*']]) { reply1 ->
+                def array = reply1.body.getArray('value')
                 // this is because there are leftovers from previous tests
                 assertTrue(3 <= array.size())
 
-                redis([command: "keys", pattern: "t??"]) { reply2 ->
-                    def array2 = reply2.body.getArray("value")
+                redis([command: 'keys', args: ['t??']]) { reply2 ->
+                    def array2 = reply2.body.getArray('value')
                     assertTrue(1 == array2.size())
 
-                    redis([command: "keys", pattern: "*"]) { reply3 ->
-                        def array3 = reply3.body.getArray("value")
+                    redis([command: 'keys', args: ['*']]) { reply3 ->
+                        def array3 = reply3.body.getArray('value')
                         assertTrue(4 <= array3.size())
                         testComplete()
                     }
@@ -851,7 +852,7 @@ class GRedisClientTester extends TestVerticle {
 
     @Test
     void testLastsave() {
-        redis([command: "lastsave"]) { reply0 ->
+        redis([command: 'lastsave']) { reply0 ->
             testComplete()
         }
     }
@@ -860,17 +861,17 @@ class GRedisClientTester extends TestVerticle {
     void testLindex() {
         def mykey = makeKey()
 
-        redis([command: "lpush", key: mykey, value: "World"]) { reply0 ->
+        redis([command: 'lpush', args: [mykey, 'World']]) { reply0 ->
             assertNumberValue(1, reply0)
 
-            redis([command: "lpush", key: mykey, value: "Hello"]) { reply1 ->
+            redis([command: 'lpush', args: [mykey, 'Hello']]) { reply1 ->
                 assertNumberValue(2, reply1)
 
-                redis([command: "lindex", key: mykey, index: 0]) { reply2 ->
-                    assertStringValue("Hello", reply2)
+                redis([command: 'lindex', args: [mykey, 0]]) { reply2 ->
+                    assertStringValue('Hello', reply2)
 
-                    redis([command: "lindex", key: mykey, index: -1]) { reply3 ->
-                        assertStringValue("World", reply3)
+                    redis([command: 'lindex', args: [mykey, -1]]) { reply3 ->
+                        assertStringValue('World', reply3)
                         testComplete()
                     }
                 }
@@ -882,13 +883,13 @@ class GRedisClientTester extends TestVerticle {
     void testLinsert() {
         def mykey = makeKey()
 
-        redis([command: "rpush", key: mykey, value: "Hello"]) { reply0 ->
+        redis([command: 'rpush', args: [mykey, 'Hello']]) { reply0 ->
             assertNumberValue(1, reply0)
 
-            redis([command: "rpush", key: mykey, value: "World"]) { reply1 ->
+            redis([command: 'rpush', args: [mykey, 'World']]) { reply1 ->
                 assertNumberValue(2, reply1)
 
-                redis([command: "linsert", key: mykey, before: true, pivot: "World", value: "There"]) { reply2 ->
+                redis([command: 'linsert', args: [mykey, 'before', 'World', 'There']]) { reply2 ->
                     assertNumberValue(3, reply2)
                     testComplete()
                 }
@@ -899,11 +900,11 @@ class GRedisClientTester extends TestVerticle {
     @Test
     void testLlen() {
         def mykey = makeKey()
-        redis([command: "lpush", key: mykey, value: "World"]) { reply0 ->
+        redis([command: 'lpush', args: [mykey, 'World']]) { reply0 ->
             assertNumberValue(1, reply0)
-            redis([command: "lpush", key: mykey, value: "Hello"]) { reply1 ->
+            redis([command: 'lpush', args: [mykey, 'Hello']]) { reply1 ->
                 assertNumberValue(2, reply1)
-                redis([command: "llen", key: mykey]) { reply2 ->
+                redis([command: 'llen', args: [mykey]]) { reply2 ->
                     assertNumberValue(2, reply2)
                     testComplete()
                 }
@@ -914,14 +915,14 @@ class GRedisClientTester extends TestVerticle {
     @Test
     void testLpop() {
         def mykey = makeKey()
-        redis([command: "rpush", key: mykey, value: "one"]) { reply0 ->
+        redis([command: 'rpush', args: [mykey, 'one']]) { reply0 ->
             assertNumberValue(1, reply0)
-            redis([command: "rpush", key: mykey, value: "two"]) { reply1 ->
+            redis([command: 'rpush', args: [mykey, 'two']]) { reply1 ->
                 assertNumberValue(2, reply1)
-                redis([command: "rpush", key: mykey, value: "three"]) { reply2 ->
+                redis([command: 'rpush', args: [mykey, 'three']]) { reply2 ->
                     assertNumberValue(3, reply2)
-                    redis([command: "lpop", key: mykey]) { reply3 ->
-                        assertStringValue("one", reply3)
+                    redis([command: 'lpop', args: [mykey]]) { reply3 ->
+                        assertStringValue('one', reply3)
                         testComplete()
                     }
                 }
@@ -932,12 +933,12 @@ class GRedisClientTester extends TestVerticle {
     @Test
     void testLpush() {
         def mykey = makeKey()
-        redis([command: "lpush", key: mykey, value: "world"]) { reply0 ->
+        redis([command: 'lpush', args: [mykey, 'world']]) { reply0 ->
             assertNumberValue(1, reply0)
-            redis([command: "lpush", key: mykey, value: "hello"]) { reply1 ->
+            redis([command: 'lpush', args: [mykey, 'hello']]) { reply1 ->
                 assertNumberValue(2, reply1)
-                redis([command: "lrange", key: mykey, start: 0, stop: -1]) { reply2 ->
-                    assertArrayValue(["hello", "world"], reply2)
+                redis([command: 'lrange', args: [mykey, 0, -1]]) { reply2 ->
+                    assertArrayValue(['hello', 'world'], reply2)
                     testComplete()
                 }
             }
@@ -949,20 +950,20 @@ class GRedisClientTester extends TestVerticle {
         def mykey = makeKey()
         def myotherkey = makeKey()
 
-        redis([command: "lpush", key: mykey, value: "World"]) { reply0 ->
+        redis([command: 'lpush', args: [mykey, 'World']]) { reply0 ->
             assertNumberValue(1, reply0)
-            redis([command: "lpushx", key: mykey, value: "Hello"]) { reply1 ->
+            redis([command: 'lpushx', args: [mykey, 'Hello']]) { reply1 ->
                 assertNumberValue(2, reply1)
-                redis([command: "lpushx", key: myotherkey, value: "Hello"]) { reply2 ->
+                redis([command: 'lpushx', args: [myotherkey, 'Hello']]) { reply2 ->
                     assertNumberValue(0, reply2)
-                    redis([command: "lrange", key: mykey, start: 0, stop: -1]) { reply3 ->
-                        def array3 = reply3.body.getArray("value")
+                    redis([command: 'lrange', args: [mykey, 0, -1]]) { reply3 ->
+                        def array3 = reply3.body.getArray('value')
                         assertTrue(2 == array3.size())
 
-                        assertTrue("Hello".equals(array3.get(0)))
-                        assertTrue("World".equals(array3.get(1)))
-                        redis([command: "lrange", key: myotherkey, start: 0, stop: -1]) { reply4 ->
-                            def array4 = reply4.body.getArray("value")
+                        assertTrue('Hello'.equals(array3.get(0)))
+                        assertTrue('World'.equals(array3.get(1)))
+                        redis([command: 'lrange',args: [myotherkey, 0, -1]]) { reply4 ->
+                            def array4 = reply4.body.getArray('value')
                             assertTrue(0 == array4.size())
                             testComplete()
                         }
@@ -975,14 +976,14 @@ class GRedisClientTester extends TestVerticle {
     @Test
     void testLrange() {
         def mykey = makeKey()
-        redis([command: "rpush", key: mykey, value: "one"]) { reply0 ->
+        redis([command: 'rpush', args: [mykey, 'one']]) { reply0 ->
             assertNumberValue(1, reply0)
-            redis([command: "rpush", key: mykey, value: "two"]) { reply1 ->
+            redis([command: 'rpush', args: [mykey, 'two']]) { reply1 ->
                 assertNumberValue(2, reply1)
-                redis([command: "rpush", key: mykey, value: "three"]) { reply2 ->
+                redis([command: 'rpush', args: [mykey, 'three']]) { reply2 ->
                     assertNumberValue(3, reply2)
-                    redis([command: "lrange", key: mykey, start: 0, stop: 0]) { reply3 ->
-                        assertArrayValue(["one"], reply3)
+                    redis([command: 'lrange', args: [mykey, 0, 0]]) { reply3 ->
+                        assertArrayValue(['one'], reply3)
                         testComplete()
                     }
                 }
@@ -993,18 +994,18 @@ class GRedisClientTester extends TestVerticle {
     @Test
     void testLrem() {
         def mykey = makeKey()
-        redis([command: "rpush", key: mykey, value: "hello"]) { reply0 ->
+        redis([command: 'rpush', args: [mykey, 'hello']]) { reply0 ->
             assertNumberValue(1, reply0)
-            redis([command: "rpush", key: mykey, value: "hello"]) { reply1 ->
+            redis([command: 'rpush', args: [mykey, 'hello']]) { reply1 ->
                 assertNumberValue(2, reply1)
-                redis([command: "rpush", key: mykey, value: "foo"]) { reply2 ->
+                redis([command: 'rpush', args: [mykey, 'foo']]) { reply2 ->
                     assertNumberValue(3, reply2)
-                    redis([command: "rpush", key: mykey, value: "hello"]) { reply3 ->
+                    redis([command: 'rpush', args: [mykey, 'hello']]) { reply3 ->
                         assertNumberValue(4, reply3)
-                        redis([command: "lrem", key: mykey, count: -2, value: "hello"]) { reply4 ->
+                        redis([command: 'lrem', args: [mykey, -2, 'hello']]) { reply4 ->
                             assertNumberValue(2, reply4)
-                            redis([command: "lrange", key: mykey, start: 0, stop: -1]) { reply5 ->
-                                assertArrayValue(["hello", "foo"], reply5)
+                            redis([command: 'lrange', args: [mykey, 0, -1]]) { reply5 ->
+                                assertArrayValue(['hello', 'foo'], reply5)
                                 testComplete()
                             }
                         }
@@ -1017,16 +1018,16 @@ class GRedisClientTester extends TestVerticle {
     @Test
     void testLset() {
         def mykey = makeKey()
-        redis([command: "rpush", key: mykey, value: "one"]) { reply0 ->
+        redis([command: 'rpush', args: [mykey, 'one']]) { reply0 ->
             assertNumberValue(1, reply0)
-            redis([command: "rpush", key: mykey, value: "two"]) { reply1 ->
+            redis([command: 'rpush', args: [mykey, 'two']]) { reply1 ->
                 assertNumberValue(2, reply1)
-                redis([command: "rpush", key: mykey, value: "three"]) { reply2 ->
+                redis([command: 'rpush', args: [mykey, 'three']]) { reply2 ->
                     assertNumberValue(3, reply2)
-                    redis([command: "lset", key: mykey, index: 0, value: "four"]) { reply3 ->
-                        redis([command: "lset", key: mykey, index: -2, value: "five"]) { reply4 ->
-                            redis([command: "lrange", key: mykey, start: 0, stop: -1]) { reply5 ->
-                                assertArrayValue(["four", "five", "three"], reply5)
+                    redis([command: 'lset', args: [mykey, 0, 'four']]) { reply3 ->
+                        redis([command: 'lset', args: [mykey, -2, 'five']]) { reply4 ->
+                            redis([command: 'lrange', args: [mykey, 0, -1]]) { reply5 ->
+                                assertArrayValue(['four', 'five', 'three'], reply5)
                                 testComplete()
                             }
                         }
@@ -1039,15 +1040,15 @@ class GRedisClientTester extends TestVerticle {
     @Test
     void testLtrim() {
         def mykey = makeKey()
-        redis([command: "rpush", key: mykey, value: "one"]) { reply0 ->
+        redis([command: 'rpush', args: [mykey, 'one']]) { reply0 ->
             assertNumberValue(1, reply0)
-            redis([command: "rpush", key: mykey, value: "two"]) { reply1 ->
+            redis([command: 'rpush', args: [mykey, 'two']]) { reply1 ->
                 assertNumberValue(2, reply1)
-                redis([command: "rpush", key: mykey, value: "three"]) { reply2 ->
+                redis([command: 'rpush', args: [mykey, 'three']]) { reply2 ->
                     assertNumberValue(3, reply2)
-                    redis([command: "ltrim", key: mykey, start: 1, stop: -1]) { reply3 ->
-                        redis([command: "lrange", key: mykey, start: 0, stop: -1]) { reply5 ->
-                            assertArrayValue(["two", "three"], reply5)
+                    redis([command: 'ltrim', args: [mykey, 1, -1]]) { reply3 ->
+                        redis([command: 'lrange', args: [mykey, 0, -1]]) { reply5 ->
+                            assertArrayValue(['two', 'three'], reply5)
                             testComplete()
                         }
                     }
@@ -1060,10 +1061,10 @@ class GRedisClientTester extends TestVerticle {
     void testMget() {
         def mykey1 = makeKey()
         def mykey2 = makeKey()
-        redis([command: "set", key: mykey1, value: "Hello"]) { reply0 ->
-            redis([command: "set", key: mykey2, value: "World"]) { reply1 ->
-                redis([command: "mget", key: [mykey1, mykey2, "nonexisting"]]) { reply2 ->
-                    assertArrayValue(["Hello", "World", null], reply2)
+        redis([command: 'set', args: [mykey1, 'Hello']]) { reply0 ->
+            redis([command: 'set', args: [mykey2, 'World']]) { reply1 ->
+                redis([command: 'mget', args: [mykey1, mykey2, 'nonexisting']]) { reply2 ->
+                    assertArrayValue(['Hello', 'World', null], reply2)
                     testComplete()
                 }
             }
@@ -1089,11 +1090,11 @@ class GRedisClientTester extends TestVerticle {
     void testMset() {
         def mykey1 = makeKey()
         def mykey2 = makeKey()
-        redis([command: "mset", keys: [(mykey1): "Hello", (mykey2): "World"]]) { reply0 ->
-            redis([command: "get", key: mykey1]) { reply1 ->
-                assertStringValue("Hello", reply1)
-                redis([command: "get", key: mykey2]) { reply2 ->
-                    assertStringValue("World", reply2)
+        redis([command: 'mset', args: [mykey1, 'Hello', mykey2, 'World']]) { reply0 ->
+            redis([command: 'get', args: [mykey1]]) { reply1 ->
+                assertStringValue('Hello', reply1)
+                redis([command: 'get', args: [mykey2]]) { reply2 ->
+                    assertStringValue('World', reply2)
                     testComplete()
                 }
             }
@@ -1106,12 +1107,12 @@ class GRedisClientTester extends TestVerticle {
         def mykey2 = makeKey()
         def mykey3 = makeKey()
 
-        redis([command: "msetnx", keys: [(mykey1): "Hello", (mykey2): "there"]]) { reply0 ->
+        redis([command: 'msetnx', args: [mykey1, 'Hello', mykey2, 'there']]) { reply0 ->
             assertNumberValue(1, reply0)
-            redis([command: "msetnx", keys: [(mykey2): "there", (mykey3): "world"]]) { reply1 ->
+            redis([command: 'msetnx', args: [mykey2, 'there', mykey3, 'world']]) { reply1 ->
                 assertNumberValue(0, reply1)
-                redis([command: "mget", key: [mykey1, mykey2, mykey3]]) { reply2 ->
-                    assertArrayValue(["Hello", "there", null], reply2)
+                redis([command: 'mget', args: [mykey1, mykey2, mykey3]]) { reply2 ->
+                    assertArrayValue(['Hello', 'there', null], reply2)
                     testComplete()
                 }
             }
@@ -1131,14 +1132,14 @@ class GRedisClientTester extends TestVerticle {
     @Test
     void testPersist() {
         def mykey = makeKey()
-        redis([command: "set", key: mykey, value: "Hello"]) { reply0 ->
-            redis([command: "expire", key: mykey, seconds: 10]) { reply1 ->
+        redis([command: 'set', args: [mykey, 'Hello']]) { reply0 ->
+            redis([command: 'expire', args: [mykey, 10]]) { reply1 ->
                 assertNumberValue(1, reply1)
-                redis([command: "ttl", key: mykey]) { reply2 ->
+                redis([command: 'ttl', args: [mykey]]) { reply2 ->
                     assertNumberValue(10, reply2)
-                    redis([command: "persist", key: mykey]) { reply3 ->
+                    redis([command: 'persist', args: [mykey]]) { reply3 ->
                         assertNumberValue(1, reply3)
-                        redis([command: "ttl", key: mykey]) { reply4 ->
+                        redis([command: 'ttl', args: [mykey]]) { reply4 ->
                             assertNumberValue(-1, reply4)
                             testComplete()
                         }
@@ -1151,13 +1152,13 @@ class GRedisClientTester extends TestVerticle {
     @Test
     void testPexpire() {
         def mykey = makeKey()
-        redis([command: "set", key: mykey, value: "Hello"]) { reply0 ->
-            redis([command: "pexpire", key: mykey, milliseconds: 1500]) { reply1 ->
+        redis([command: 'set', args: [mykey, 'Hello']]) { reply0 ->
+            redis([command: 'pexpire', args: [mykey, 1500]]) { reply1 ->
                 assertNumberValue(1, reply1)
-                redis([command: "ttl", key: mykey]) { reply2 ->
+                redis([command: 'ttl', args: [mykey]]) { reply2 ->
                     assertNumberValue(1, reply2)
-                    redis([command: "pttl", key: mykey]) { reply3 ->
-                        assertTrue(1500 > reply3.body.getNumber("value") && reply3.body.getNumber("value") > 0)
+                    redis([command: 'pttl', args: [mykey]]) { reply3 ->
+                        assertTrue(1500 > reply3.body.getNumber('value') && reply3.body.getNumber('value') > 0)
                         testComplete()
                     }
                 }
@@ -1168,13 +1169,13 @@ class GRedisClientTester extends TestVerticle {
     @Test
     void testPexpireat() {
         def mykey = makeKey()
-        redis([command: "set", key: mykey, value: "Hello"]) { reply0 ->
-            redis([command: "pexpireat", key: mykey, 'milliseconds-timestamp': 1555555555005]) { reply1 ->
+        redis([command: 'set', args: [mykey, 'Hello']]) { reply0 ->
+            redis([command: 'pexpireat', args: [mykey, 1555555555005]]) { reply1 ->
                 assertNumberValue(1, reply1)
-                redis([command: "ttl", key: mykey]) { reply2 ->
-                    assertTrue(200000000 > reply2.body.getNumber("value") && reply2.body.getNumber("value") > 0)
-                    redis([command: "pttl", key: mykey]) { reply3 ->
-                        assertTrue(1555555555005 > reply3.body.getNumber("value") && reply3.body.getNumber("value") > 0)
+                redis([command: 'ttl', args: [mykey]]) { reply2 ->
+                    assertTrue(200000000 > reply2.body.getNumber('value') && reply2.body.getNumber('value') > 0)
+                    redis([command: 'pttl', args: [mykey]]) { reply3 ->
+                        assertTrue(1555555555005 > reply3.body.getNumber('value') && reply3.body.getNumber('value') > 0)
                         testComplete()
                     }
                 }
@@ -1184,8 +1185,8 @@ class GRedisClientTester extends TestVerticle {
 
     @Test
     void testPing() {
-        redis([command: "ping"]) { reply0 ->
-            assertStringValue("PONG", reply0)
+        redis([command: 'ping']) { reply0 ->
+            assertStringValue('PONG', reply0)
             testComplete()
         }
     }
@@ -1193,11 +1194,11 @@ class GRedisClientTester extends TestVerticle {
     @Test
     void testPsetex() {
         def mykey = makeKey()
-        redis([command: "psetex", key: mykey, milliseconds: 1000, value: "Hello"]) { reply0 ->
-            redis([command: "pttl", key: mykey]) { reply1 ->
-                assertTrue(1500 > reply1.body.getNumber("value") && reply1.body.getNumber("value") > 0)
-                redis([command: "get", key: mykey]) { reply2 ->
-                    assertStringValue("Hello", reply2)
+        redis([command: 'psetex', args: [mykey, 1000, 'Hello']]) { reply0 ->
+            redis([command: 'pttl', args: [mykey]]) { reply1 ->
+                assertTrue(1500 > reply1.body.getNumber('value') && reply1.body.getNumber('value') > 0)
+                redis([command: 'get', args: [mykey]]) { reply2 ->
+                    assertStringValue('Hello', reply2)
                     testComplete()
                 }
             }
@@ -1212,11 +1213,11 @@ class GRedisClientTester extends TestVerticle {
     @Test
     void testPttl() {
         def mykey = makeKey()
-        redis([command: "set", key: mykey, value: "Hello"]) { reply0 ->
-            redis([command: "expire", key: mykey, seconds: 1]) { reply1 ->
+        redis([command: 'set', args: [mykey, 'Hello']]) { reply0 ->
+            redis([command: 'expire', args: [mykey, 1]]) { reply1 ->
                 assertNumberValue(1, reply1)
-                redis([command: "pttl", key: mykey]) { reply2 ->
-                    assertTrue(1000 > reply2.body.getNumber("value") && reply2.body.getNumber("value") > 0)
+                redis([command: 'pttl', args: [mykey]]) { reply2 ->
+                    assertTrue(1000 > reply2.body.getNumber('value') && reply2.body.getNumber('value') > 0)
                     testComplete()
                 }
             }
@@ -1248,10 +1249,10 @@ class GRedisClientTester extends TestVerticle {
         def mykey = makeKey()
         def myotherkey = makeKey()
 
-        redis([command: "set", key: mykey, value: "Hello"]) { reply0 ->
-            redis([command: "rename", key: mykey, newkey: myotherkey]) { reply1 ->
-                redis([command: "get", key: myotherkey]) { reply2 ->
-                    assertStringValue("Hello", reply2)
+        redis([command: 'set', args: [mykey, 'Hello']]) { reply0 ->
+            redis([command: 'rename', args: [mykey, myotherkey]]) { reply1 ->
+                redis([command: 'get', args: [myotherkey]]) { reply2 ->
+                    assertStringValue('Hello', reply2)
                     testComplete()
                 }
             }
@@ -1263,12 +1264,12 @@ class GRedisClientTester extends TestVerticle {
         def mykey = makeKey()
         def myotherkey = makeKey()
 
-        redis([command: "set", key: mykey, value: "Hello"]) { reply0 ->
-            redis([command: "set", key: myotherkey, value: "World"]) { reply1 ->
-                redis([command: "renamenx", key: mykey, newkey: myotherkey]) { reply2 ->
+        redis([command: 'set', args: [mykey, 'Hello']]) { reply0 ->
+            redis([command: 'set', args: [myotherkey, 'World']]) { reply1 ->
+                redis([command: 'renamenx', args: [mykey, myotherkey]]) { reply2 ->
                     assertNumberValue(0, reply2)
-                    redis([command: "get", key: myotherkey]) { reply3 ->
-                        assertStringValue("World", reply3)
+                    redis([command: 'get', args: [myotherkey]]) { reply3 ->
+                        assertStringValue('World', reply3)
                         testComplete()
                     }
                 }
@@ -1284,16 +1285,16 @@ class GRedisClientTester extends TestVerticle {
     @Test
     void testRpop() {
         def mykey = makeKey()
-        redis([command: "rpush", key: mykey, value: "one"]) { reply0 ->
+        redis([command: 'rpush', args: [mykey, 'one']]) { reply0 ->
             assertNumberValue(1, reply0)
-            redis([command: "rpush", key: mykey, value: "two"]) { reply1 ->
+            redis([command: 'rpush', args: [mykey, 'two']]) { reply1 ->
                 assertNumberValue(2, reply1)
-                redis([command: "rpush", key: mykey, value: "three"]) { reply2 ->
+                redis([command: 'rpush', args: [mykey, 'three']]) { reply2 ->
                     assertNumberValue(3, reply2)
-                    redis([command: "rpop", key: mykey]) { reply3 ->
-                        assertStringValue("three", reply3)
-                        redis([command: "lrange", key: mykey, start: 0, stop: -1]) { reply5 ->
-                            assertArrayValue(["one", "two"], reply5)
+                    redis([command: 'rpop', args: [mykey]]) { reply3 ->
+                        assertStringValue('three', reply3)
+                        redis([command: 'lrange', args: [mykey, 0, -1]]) { reply5 ->
+                            assertArrayValue(['one', 'two'], reply5)
                             testComplete()
                         }
                     }
@@ -1306,18 +1307,18 @@ class GRedisClientTester extends TestVerticle {
     void testRpoplpush() {
         def mykey = makeKey()
         def myotherkey = makeKey()
-        redis([command: "rpush", key: mykey, value: "one"]) { reply0 ->
+        redis([command: 'rpush', args: [mykey, 'one']]) { reply0 ->
             assertNumberValue(1, reply0)
-            redis([command: "rpush", key: mykey, value: "two"]) { reply1 ->
+            redis([command: 'rpush', args: [mykey, 'two']]) { reply1 ->
                 assertNumberValue(2, reply1)
-                redis([command: "rpush", key: mykey, value: "three"]) { reply2 ->
+                redis([command: 'rpush', args: [mykey, 'three']]) { reply2 ->
                     assertNumberValue(3, reply2)
-                    redis([command: "rpoplpush", source: mykey, destination: myotherkey]) { reply3 ->
-                        assertStringValue("three", reply3)
-                        redis([command: "lrange", key: mykey, start: 0, stop: -1]) { reply5 ->
-                            assertArrayValue(["one", "two"], reply5)
-                            redis([command: "lrange", key: myotherkey, start: 0, stop: -1]) { reply6 ->
-                                assertArrayValue(["three"], reply6)
+                    redis([command: 'rpoplpush', args: [mykey, myotherkey]]) { reply3 ->
+                        assertStringValue('three', reply3)
+                        redis([command: 'lrange', args: [mykey, 0, -1]]) { reply5 ->
+                            assertArrayValue(['one', 'two'], reply5)
+                            redis([command: 'lrange',args: [myotherkey, 0, -1]]) { reply6 ->
+                                assertArrayValue(['three'], reply6)
                                 testComplete()
                             }
                         }
@@ -1330,12 +1331,12 @@ class GRedisClientTester extends TestVerticle {
     @Test
     void testRpush() {
         def mykey = makeKey()
-        redis([command: "rpush", key: mykey, value: "hello"]) { reply0 ->
+        redis([command: 'rpush', args: [mykey, 'hello']]) { reply0 ->
             assertNumberValue(1, reply0)
-            redis([command: "rpush", key: mykey, value: "world"]) { reply1 ->
+            redis([command: 'rpush', args: [mykey, 'world']]) { reply1 ->
                 assertNumberValue(2, reply1)
-                redis([command: "lrange", key: mykey, start: 0, stop: -1]) { reply2 ->
-                    assertArrayValue(["hello", "world"], reply2)
+                redis([command: 'lrange', args: [mykey, 0, -1]]) { reply2 ->
+                    assertArrayValue(['hello', 'world'], reply2)
                     testComplete()
                 }
             }
@@ -1346,15 +1347,15 @@ class GRedisClientTester extends TestVerticle {
     void testRpushx() {
         def mykey = makeKey()
         def myotherkey = makeKey()
-        redis([command: "rpush", key: mykey, value: "Hello"]) { reply0 ->
+        redis([command: 'rpush', args: [mykey, 'Hello']]) { reply0 ->
             assertNumberValue(1, reply0)
-            redis([command: "rpushx", key: mykey, value: "World"]) { reply1 ->
+            redis([command: 'rpushx', args: [mykey, 'World']]) { reply1 ->
                 assertNumberValue(2, reply1)
-                redis([command: "rpushx", key: myotherkey, value: "World"]) { reply2 ->
+                redis([command: 'rpushx', args: [myotherkey, 'World']]) { reply2 ->
                     assertNumberValue(0, reply2)
-                    redis([command: "lrange", key: mykey, start: 0, stop: -1]) { reply3 ->
-                        assertArrayValue(["Hello", "World"], reply3)
-                        redis([command: "lrange", key: myotherkey, start: 0, stop: -1]) { reply4 ->
+                    redis([command: 'lrange', args: [mykey, 0, -1]]) { reply3 ->
+                        assertArrayValue(['Hello', 'World'], reply3)
+                        redis([command: 'lrange',args: [myotherkey, 0, -1]]) { reply4 ->
                             assertArrayValue([], reply4)
                             testComplete()
                         }
@@ -1367,14 +1368,14 @@ class GRedisClientTester extends TestVerticle {
     @Test
     void testSadd() {
         def mykey = makeKey()
-        redis([command: "sadd", key: mykey, member: "Hello"]) { reply0 ->
+        redis([command: 'sadd', args: [mykey, 'Hello']]) { reply0 ->
             assertNumberValue(1, reply0)
-            redis([command: "sadd", key: mykey, member: "World"]) { reply1 ->
+            redis([command: 'sadd', args: [mykey, 'World']]) { reply1 ->
                 assertNumberValue(1, reply1)
-                redis([command: "sadd", key: mykey, member: "World"]) { reply2 ->
+                redis([command: 'sadd', args: [mykey, 'World']]) { reply2 ->
                     assertNumberValue(0, reply2)
-                    redis([command: "smembers", key: mykey]) { reply3 ->
-                        assertUnorderedArrayValue(["World", "Hello"], reply3)
+                    redis([command: 'smembers', args: [mykey]]) { reply3 ->
+                        assertUnorderedArrayValue(['World', 'Hello'], reply3)
                         testComplete()
                     }
                 }
@@ -1390,11 +1391,11 @@ class GRedisClientTester extends TestVerticle {
     @Test
     void testScard() {
         def mykey = makeKey()
-        redis([command: "sadd", key: mykey, member: "Hello"]) { reply0 ->
+        redis([command: 'sadd', args: [mykey, 'Hello']]) { reply0 ->
             assertNumberValue(1, reply0)
-            redis([command: "sadd", key: mykey, member: "World"]) { reply1 ->
+            redis([command: 'sadd', args: [mykey, 'World']]) { reply1 ->
                 assertNumberValue(1, reply1)
-                redis([command: "scard", key: mykey]) { reply2 ->
+                redis([command: 'scard', args: [mykey]]) { reply2 ->
                     assertNumberValue(2, reply2)
                     testComplete()
                 }
@@ -1427,20 +1428,20 @@ class GRedisClientTester extends TestVerticle {
         def mykey1 = makeKey()
         def mykey2 = makeKey()
 
-        redis([command: "sadd", key: mykey1, member: "a"]) { reply0 ->
+        redis([command: 'sadd', args: [mykey1, 'a']]) { reply0 ->
             assertNumberValue(1, reply0)
-            redis([command: "sadd", key: mykey1, member: "b"]) { reply1 ->
+            redis([command: 'sadd', args: [mykey1, 'b']]) { reply1 ->
                 assertNumberValue(1, reply1)
-                redis([command: "sadd", key: mykey1, member: "c"]) { reply2 ->
+                redis([command: 'sadd', args: [mykey1, 'c']]) { reply2 ->
                     assertNumberValue(1, reply2)
-                    redis([command: "sadd", key: mykey2, member: "c"]) { reply3 ->
+                    redis([command: 'sadd', args: [mykey2, 'c']]) { reply3 ->
                         assertNumberValue(1, reply3)
-                        redis([command: "sadd", key: mykey2, member: "d"]) { reply4 ->
+                        redis([command: 'sadd', args: [mykey2, 'd']]) { reply4 ->
                             assertNumberValue(1, reply4)
-                            redis([command: "sadd", key: mykey2, member: "e"]) { reply5 ->
+                            redis([command: 'sadd', args: [mykey2, 'e']]) { reply5 ->
                                 assertNumberValue(1, reply5)
-                                redis([command: "sdiff", key: [mykey1, mykey2]]) { reply6 ->
-                                    assertUnorderedArrayValue(["a", "b"], reply6)
+                                redis([command: 'sdiff', args: [mykey1, mykey2]]) { reply6 ->
+                                    assertUnorderedArrayValue(['a', 'b'], reply6)
                                     testComplete()
                                 }
                             }
@@ -1464,9 +1465,9 @@ class GRedisClientTester extends TestVerticle {
     @Test
     void testSet() {
         def mykey = makeKey()
-        redis([command: "set", key: mykey, value: "Hello"]) { reply0 ->
-            redis([command: "get", key: mykey]) { reply1 ->
-                assertStringValue("Hello", reply1)
+        redis([command: 'set', args: [mykey, 'Hello']]) { reply0 ->
+            redis([command: 'get', args: [mykey]]) { reply1 ->
+                assertStringValue('Hello', reply1)
                 testComplete()
             }
         }
@@ -1475,12 +1476,12 @@ class GRedisClientTester extends TestVerticle {
     @Test
     void testSetbit() {
         def mykey = makeKey()
-        redis([command: "setbit", key: mykey, offset: 7, value: 1]) { reply0 ->
+        redis([command: 'setbit', args: [mykey, 7, 1]]) { reply0 ->
             assertNumberValue(0, reply0)
-            redis([command: "setbit", key: mykey, offset: 7, value: 0]) { reply1 ->
+            redis([command: 'setbit', args: [mykey, 7, 0]]) { reply1 ->
                 assertNumberValue(1, reply1)
-                redis([command: "get", key: mykey]) { reply2 ->
-                    assertStringValue("\u0000", reply2)
+                redis([command: 'get', args: [mykey]]) { reply2 ->
+                    assertStringValue('\u0000', reply2)
                     testComplete()
                 }
             }
@@ -1490,11 +1491,11 @@ class GRedisClientTester extends TestVerticle {
     @Test
     void testSetex() {
         def mykey = makeKey()
-        redis([command: "setex", key: mykey, seconds: 10, value: "Hello"]) { reply0 ->
-            redis([command: "ttl", key: mykey]) { reply1 ->
+        redis([command: 'setex', args: [mykey, 10, 'Hello']]) { reply0 ->
+            redis([command: 'ttl', args: [mykey]]) { reply1 ->
                 assertNumberValue(10, reply1)
-                redis([command: "get", key: mykey]) { reply2 ->
-                    assertStringValue("Hello", reply2)
+                redis([command: 'get', args: [mykey]]) { reply2 ->
+                    assertStringValue('Hello', reply2)
                     testComplete()
                 }
             }
@@ -1504,12 +1505,12 @@ class GRedisClientTester extends TestVerticle {
     @Test
     void testSetnx() {
         def mykey = makeKey()
-        redis([command: "setnx", key: mykey, value: "Hello"]) { reply0 ->
+        redis([command: 'setnx', args: [mykey, 'Hello']]) { reply0 ->
             assertNumberValue(1, reply0)
-            redis([command: "setnx", key: mykey, value: "World"]) { reply1 ->
+            redis([command: 'setnx', args: [mykey, 'World']]) { reply1 ->
                 assertNumberValue(0, reply1)
-                redis([command: "get", key: mykey]) { reply2 ->
-                    assertStringValue("Hello", reply2)
+                redis([command: 'get', args: [mykey]]) { reply2 ->
+                    assertStringValue('Hello', reply2)
                     testComplete()
                 }
             }
@@ -1519,11 +1520,11 @@ class GRedisClientTester extends TestVerticle {
     @Test
     void testSetrange() {
         def mykey = makeKey()
-        redis([command: "set", key: mykey, value: "Hello World"]) { reply0 ->
-            redis([command: "setrange", key: mykey, offset: 6, value: "Redis"]) { reply1 ->
+        redis([command: 'set', args: [mykey, 'Hello World']]) { reply0 ->
+            redis([command: 'setrange', args: [mykey, 6, 'Redis']]) { reply1 ->
                 assertNumberValue(11, reply1)
-                redis([command: "get", key: mykey]) { reply2 ->
-                    assertStringValue("Hello Redis", reply2)
+                redis([command: 'get', args: [mykey]]) { reply2 ->
+                    assertStringValue('Hello Redis', reply2)
                     testComplete()
                 }
             }
@@ -1540,20 +1541,20 @@ class GRedisClientTester extends TestVerticle {
         def mykey1 = makeKey()
         def mykey2 = makeKey()
 
-        redis([command: "sadd", key: mykey1, member: "a"]) { reply0 ->
+        redis([command: 'sadd', args: [mykey1, 'a']]) { reply0 ->
             assertNumberValue(1, reply0)
-            redis([command: "sadd", key: mykey1, member: "b"]) { reply1 ->
+            redis([command: 'sadd', args: [mykey1, 'b']]) { reply1 ->
                 assertNumberValue(1, reply1)
-                redis([command: "sadd", key: mykey1, member: "c"]) { reply2 ->
+                redis([command: 'sadd', args: [mykey1, 'c']]) { reply2 ->
                     assertNumberValue(1, reply2)
-                    redis([command: "sadd", key: mykey2, member: "c"]) { reply3 ->
+                    redis([command: 'sadd', args: [mykey2, 'c']]) { reply3 ->
                         assertNumberValue(1, reply3)
-                        redis([command: "sadd", key: mykey2, member: "d"]) { reply4 ->
+                        redis([command: 'sadd', args: [mykey2, 'd']]) { reply4 ->
                             assertNumberValue(1, reply4)
-                            redis([command: "sadd", key: mykey2, member: "e"]) { reply5 ->
+                            redis([command: 'sadd', args: [mykey2, 'e']]) { reply5 ->
                                 assertNumberValue(1, reply5)
-                                redis([command: "sinter", key: [mykey1, mykey2]]) { reply6 ->
-                                    assertArrayValue(["c"], reply6)
+                                redis([command: 'sinter', args: [mykey1, mykey2]]) { reply6 ->
+                                    assertArrayValue(['c'], reply6)
                                     testComplete()
                                 }
                             }
@@ -1572,10 +1573,10 @@ class GRedisClientTester extends TestVerticle {
     @Test
     void testSismember() {
         def mykey = makeKey()
-        redis([command: "sadd", key: mykey, member: "one"]) { reply0 ->
-            redis([command: "sismember", key: mykey, member: "one"]) { reply1 ->
+        redis([command: 'sadd', args: [mykey, 'one']]) { reply0 ->
+            redis([command: 'sismember', args: [mykey, 'one']]) { reply1 ->
                 assertNumberValue(1, reply1)
-                redis([command: "sismember", key: mykey, member: "two"]) { reply2 ->
+                redis([command: 'sismember', args: [mykey, 'two']]) { reply2 ->
                     assertNumberValue(0, reply2)
                     testComplete()
                 }
@@ -1596,12 +1597,12 @@ class GRedisClientTester extends TestVerticle {
     @Test
     void testSmembers() {
         def mykey = makeKey()
-        redis([command: "sadd", key: mykey, member: "Hello"]) { reply0 ->
+        redis([command: 'sadd', args: [mykey, 'Hello']]) { reply0 ->
             assertNumberValue(1, reply0)
-            redis([command: "sadd", key: mykey, member: "World"]) { reply1 ->
+            redis([command: 'sadd', args: [mykey, 'World']]) { reply1 ->
                 assertNumberValue(1, reply1)
-                redis([command: "smembers", key: mykey]) { reply2 ->
-                    assertUnorderedArrayValue(["World", "Hello"], reply2)
+                redis([command: 'smembers', args: [mykey]]) { reply2 ->
+                    assertUnorderedArrayValue(['World', 'Hello'], reply2)
                     testComplete()
                 }
             }
@@ -1612,18 +1613,18 @@ class GRedisClientTester extends TestVerticle {
     void testSmove() {
         def mykey = makeKey()
         def myotherkey = makeKey()
-        redis([command: "sadd", key: mykey, member: "one"]) { reply0 ->
+        redis([command: 'sadd', args: [mykey, 'one']]) { reply0 ->
             assertNumberValue(1, reply0)
-            redis([command: "sadd", key: mykey, member: "two"]) { reply1 ->
+            redis([command: 'sadd', args: [mykey, 'two']]) { reply1 ->
                 assertNumberValue(1, reply1)
-                redis([command: "sadd", key: myotherkey, member: "three"]) { reply2 ->
+                redis([command: 'sadd', args: [myotherkey, 'three']]) { reply2 ->
                     assertNumberValue(1, reply2)
-                    redis([command: "smove", source: mykey, destination: myotherkey, member: "two"]) { reply3 ->
+                    redis([command: 'smove', args: [mykey, myotherkey, 'two']]) { reply3 ->
                         assertNumberValue(1, reply3)
-                        redis([command: "smembers", key: mykey]) { reply4 ->
-                            assertUnorderedArrayValue(["one"], reply4)
-                            redis([command: "smembers", key: myotherkey]) { reply5 ->
-                                assertUnorderedArrayValue(["two", "three"], reply5)
+                        redis([command: 'smembers', args: [mykey]]) { reply4 ->
+                            assertUnorderedArrayValue(['one'], reply4)
+                            redis([command: 'smembers', args: [myotherkey]]) { reply5 ->
+                                assertUnorderedArrayValue(['two', 'three'], reply5)
                                 testComplete()
                             }
                         }
@@ -1642,13 +1643,14 @@ class GRedisClientTester extends TestVerticle {
         def k3 = "${mykey}:3".toString()
         def kx = "${mykey}:*".toString()
 
-        redis([command: "sadd", key: mykey, member: ["1", "2", "3"]]) { reply0 ->
+        redis([command: 'sadd', args: [mykey, '1', '2', '3']]) { reply0 ->
             assertNumberValue(3, reply0)
-            redis([command: "set", key: k1, value: "one"]) { reply1 ->
-                redis([command: "set", key: k2, value: "two"]) { reply2 ->
-                    redis([command: "set", key: k3, value: "three"]) { reply3 ->
-                        redis([command: "sort", key: mykey, desc: true, get: kx]) { reply4 ->
-                            assertArrayValue(["three", "two", "one"], reply4)
+            redis([command: 'set', args: [k1, 'one']]) { reply1 ->
+                redis([command: 'set', args: [k2, 'two']]) { reply2 ->
+                    redis([command: 'set', args: [k3, 'three']]) { reply3 ->
+                        redis([command: 'sort', args: [mykey, 'desc', 'get', kx]]) { reply4 ->
+                            println reply4.body().encode()
+                            assertArrayValue(['three', 'two', 'one'], reply4)
                             testComplete()
                         }
                     }
@@ -1660,26 +1662,26 @@ class GRedisClientTester extends TestVerticle {
     @Test
     void testSpop() {
         def mykey = makeKey()
-        redis([command: "sadd", key: mykey, member: "one"]) { reply0 ->
+        redis([command: 'sadd', args: [mykey, 'one']]) { reply0 ->
             assertNumberValue(1, reply0)
-            redis([command: "sadd", key: mykey, member: "two"]) { reply1 ->
+            redis([command: 'sadd', args: [mykey, 'two']]) { reply1 ->
                 assertNumberValue(1, reply1)
-                redis([command: "sadd", key: mykey, member: "three"]) { reply2 ->
+                redis([command: 'sadd', args: [mykey, 'three']]) { reply2 ->
                     assertNumberValue(1, reply2)
-                    redis([command: "spop", key: mykey]) { reply3 ->
-                        def ret = reply3.body.getString("value")
-                        assertTrue(ret.equals("one") || ret.equals("two") || ret.equals("three"))
+                    redis([command: 'spop', args: [mykey]]) { reply3 ->
+                        def ret = reply3.body.getString('value')
+                        assertTrue(ret.equals('one') || ret.equals('two') || ret.equals('three'))
                         def expected = []
-                        if (!ret.equals("one")) {
-                            expected.add("one")
+                        if (!ret.equals('one')) {
+                            expected.add('one')
                         }
-                        if (!ret.equals("two")) {
-                            expected.add("two")
+                        if (!ret.equals('two')) {
+                            expected.add('two')
                         }
-                        if (!ret.equals("three")) {
-                            expected.add("three")
+                        if (!ret.equals('three')) {
+                            expected.add('three')
                         }
-                        redis([command: "smembers", key: mykey]) { reply4 ->
+                        redis([command: 'smembers', args: [mykey]]) { reply4 ->
                             assertUnorderedArrayValue(expected, reply4)
                             testComplete()
                         }
@@ -1692,11 +1694,11 @@ class GRedisClientTester extends TestVerticle {
     @Test
     void testSrandmember() {
         def mykey = makeKey()
-        redis([command: "sadd", key: mykey, member: ["one", "two", "three"]]) { reply0 ->
+        redis([command: 'sadd', args: [mykey, 'one', 'two', 'three']]) { reply0 ->
             assertNumberValue(3, reply0)
-            redis([command: "srandmember", key: mykey]) { reply1 ->
-                def randmember = reply1.body.getString("value");
-                assertTrue(randmember.equals("one") || randmember.equals("two") || randmember.equals("three"))
+            redis([command: 'srandmember', args: [mykey]]) { reply1 ->
+                def randmember = reply1.body.getString('value');
+                assertTrue(randmember.equals('one') || randmember.equals('two') || randmember.equals('three'))
                 testComplete()
             }
         }
@@ -1705,15 +1707,15 @@ class GRedisClientTester extends TestVerticle {
     @Test
     void testSrem() {
         def mykey = makeKey()
-        redis([command: "sadd", key: mykey, member: "one"]) { reply0 ->
+        redis([command: 'sadd', args: [mykey, 'one']]) { reply0 ->
             assertNumberValue(1, reply0)
-            redis([command: "sadd", key: mykey, member: "two"]) { reply1 ->
+            redis([command: 'sadd', args: [mykey, 'two']]) { reply1 ->
                 assertNumberValue(1, reply1)
-                redis([command: "sadd", key: mykey, member: "three"]) { reply2 ->
+                redis([command: 'sadd', args: [mykey, 'three']]) { reply2 ->
                     assertNumberValue(1, reply2)
-                    redis([command: "srem", key: mykey, member: "one"]) { reply3 ->
+                    redis([command: 'srem', args: [mykey, 'one']]) { reply3 ->
                         assertNumberValue(1, reply3)
-                        redis([command: "srem", key: mykey, member: "four"]) { reply4 ->
+                        redis([command: 'srem', args: [mykey, 'four']]) { reply4 ->
                             assertNumberValue(0, reply4)
                             testComplete()
                         }
@@ -1726,10 +1728,10 @@ class GRedisClientTester extends TestVerticle {
     @Test
     void testStrlen() {
         def mykey = makeKey()
-        redis([command: "set", key: mykey, value: "Hello world"]) { reply0 ->
-            redis([command: "strlen", key: mykey]) { reply1 ->
+        redis([command: 'set', args: [mykey, 'Hello world']]) { reply0 ->
+            redis([command: 'strlen', args: [mykey]]) { reply1 ->
                 assertNumberValue(11, reply1)
-                redis([command: "strlen", key: "nonexisting"]) { reply2 ->
+                redis([command: 'strlen', args: ['nonexisting']]) { reply2 ->
                     assertNumberValue(0, reply2)
                     testComplete()
                 }
@@ -1747,26 +1749,26 @@ class GRedisClientTester extends TestVerticle {
         def mykey1 = makeKey()
         def mykey2 = makeKey()
 
-        redis([command: "sadd", key: mykey1, member: "a"]) { reply0 ->
+        redis([command: 'sadd', args: [mykey1, 'a']]) { reply0 ->
             assertNumberValue(1, reply0)
-            redis([command: "sadd", key: mykey1, member: "b"]) { reply1 ->
+            redis([command: 'sadd', args: [mykey1, 'b']]) { reply1 ->
                 assertNumberValue(1, reply1)
             }
-            redis([command: "sadd", key: mykey1, member: "c"]) { reply2 ->
+            redis([command: 'sadd', args: [mykey1, 'c']]) { reply2 ->
                 assertNumberValue(1, reply2)
             }
-            redis([command: "sadd", key: mykey2, member: "c"]) { reply3 ->
+            redis([command: 'sadd', args: [mykey2, 'c']]) { reply3 ->
                 assertNumberValue(1, reply3)
             }
-            redis([command: "sadd", key: mykey2, member: "d"]) { reply4 ->
+            redis([command: 'sadd', args: [mykey2, 'd']]) { reply4 ->
                 assertNumberValue(1, reply4)
             }
-            redis([command: "sadd", key: mykey2, member: "e"]) { reply5 ->
+            redis([command: 'sadd', args: [mykey2, 'e']]) { reply5 ->
                 assertNumberValue(1, reply5)
-                redis([command: "sunion", key: [mykey1, mykey2]]) { reply6 ->
-                    def arr = reply6.body.getArray("value")
+                redis([command: 'sunion', args: [mykey1, mykey2]]) { reply6 ->
+                    def arr = reply6.body.getArray('value')
                     assertTrue(arr.size() == 5)
-//                    assertArrayValue(["a", "b", "c", "d", "e"], reply6)
+//                    assertArrayValue(['a', 'b', 'c', 'd', 'e'], reply6)
                     testComplete()
                 }
             }
@@ -1785,8 +1787,8 @@ class GRedisClientTester extends TestVerticle {
 
     @Test
     void testTime() {
-        redis([command: "time"]) { reply0 ->
-            assertTrue(reply0.body.getArray("value").size() == 2)
+        redis([command: 'time']) { reply0 ->
+            assertTrue(reply0.body.getArray('value').size() == 2)
             testComplete()
         }
     }
@@ -1794,10 +1796,10 @@ class GRedisClientTester extends TestVerticle {
     @Test
     void testTtl() {
         def mykey = makeKey()
-        redis([command: "set", key: mykey, value: "Hello"]) { reply0 ->
-            redis([command: "expire", key: mykey, seconds: 10]) { reply1 ->
+        redis([command: 'set', args: [mykey, 'Hello']]) { reply0 ->
+            redis([command: 'expire', args: [mykey, 10]]) { reply1 ->
                 assertNumberValue(1, reply1)
-                redis([command: "ttl", key: mykey]) { reply2 ->
+                redis([command: 'ttl', args: [mykey]]) { reply2 ->
                     assertNumberValue(10, reply2)
                     testComplete()
                 }
@@ -1811,17 +1813,17 @@ class GRedisClientTester extends TestVerticle {
         def key2 = makeKey()
         def key3 = makeKey()
 
-        redis([command: "set", key: key1, value: "value"]) { reply0 ->
-            redis([command: "lpush", key: key2, value: "value"]) { reply1 ->
+        redis([command: 'set', args: [key1, 'value']]) { reply0 ->
+            redis([command: 'lpush', args: [key2, 'value']]) { reply1 ->
                 assertNumberValue(1, reply1)
-                redis([command: "sadd", key: key3, member: "value"]) { reply2 ->
+                redis([command: 'sadd', args: [key3, 'value']]) { reply2 ->
                     assertNumberValue(1, reply2)
-                    redis([command: "type", key: key1]) { reply3 ->
-                        assertStringValue("string", reply3)
-                        redis([command: "type", key: key2]) { reply4 ->
-                            assertStringValue("list", reply4)
-                            redis([command: "type", key: key3]) { reply5 ->
-                                assertStringValue("set", reply5)
+                    redis([command: 'type', args: [key1]]) { reply3 ->
+                        assertStringValue('string', reply3)
+                        redis([command: 'type', args: [key2]]) { reply4 ->
+                            assertStringValue('list', reply4)
+                            redis([command: 'type', args: [key3]]) { reply5 ->
+                                assertStringValue('set', reply5)
                                 testComplete()
                             }
                         }
@@ -1849,16 +1851,16 @@ class GRedisClientTester extends TestVerticle {
     @Test
     void testZadd() {
         def key = makeKey()
-        redis([command: "zadd", key: key, score: 1, member: "one"]) { reply0 ->
+        redis([command: 'zadd', args: [key, 1, 'one']]) { reply0 ->
             assertNumberValue(1, reply0)
-            redis([command: "zadd", key: key, score: 1, member: "uno"]) { reply1 ->
+            redis([command: 'zadd', args: [key, 1, 'uno']]) { reply1 ->
                 assertNumberValue(1, reply1)
-                redis([command: "zadd", key: key, score: 2, member: "two"]) { reply2 ->
+                redis([command: 'zadd', args: [key, 2, 'two']]) { reply2 ->
                     assertNumberValue(1, reply2)
-                    redis([command: "zadd", key: key, score: 3, member: "two"]) { reply3 ->
+                    redis([command: 'zadd', args: [key, 3, 'two']]) { reply3 ->
                         assertNumberValue(0, reply3)
-                        redis([command: "zrange", key: key, start: 0, stop: -1, withscores: true]) { reply4 ->
-                            assertArrayValue(["one", "1", "uno", "1", "two", "3"], reply4)
+                        redis([command: 'zrange', args: [key, 0, -1, 'withscores']]) { reply4 ->
+                            assertArrayValue(['one', '1', 'uno', '1', 'two', '3'], reply4)
                             testComplete()
                         }
                     }
@@ -1870,11 +1872,11 @@ class GRedisClientTester extends TestVerticle {
     @Test
     void testZcard() {
         def key = makeKey()
-        redis([command: "zadd", key: key, score: 1, member: "one"]) { reply0 ->
+        redis([command: 'zadd', args: [key, 1, 'one']]) { reply0 ->
             assertNumberValue(1, reply0)
-            redis([command: "zadd", key: key, score: 2, member: "two"]) { reply1 ->
+            redis([command: 'zadd', args: [key, 2, 'two']]) { reply1 ->
                 assertNumberValue(1, reply1)
-                redis([command: "zcard", key: key]) { reply2 ->
+                redis([command: 'zcard', args: [key]]) { reply2 ->
                     assertNumberValue(2, reply2)
                     testComplete()
                 }
@@ -1885,13 +1887,13 @@ class GRedisClientTester extends TestVerticle {
     @Test
     void testZcount() {
         def key = makeKey()
-        redis([command: "zadd", key: key, score: 1, member: "one"]) { reply0 ->
+        redis([command: 'zadd', args: [key, 1, 'one']]) { reply0 ->
             assertNumberValue(1, reply0)
-            redis([command: "zadd", key: key, score: 2, member: "two"]) { reply1 ->
+            redis([command: 'zadd', args: [key, 2, 'two']]) { reply1 ->
                 assertNumberValue(1, reply1)
-                redis([command: "zadd", key: key, score: 3, member: "three"]) { reply2 ->
+                redis([command: 'zadd', args: [key, 3, 'three']]) { reply2 ->
                     assertNumberValue(1, reply2)
-                    redis([command: "zcount", key: key, min: "-inf", max: "+inf"]) { reply3 ->
+                    redis([command: 'zcount', args: [key, '-inf', '+inf']]) { reply3 ->
                         assertNumberValue(3, reply3)
                         testComplete()
                     }
@@ -1903,12 +1905,12 @@ class GRedisClientTester extends TestVerticle {
     @Test
     void testZincrby() {
         def key = makeKey()
-        redis([command: "zadd", key: key, score: 1, member: "one"]) { reply0 ->
+        redis([command: 'zadd', args: [key, 1, 'one']]) { reply0 ->
             assertNumberValue(1, reply0)
-            redis([command: "zadd", key: key, score: 2, member: "two"]) { reply1 ->
+            redis([command: 'zadd', args: [key, 2, 'two']]) { reply1 ->
                 assertNumberValue(1, reply1)
-                redis([command: "zincrby", key: key, increment: 2, member: "one"]) { reply2 ->
-                    assertStringValue("3", reply2)
+                redis([command: 'zincrby', args: [key, 2, 'one']]) { reply2 ->
+                    assertStringValue('3', reply2)
                     testComplete()
                 }
             }
@@ -1921,17 +1923,17 @@ class GRedisClientTester extends TestVerticle {
         def key2 = makeKey()
         def key3 = makeKey()
 
-        redis([command: "zadd", key: key1, score: 1, member: "one"]) { reply0 ->
+        redis([command: 'zadd', args: [key1, 1, 'one']]) { reply0 ->
             assertNumberValue(1, reply0)
-            redis([command: "zadd", key: key1, score: 2, member: "two"]) { reply1 ->
+            redis([command: 'zadd', args: [key1, 2, 'two']]) { reply1 ->
                 assertNumberValue(1, reply1)
-                redis([command: "zadd", key: key2, score: 1, member: "one"]) { reply2 ->
+                redis([command: 'zadd', args: [key2, 1, 'one']]) { reply2 ->
                     assertNumberValue(1, reply2)
-                    redis([command: "zadd", key: key2, score: 2, member: "two"]) { reply3 ->
+                    redis([command: 'zadd', args: [key2, 2, 'two']]) { reply3 ->
                         assertNumberValue(1, reply3)
-                        redis([command: "zadd", key: key2, score: 3, member: "three"]) { reply4 ->
+                        redis([command: 'zadd', args: [key2, 3, 'three']]) { reply4 ->
                             assertNumberValue(1, reply4)
-                            redis([command: "zinterstore", destination: key3, numkeys: 2, key: [key1, key2], weigths: [2, 3]]) { reply5 ->
+                            redis([command: 'zinterstore', args: [key3, 2, key1, key2, 'weights', 2, 3]]) { reply5 ->
                                 assertNumberValue(2, reply5)
                                 testComplete()
                             }
@@ -1945,14 +1947,14 @@ class GRedisClientTester extends TestVerticle {
     @Test
     void testZrange() {
         def key = makeKey()
-        redis([command: "zadd", key: key, score: 1, member: "one"]) { reply0 ->
+        redis([command: 'zadd', args: [key, 1, 'one']]) { reply0 ->
             assertNumberValue(1, reply0)
-            redis([command: "zadd", key: key, score: 2, member: "two"]) { reply1 ->
+            redis([command: 'zadd', args: [key, 2, 'two']]) { reply1 ->
                 assertNumberValue(1, reply1)
-                redis([command: "zadd", key: key, score: 3, member: "three"]) { reply2 ->
+                redis([command: 'zadd', args: [key, 3, 'three']]) { reply2 ->
                     assertNumberValue(1, reply2)
-                    redis([command: "zrange", key: key, start: 0, stop: -1]) { reply3 ->
-                        assertArrayValue(["one", "two", "three"], reply3)
+                    redis([command: 'zrange', args: [key, 0, -1]]) { reply3 ->
+                        assertArrayValue(['one', 'two', 'three'], reply3)
                         testComplete()
                     }
                 }
@@ -1963,14 +1965,14 @@ class GRedisClientTester extends TestVerticle {
     @Test
     void testZrangebyscore() {
         def key = makeKey()
-        redis([command: "zadd", key: key, score: 1, member: "one"]) { reply0 ->
+        redis([command: 'zadd', args: [key, 1, 'one']]) { reply0 ->
             assertNumberValue(1, reply0)
-            redis([command: "zadd", key: key, score: 2, member: "two"]) { reply1 ->
+            redis([command: 'zadd', args: [key, 2, 'two']]) { reply1 ->
                 assertNumberValue(1, reply1)
-                redis([command: "zadd", key: key, score: 3, member: "three"]) { reply2 ->
+                redis([command: 'zadd', args: [key, 3, 'three']]) { reply2 ->
                     assertNumberValue(1, reply2)
-                    redis([command: "zrangebyscore", key: key, min: "-inf", max: "+inf"]) { reply3 ->
-                        assertArrayValue(["one", "two", "three"], reply3)
+                    redis([command: 'zrangebyscore', args: [key, '-inf', '+inf']]) { reply3 ->
+                        assertArrayValue(['one', 'two', 'three'], reply3)
                         testComplete()
                     }
                 }
@@ -1981,13 +1983,13 @@ class GRedisClientTester extends TestVerticle {
     @Test
     void testZrank() {
         def key = makeKey()
-        redis([command: "zadd", key: key, score: 1, member: "one"]) { reply0 ->
+        redis([command: 'zadd', args: [key, 1, 'one']]) { reply0 ->
             assertNumberValue(1, reply0)
-            redis([command: "zadd", key: key, score: 2, member: "two"]) { reply1 ->
+            redis([command: 'zadd', args: [key, 2, 'two']]) { reply1 ->
                 assertNumberValue(1, reply1)
-                redis([command: "zadd", key: key, score: 3, member: "three"]) { reply2 ->
+                redis([command: 'zadd', args: [key, 3, 'three']]) { reply2 ->
                     assertNumberValue(1, reply2)
-                    redis([command: "zrank", key: key, member: "three"]) { reply3 ->
+                    redis([command: 'zrank', args: [key, 'three']]) { reply3 ->
                         assertNumberValue(2, reply3)
                         testComplete()
                     }
@@ -1999,13 +2001,13 @@ class GRedisClientTester extends TestVerticle {
     @Test
     void testZrem() {
         def key = makeKey()
-        redis([command: "zadd", key: key, score: 1, member: "one"]) { reply0 ->
+        redis([command: 'zadd', args: [key, 1, 'one']]) { reply0 ->
             assertNumberValue(1, reply0)
-            redis([command: "zadd", key: key, score: 2, member: "two"]) { reply1 ->
+            redis([command: 'zadd', args: [key, 2, 'two']]) { reply1 ->
                 assertNumberValue(1, reply1)
-                redis([command: "zadd", key: key, score: 3, member: "three"]) { reply2 ->
+                redis([command: 'zadd', args: [key, 3, 'three']]) { reply2 ->
                     assertNumberValue(1, reply2)
-                    redis([command: "zrem", key: key, member: "two"]) { reply3 ->
+                    redis([command: 'zrem', args: [key, 'two']]) { reply3 ->
                         assertNumberValue(1, reply3)
                         testComplete()
                     }
@@ -2017,13 +2019,13 @@ class GRedisClientTester extends TestVerticle {
     @Test
     void testZremrangebyrank() {
         def key = makeKey()
-        redis([command: "zadd", key: key, score: 1, member: "one"]) { reply0 ->
+        redis([command: 'zadd', args: [key, 1, 'one']]) { reply0 ->
             assertNumberValue(1, reply0)
-            redis([command: "zadd", key: key, score: 2, member: "two"]) { reply1 ->
+            redis([command: 'zadd', args: [key, 2, 'two']]) { reply1 ->
                 assertNumberValue(1, reply1)
-                redis([command: "zadd", key: key, score: 3, member: "three"]) { reply2 ->
+                redis([command: 'zadd', args: [key, 3, 'three']]) { reply2 ->
                     assertNumberValue(1, reply2)
-                    redis([command: "zremrangebyrank", key: key, start: 0, stop: 1]) { reply3 ->
+                    redis([command: 'zremrangebyrank', args: [key, 0, 1]]) { reply3 ->
                         assertNumberValue(2, reply3)
                         testComplete()
                     }
@@ -2035,13 +2037,13 @@ class GRedisClientTester extends TestVerticle {
     @Test
     void testZremrangebyscore() {
         def key = makeKey()
-        redis([command: "zadd", key: key, score: 1, member: "one"]) { reply0 ->
+        redis([command: 'zadd', args: [key, 1, 'one']]) { reply0 ->
             assertNumberValue(1, reply0)
-            redis([command: "zadd", key: key, score: 2, member: "two"]) { reply1 ->
+            redis([command: 'zadd', args: [key, 2, 'two']]) { reply1 ->
                 assertNumberValue(1, reply1)
-                redis([command: "zadd", key: key, score: 3, member: "three"]) { reply2 ->
+                redis([command: 'zadd', args: [key, 3, 'three']]) { reply2 ->
                     assertNumberValue(1, reply2)
-                    redis([command: "zremrangebyscore", key: key, min: "-inf", max: "(2"]) { reply3 ->
+                    redis([command: 'zremrangebyscore', args: [key, '-inf', '(2']]) { reply3 ->
                         assertNumberValue(1, reply3)
                         testComplete()
                     }
@@ -2053,14 +2055,14 @@ class GRedisClientTester extends TestVerticle {
     @Test
     void testZrevrange() {
         def key = makeKey()
-        redis([command: "zadd", key: key, score: 1, member: "one"]) { reply0 ->
+        redis([command: 'zadd', args: [key, 1, 'one']]) { reply0 ->
             assertNumberValue(1, reply0)
-            redis([command: "zadd", key: key, score: 2, member: "two"]) { reply1 ->
+            redis([command: 'zadd', args: [key, 2, 'two']]) { reply1 ->
                 assertNumberValue(1, reply1)
-                redis([command: "zadd", key: key, score: 3, member: "three"]) { reply2 ->
+                redis([command: 'zadd', args: [key, 3, 'three']]) { reply2 ->
                     assertNumberValue(1, reply2)
-                    redis([command: "zrevrange", key: key, start: 0, stop: -1]) { reply3 ->
-                        assertArrayValue(["three", "two", "one"], reply3)
+                    redis([command: 'zrevrange', args: [key, 0, -1]]) { reply3 ->
+                        assertArrayValue(['three', 'two', 'one'], reply3)
                         testComplete()
                     }
                 }
@@ -2071,14 +2073,14 @@ class GRedisClientTester extends TestVerticle {
     @Test
     void testZrevrangebyscore() {
         def key = makeKey()
-        redis([command: "zadd", key: key, score: 1, member: "one"]) { reply0 ->
+        redis([command: 'zadd', args: [key, 1, 'one']]) { reply0 ->
             assertNumberValue(1, reply0)
-            redis([command: "zadd", key: key, score: 2, member: "two"]) { reply1 ->
+            redis([command: 'zadd', args: [key, 2, 'two']]) { reply1 ->
                 assertNumberValue(1, reply1)
-                redis([command: "zadd", key: key, score: 3, member: "three"]) { reply2 ->
+                redis([command: 'zadd', args: [key, 3, 'three']]) { reply2 ->
                     assertNumberValue(1, reply2)
-                    redis([command: "zrevrangebyscore", key: key, max: "+inf", min: "-inf"]) { reply3 ->
-                        assertArrayValue(["three", "two", "one"], reply3)
+                    redis([command: 'zrevrangebyscore', args: [key, '+inf', '-inf']]) { reply3 ->
+                        assertArrayValue(['three', 'two', 'one'], reply3)
                         testComplete()
                     }
                 }
@@ -2089,13 +2091,13 @@ class GRedisClientTester extends TestVerticle {
     @Test
     void testZrevrank() {
         def key = makeKey()
-        redis([command: "zadd", key: key, score: 1, member: "one"]) { reply0 ->
+        redis([command: 'zadd', args: [key, 1, 'one']]) { reply0 ->
             assertNumberValue(1, reply0)
-            redis([command: "zadd", key: key, score: 2, member: "two"]) { reply1 ->
+            redis([command: 'zadd', args: [key, 2, 'two']]) { reply1 ->
                 assertNumberValue(1, reply1)
-                redis([command: "zadd", key: key, score: 3, member: "three"]) { reply2 ->
+                redis([command: 'zadd', args: [key, 3, 'three']]) { reply2 ->
                     assertNumberValue(1, reply2)
-                    redis([command: "zrevrank", key: key, member: "one"]) { reply3 ->
+                    redis([command: 'zrevrank', args: [key, 'one']]) { reply3 ->
                         assertNumberValue(2, reply3)
                         testComplete()
                     }
@@ -2107,10 +2109,10 @@ class GRedisClientTester extends TestVerticle {
     @Test
     void testZscore() {
         def key = makeKey()
-        redis([command: "zadd", key: key, score: 1, member: "one"]) { reply0 ->
+        redis([command: 'zadd', args: [key, 1, 'one']]) { reply0 ->
             assertNumberValue(1, reply0)
-            redis([command: "zscore", key: key, member: "one"]) { reply1 ->
-                assertStringValue("1", reply1)
+            redis([command: 'zscore', args: [key, 'one']]) { reply1 ->
+                assertStringValue('1', reply1)
                 testComplete()
             }
         }
@@ -2122,17 +2124,17 @@ class GRedisClientTester extends TestVerticle {
         def key2 = makeKey()
         def key3 = makeKey()
 
-        redis([command: "zadd", key: key1, score: 1, member: "one"]) { reply0 ->
+        redis([command: 'zadd', args: [key1, 1, 'one']]) { reply0 ->
             assertNumberValue(1, reply0)
-            redis([command: "zadd", key: key1, score: 2, member: "two"]) { reply1 ->
+            redis([command: 'zadd', args: [key1, 2, 'two']]) { reply1 ->
                 assertNumberValue(1, reply1)
-                redis([command: "zadd", key: key2, score: 1, member: "one"]) { reply2 ->
+                redis([command: 'zadd', args: [key2, 1, 'one']]) { reply2 ->
                     assertNumberValue(1, reply2)
-                    redis([command: "zadd", key: key2, score: 2, member: "two"]) { reply3 ->
+                    redis([command: 'zadd', args: [key2, 2, 'two']]) { reply3 ->
                         assertNumberValue(1, reply3)
-                        redis([command: "zadd", key: key2, score: 3, member: "three"]) { reply4 ->
+                        redis([command: 'zadd', args: [key2, 3, 'three']]) { reply4 ->
                             assertNumberValue(1, reply4)
-                            redis([command: "zunionstore", destination: key3, numkeys: 2, key: [key1, key2], weigths: [2, 3]]) { reply5 ->
+                            redis([command: 'zunionstore', args: [key3, 2, key1, key2, 'weights', 2, 3]]) { reply5 ->
                                 assertNumberValue(3, reply5)
                                 testComplete()
                             }

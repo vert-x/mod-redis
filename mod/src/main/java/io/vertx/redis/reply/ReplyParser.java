@@ -1,6 +1,6 @@
 package io.vertx.redis.reply;
 
-import io.vertx.redis.RedisClientBase;
+import io.vertx.redis.RedisConnection;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.buffer.Buffer;
 
@@ -16,9 +16,9 @@ public class ReplyParser implements Handler<Buffer> {
     private int _offset;
     private final String _encoding = "utf-8";
 
-    private final RedisClientBase client;
+    private final RedisConnection client;
 
-    public ReplyParser(RedisClientBase client) {
+    public ReplyParser(RedisConnection client) {
         this.client = client;
     }
 
