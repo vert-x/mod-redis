@@ -151,7 +151,12 @@ public class RedisConnection {
                         if (resultHandler != null) {
                             resultHandler.handle(new RedisAsyncResult<Void>(asyncResult.cause()));
                         }
-                        disconnect();
+                        // make sure the socket is closed
+                        if (netSocket != null) {
+                            netSocket.close();
+                        }
+                        // update state
+                        state = State.DISCONNECTED;
                     } else {
                         state = State.CONNECTED;
                         netSocket = asyncResult.result();
@@ -161,14 +166,24 @@ public class RedisConnection {
                         netSocket.exceptionHandler(new Handler<Throwable>() {
                             public void handle(Throwable e) {
                                 logger.error("Socket client error", e);
-                                disconnect();
+                                // make sure the socket is closed
+                                if (netSocket != null) {
+                                    netSocket.close();
+                                }
+                                // update state
+                                state = State.DISCONNECTED;
                             }
                         });
                         // set the close handler
                         netSocket.closeHandler(new Handler<Void>() {
                             public void handle(Void arg0) {
                                 logger.info("Socket closed");
-                                disconnect();
+                                // clean the reply pool
+                                while (!replies.isEmpty()) {
+                                    replies.poll().handle(new ErrorReply("Connection closed"));
+                                }
+                                // update state
+                                state = State.DISCONNECTED;
                             }
                         });
                         if (auth != null) {
@@ -184,14 +199,21 @@ public class RedisConnection {
                                     switch (reply.getType()) {
                                         case '-':   // Error
                                             error = (ErrorReply) reply;
-                                            disconnect();
+                                            if (resultHandler != null) {
+                                                resultHandler.handle(new RedisAsyncResult<Void>(new RuntimeException(error.data())));
+                                            }
+                                            // make sure the socket is closed
+                                            if (netSocket != null) {
+                                                netSocket.close();
+                                            }
+                                            // update state
+                                            state = State.DISCONNECTED;
                                             break;
                                         default:
-                                            error = null;
+                                            if (resultHandler != null) {
+                                                resultHandler.handle(new RedisAsyncResult<Void>(null));
+                                            }
                                             break;
-                                    }
-                                    if (resultHandler != null) {
-                                        resultHandler.handle(new RedisAsyncResult<Void>(error == null ? null : new RuntimeException(error.data())));
                                     }
                                 }
                             });
@@ -342,16 +364,5 @@ public class RedisConnection {
             }
         }
         return false;
-    }
-
-    void disconnect() {
-        state = State.DISCONNECTED;
-        while (!replies.isEmpty()) {
-            replies.poll().handle(new ErrorReply("Connection closed"));
-        }
-        // make sure the socket is closed
-        if (netSocket != null) {
-            netSocket.close();
-        }
     }
 }
