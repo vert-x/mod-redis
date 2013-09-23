@@ -1,6 +1,6 @@
-package io.vertx.redis;
+package io.vertx.groovy.redis;
 
-import org.vertx.java.core.eventbus.EventBus;
+import org.vertx.groovy.core.eventbus.EventBus;
 
 public class RedisClient extends AbstractRedisClient {
 

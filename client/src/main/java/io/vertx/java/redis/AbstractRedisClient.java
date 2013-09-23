@@ -1,4 +1,4 @@
-package io.vertx.redis;
+package io.vertx.java.redis;
 
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.eventbus.EventBus;
