@@ -39,7 +39,7 @@ class AbstractRedisClient {
 
         // serialize arguments
         for (int i = 0; i < totalArgs; i++) {
-            redisArgs.add(null);
+            redisArgs.add(args[i]);
         }
 
         json.put("args", redisArgs);
