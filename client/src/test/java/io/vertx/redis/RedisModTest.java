@@ -10,6 +10,8 @@ import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.json.JsonObject;
 import org.vertx.testtools.TestVerticle;
 
+import java.util.UUID;
+
 import static org.vertx.testtools.VertxAssert.*;
 
 public class RedisModTest extends TestVerticle {
@@ -21,6 +23,9 @@ public class RedisModTest extends TestVerticle {
 
     private void appReady() {
         super.start();
+    }
+    private static String makeKey() {
+        return UUID.randomUUID().toString();
     }
 
     public void start() {
@@ -42,13 +47,23 @@ public class RedisModTest extends TestVerticle {
         });
     }
     @Test
-    public void testHmset() {
-        testComplete();
-//        client.hmset("myhash", "field1", "Hello", "field2", "World", new Handler<Message<Buffer>>() {
-//            @Override
-//            public void handle(Message<Buffer> event) {
-//                //To change body of implemented methods use File | Settings | File Templates.
-//            }
-//        });
+    public void testSetGet() {
+        final String key = makeKey();
+        client.set(key, "value1", new Handler<Message<JsonObject>>() {
+            @Override
+            public void handle(Message<JsonObject> reply) {
+                assertEquals("ok", reply.body().getString("status"));
+
+                client.get(key, new Handler<Message<JsonObject>>() {
+
+                    @Override
+                    public void handle(Message<JsonObject> reply) {
+                        assertEquals("ok", reply.body().getString("status"));
+                        assertEquals("value1", reply.body().getString("value"));
+                        testComplete();
+                    }
+                });
+            }
+        });
     }
 }

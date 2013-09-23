@@ -34,6 +34,6 @@ public class RedisClient extends AbstractRedisClient {
 <%}%>
 }
 '''
-        println engine.createTemplate(text).make([json: commands])
+        engine.createTemplate(text).make([json: commands]).writeTo(new OutputStreamWriter(new FileOutputStream("client/src/main/java/io/vertx/redis/RedisClient.java")))
     }
 }

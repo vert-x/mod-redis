@@ -31,7 +31,7 @@ abstract class AbstractRedisClient {
         if (args != null) {
             // verify if the last one is a Handler
             Object last = args[args.length - 1];
-            totalArgs = args.length - 1;
+            totalArgs = args.length;
             if (last instanceof Handler) {
                 // the caller expects a result
                 expectResult = true;
