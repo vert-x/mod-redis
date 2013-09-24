@@ -1,11 +1,13 @@
 package io.vertx.java.redis;
 
+import org.vertx.java.core.AsyncResultHandler;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.eventbus.EventBus;
 import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonElement;
 import org.vertx.java.core.json.JsonObject;
+import org.vertx.java.platform.Container;
 
 abstract class AbstractRedisClient {
 
@@ -15,6 +17,46 @@ abstract class AbstractRedisClient {
     AbstractRedisClient(EventBus eventBus, String redisAddress) {
         this.eventBus = eventBus;
         this.redisAddress = redisAddress;
+    }
+
+    public final void deployModule(Container container) {
+        deployModule(container, "localhost", 6379, "UTF-8", false, null, 1, null);
+    }
+
+    public final void deployModule(Container container, AsyncResultHandler<String> handler) {
+        deployModule(container, "localhost", 6379, "UTF-8", false, null, 1, handler);
+    }
+
+    public final void deployModule(Container container, String hostname, int port) {
+        deployModule(container, hostname, port, "UTF-8", false, null, 1, null);
+    }
+
+    public final void deployModule(Container container, String hostname, int port, AsyncResultHandler<String> handler) {
+        deployModule(container, hostname, port, "UTF-8", false, null, 1, handler);
+    }
+
+    public final void deployModule(Container container, String hostname, int port, int instances) {
+        deployModule(container, hostname, port, "UTF-8", false, null, instances, null);
+    }
+
+    public final void deployModule(Container container, String hostname, int port, int instances, AsyncResultHandler<String> handler) {
+        deployModule(container, hostname, port, "UTF-8", false, null, instances, handler);
+    }
+
+    public final void deployModule(Container container, String hostname, int port, String encoding, boolean binary, String auth, int instances, AsyncResultHandler<String> handler) {
+        JsonObject config = new JsonObject()
+                .putString("hostname", hostname)
+                .putNumber("port", port)
+                .putString("address", redisAddress)
+                .putString("encoding", encoding)
+                .putBoolean("binary", binary)
+                .putString("auth", auth);
+
+        if (handler != null) {
+            container.deployModule("io.vertx~mod-redis~1.1.2-SNAPSHOT", config, instances, handler);
+        } else {
+            container.deployModule("io.vertx~mod-redis~1.1.2-SNAPSHOT", config, instances);
+        }
     }
 
     @SuppressWarnings("unchecked")
