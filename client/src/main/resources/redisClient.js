@@ -1,6 +1,33 @@
-module.exports = function (eventBus, redisAddress) {
-  this.eventBus = eventBus;
+var container = require("vertx/container");
+var vertx = require("vertx");
+
+module.exports = function (redisAddress) {
+  this.eventBus = vertx.eventBus;
   this.redisAddress = redisAddress;
+};
+
+module.exports.prototype.deployModule = function (options, instances, handler) {
+  var config = {
+    hostname: options.hostname || "localhost",
+    port: options.port || 6379,
+    address: this.redisAddress,
+    encoding: options.encoding || "UTF-8",
+    binary: options.binary || false,
+    auth: options.auth || null
+  };
+
+  if (arguments.length === 2) {
+    if (typeof instances === "function") {
+      handler = instances;
+      instances = 1;
+    }
+  }
+
+  if (handler) {
+    container.deployModule("io.vertx~mod-redis~1.1.2-SNAPSHOT", config, instances, handler);
+  } else {
+      container.deployModule("io.vertx~mod-redis~1.1.2-SNAPSHOT", instances, config);
+  }
 };
 
 module.exports.prototype.send = function(command, args) {
