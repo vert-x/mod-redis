@@ -132,7 +132,7 @@ test {
 
   testLogging { exceptionFormat "full" }
 
-  systemProperty 'vertx.mods', "build/mods"
+  systemProperty 'vertx.mods', "$projectDir/build/mods"
 }
 
 task runModIDEA(dependsOn: copyMod, description: 'Run the module from the resources in IntelliJ') << {
@@ -209,7 +209,7 @@ task pullInDeps(dependsOn: copyMod, description: 'Pull in all the module depende
 }
 
 def setSysProps() {
-  System.setProperty("vertx.mods", "build/mods")    
+  System.setProperty("vertx.mods", "$projectDir/build/mods")
 }
 
 def loadProperties(String sourceFileName) {
