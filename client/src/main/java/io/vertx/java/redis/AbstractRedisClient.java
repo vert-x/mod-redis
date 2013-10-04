@@ -44,10 +44,15 @@ abstract class AbstractRedisClient {
     }
 
     public final void deployModule(Container container, String hostname, int port, String encoding, boolean binary, String auth, int instances, AsyncResultHandler<String> handler) {
+        deployModule(container, hostname, port, encoding, binary, auth, 0, instances, handler);
+    }
+
+    public final void deployModule(Container container, String hostname, int port, String encoding, boolean binary, String auth, int database, int instances, AsyncResultHandler<String> handler) {
         JsonObject config = new JsonObject()
                 .putString("hostname", hostname)
                 .putNumber("port", port)
                 .putString("address", redisAddress)
+                .putNumber("database", database)
                 .putString("encoding", encoding)
                 .putBoolean("binary", binary)
                 .putString("auth", auth);

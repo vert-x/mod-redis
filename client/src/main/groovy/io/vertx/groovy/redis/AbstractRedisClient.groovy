@@ -12,14 +12,15 @@ class AbstractRedisClient {
         this.redisAddress = redisAddress
     }
 
-    final void deployModule(Container container, String hostname = "localhost", int port = 6379, String encoding = "UTF-8", boolean binary = false, String auth = null, int instances = 1, Closure handler) {
+    final void deployModule(Container container, String hostname = "localhost", int port = 6379, String encoding = "UTF-8", boolean binary = false, String auth = null, int database = 0, int instances = 1, Closure handler) {
         def config = [
            hostname: hostname,
            port: port,
            address: redisAddress,
            encoding: encoding,
            binary: binary,
-           auth: auth
+           auth: auth,
+           database : database
         ]
 
         if (handler != null) {
