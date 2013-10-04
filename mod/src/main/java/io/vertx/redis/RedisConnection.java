@@ -1,13 +1,9 @@
 package io.vertx.redis;
 
-import java.nio.charset.Charset;
-import java.util.*;
-
+import io.vertx.redis.impl.MessageHandler;
 import io.vertx.redis.impl.RedisAsyncResult;
 import io.vertx.redis.impl.RedisSubscriptions;
-import io.vertx.redis.reply.ReplyParser;
 import io.vertx.redis.reply.*;
-import io.vertx.redis.impl.MessageHandler;
 import org.vertx.java.core.AsyncResult;
 import org.vertx.java.core.AsyncResultHandler;
 import org.vertx.java.core.Handler;
@@ -18,6 +14,10 @@ import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.core.logging.Logger;
 import org.vertx.java.core.net.NetClient;
 import org.vertx.java.core.net.NetSocket;
+
+import java.nio.charset.Charset;
+import java.util.LinkedList;
+import java.util.Queue;
 
 /**
  * Base class for Redis Vertx client. Generated client would use the facilties
@@ -80,6 +80,7 @@ public class RedisConnection {
     private NetSocket netSocket;
     private final String host;
     private final int port;
+    private final int database;
     private final Charset encoding;
 
     private static enum State {
@@ -90,12 +91,13 @@ public class RedisConnection {
 
     private State state = State.DISCONNECTED;
 
-    public RedisConnection(Vertx vertx, final Logger logger, String host, int port, String auth, RedisSubscriptions subscriptions, Charset encoding) {
+    public RedisConnection(Vertx vertx, final Logger logger, String host, int port, String auth, int database, RedisSubscriptions subscriptions, Charset encoding) {
         this.vertx = vertx;
         this.logger = logger;
         this.host = host;
         this.port = port;
         this.auth = auth;
+        this.database = database;
         this.subscriptions = subscriptions;
         this.encoding = encoding;
     }
@@ -210,6 +212,36 @@ public class RedisConnection {
                                             state = State.DISCONNECTED;
                                             break;
                                         default:
+                                            break;
+                                    }
+                                }
+                            });
+                        }
+
+                        if (database > 0) {
+                            // select a database
+                            JsonObject json = new JsonObject();
+                            json.putString("command", "select");
+                            json.putArray("args", new JsonArray().addNumber(database));
+
+                            send(json, 1, new Handler<Reply>() {
+                                @Override
+                                public void handle(Reply reply) {
+                                    final ErrorReply error;
+                                    switch (reply.getType()) {
+                                        case '-':   // Error
+                                            error = (ErrorReply) reply;
+                                            if (resultHandler != null) {
+                                                resultHandler.handle(new RedisAsyncResult<Void>(new RuntimeException(error.data())));
+                                            }
+                                            // make sure the socket is closed
+                                            if (netSocket != null) {
+                                                netSocket.close();
+                                            }
+                                            // update state
+                                            state = State.DISCONNECTED;
+                                            break;
+                                        default:
                                             if (resultHandler != null) {
                                                 resultHandler.handle(new RedisAsyncResult<Void>(null));
                                             }
@@ -222,7 +254,6 @@ public class RedisConnection {
                                 resultHandler.handle(new RedisAsyncResult<Void>(null));
                             }
                         }
-
                         // TODO: process waiting queue (for messages that have been requested while the connection was not totally established
                     }
                 }
@@ -312,7 +343,7 @@ public class RedisConnection {
         if (handlePushedPubSubMessage(reply)) {
             return;
         }
-        
+
         Handler<Reply> handler = replies.poll();
         if (handler != null) {
             // handler waits for this response
@@ -320,7 +351,7 @@ public class RedisConnection {
             return;
         }
 
-        throw new RuntimeException("Received a non pub/sub message without reply handler waiting:"+reply.toString());
+        throw new RuntimeException("Received a non pub/sub message without reply handler waiting:" + reply.toString());
     }
 
     // Handle 'message' and 'pmessage' messages; returns true if the message was handled
@@ -338,24 +369,22 @@ public class RedisConnection {
                     if (data[0] instanceof BulkReply && "message".equals(((BulkReply) data[0]).asString("UTF-8"))) {
                         String channel = ((BulkReply) data[1]).asString("UTF-8");
                         MessageHandler handler = subscriptions.getChannelHandler(channel);
-                        if (handler != null)
-                        {
+                        if (handler != null) {
                             handler.handle(channel, data);
-                        }                       
+                        }
                         // It is possible to get a message after removing subscription in the client but before Redis command executes,
                         // so ignoring message here (consumer already is not interested in it)
                         return true;
                     }
-                } 
+                }
                 // pmessage
                 else if (data.length == 4) {
                     if (data[0] instanceof BulkReply && "pmessage".equals(((BulkReply) data[0]).asString("UTF-8"))) {
                         String pattern = ((BulkReply) data[1]).asString("UTF-8");
                         MessageHandler handler = subscriptions.getPatternHandler(pattern);
-                        if (handler != null)
-                        {
+                        if (handler != null) {
                             handler.handle(pattern, data);
-                        }                       
+                        }
                         // It is possible to get a message after removing subscription in the client but before Redis command executes,
                         // so ignoring message here (consumer already is not interested in it)
                         return true;

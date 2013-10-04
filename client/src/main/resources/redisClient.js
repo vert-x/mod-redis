@@ -13,7 +13,8 @@ module.exports.prototype.deployModule = function (options, instances, handler) {
     address: this.redisAddress,
     encoding: options.encoding || "UTF-8",
     binary: options.binary || false,
-    auth: options.auth || null
+    auth: options.auth || null,
+    database: options.database || 0
   };
 
   if (arguments.length === 2) {
