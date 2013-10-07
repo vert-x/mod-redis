@@ -5,8 +5,6 @@ This module allows data to be saved, retrieved, searched for, and deleted in a R
 licensed, advanced key-value store. It is often referred to as a data structure server since keys can contain strings,
 hashes, lists, sets and sorted sets. To use this module you must have a Redis server instance running on your network.
 
-[![Build Status](https://travis-ci.org/pmlopes/mod-redis-io.png?branch=master)](https://travis-ci.org/pmlopes/mod-redis-io)
-
 ## Dependencies
 
 This module requires a Redis server to be available on the network.
@@ -24,8 +22,7 @@ The module takes the following configuration:
         "host": <host>,
         "port": <port>,
         "encoding": <charset>,
-        "binary": <boolean>,
-        "auth": <password>
+        "binary": <boolean>
     }
 
 For example:
@@ -43,7 +40,6 @@ Let's take a look at each field in turn:
 * `port` Port at which the Redis instance is listening. Defaults to `6379`.
 * `encoding` The character encoding for string conversions (e.g.: `UTF-8`, `ISO-8859-1`, `US-ASCII`). Defaults to the platform default.
 * `binary` To be implemented. In this case messages are expected to be in binary format.
-* `auth` The password to authenticate the client connection. Since the module manages the connection using the `AUTH` command could not have the desired result due to concurrency.
 ## Usage
 
 Simple example:
@@ -58,7 +54,7 @@ Simple example:
 
     container.deployModule("io.redis.mod-redis", config, 1)
 
-    eb.send(address, [command: 'get', key: 'mykey']) { reply ->
+    eb.send(address, [command: 'get', args: ['mykey']]) { reply ->
         if (reply.body.status.equals('ok') {
             // do something with reply.body.value
         } else {
@@ -93,25 +89,25 @@ Simple example with pub/sub mode:
     });
 
     // on sub address subscribe to channel ch1
-    eb.send('redis.sub', [command: 'subscribe', channel: 'ch1']) { subscribe ->
+    eb.send('redis.sub', [command: 'subscribe', args: ['ch1']]) { subscribe ->
     }
 
     // on pub address publish a message
-    eb.send('redis.pub', [command: 'publish', channel: 'ch1', message: 'Hello World!']) { publish ->
+    eb.send('redis.pub', [command: 'publish', args: ['ch1', 'Hello World!']]) { publish ->
     }
 ```
 
 
 ### Sending Commands
 
-Each Redis command is exposed as a json document on the `EventBus`. All commands take a field `command` and an arbitrary
-amount of extra fields as described on the main redis documentation site.
+Each Redis command is exposed as a json document on the `EventBus`. All commands take a field `command` and a JsonArray
+ of arguments as described on the main redis documentation site.
 
 An example would be:
 
     {
         command: "get",
-        key: "mykey"
+        args: ["mykey"]
     }
 
 When the command completes successfuly the response would be:
@@ -230,7 +226,7 @@ Seting up a subscription for a specific channel:
     });
 
     // subscribe to channel mychannel
-    eb.send("redis.sub", new JsonObject("{command: \"subscribe\", channel: \"mychannel\"}));
+    eb.send("redis.sub", new JsonObject("{command: \"subscribe\", args: [\"mychannel\"]}));
 ```
 
 Setting up a subscription to a pattern:
@@ -252,7 +248,7 @@ Setting up a subscription to a pattern:
     });
 
     // subscribe to channel mychannel
-    eb.send("redis.sub", new JsonObject("{command: \"subscribe\", channel: \"news.*\"}));
+    eb.send("redis.sub", new JsonObject("{command: \"subscribe\", args: [\"news.*\]"}));
 ```
 
 Note that in the last example that you can receive messages published both to `news.sports` and `news.world`. In order to
@@ -266,12 +262,6 @@ know better wich destination the message had on the handler the received message
 
 The fields `channel` and `message` are always present, however the field `pattern` is only present if you subscribed a
 channel with `psubscribe`.
-
-
-## Authentication
-
-Authentication is done using the `auth` command. However the connection lifecycle is managed by the module so it is not
-trivial when to execute the command from the client side. The module will call this method internally at the right time.
 
 
 ## Monitor

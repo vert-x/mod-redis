@@ -74,7 +74,6 @@ public class RedisConnection {
 
     private final Vertx vertx;
     private final Logger logger;
-    private final String auth;
     private final Queue<Handler<Reply>> replies = new LinkedList<>();
     private final RedisSubscriptions subscriptions;
     private NetSocket netSocket;
@@ -90,12 +89,11 @@ public class RedisConnection {
 
     private State state = State.DISCONNECTED;
 
-    public RedisConnection(Vertx vertx, final Logger logger, String host, int port, String auth, RedisSubscriptions subscriptions, Charset encoding) {
+    public RedisConnection(Vertx vertx, final Logger logger, String host, int port, RedisSubscriptions subscriptions, Charset encoding) {
         this.vertx = vertx;
         this.logger = logger;
         this.host = host;
         this.port = port;
-        this.auth = auth;
         this.subscriptions = subscriptions;
         this.encoding = encoding;
     }
@@ -186,41 +184,8 @@ public class RedisConnection {
                                 state = State.DISCONNECTED;
                             }
                         });
-                        if (auth != null) {
-                            // authenticate
-                            JsonObject json = new JsonObject();
-                            json.putString("command", "auth");
-                            json.putArray("args", new JsonArray().addString(auth));
-
-                            send(json, 1, new Handler<Reply>() {
-                                @Override
-                                public void handle(Reply reply) {
-                                    final ErrorReply error;
-                                    switch (reply.getType()) {
-                                        case '-':   // Error
-                                            error = (ErrorReply) reply;
-                                            if (resultHandler != null) {
-                                                resultHandler.handle(new RedisAsyncResult<Void>(new RuntimeException(error.data())));
-                                            }
-                                            // make sure the socket is closed
-                                            if (netSocket != null) {
-                                                netSocket.close();
-                                            }
-                                            // update state
-                                            state = State.DISCONNECTED;
-                                            break;
-                                        default:
-                                            if (resultHandler != null) {
-                                                resultHandler.handle(new RedisAsyncResult<Void>(null));
-                                            }
-                                            break;
-                                    }
-                                }
-                            });
-                        } else {
-                            if (resultHandler != null) {
-                                resultHandler.handle(new RedisAsyncResult<Void>(null));
-                            }
+                        if (resultHandler != null) {
+                            resultHandler.handle(new RedisAsyncResult<Void>(null));
                         }
 
                         // TODO: process waiting queue (for messages that have been requested while the connection was not totally established

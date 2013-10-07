@@ -2,6 +2,7 @@ package io.vertx.groovy.redis
 
 import org.vertx.groovy.core.eventbus.EventBus
 import org.vertx.groovy.platform.Container
+import org.vertx.java.core.AsyncResult
 
 class AbstractRedisClient {
     final EventBus eventBus
@@ -12,20 +13,56 @@ class AbstractRedisClient {
         this.redisAddress = redisAddress
     }
 
+    private static AsyncResult<String> createAsyncResult(final boolean succeed, final String result, final Throwable cause) {
+        return new AsyncResult<String>() {
+            @Override
+            public String result() {
+                return result;
+            }
+
+            @Override
+            public Throwable cause() {
+                return cause;
+            }
+
+            @Override
+            public boolean succeeded() {
+                return succeed;
+            }
+
+            @Override
+            public boolean failed() {
+                return !succeed;
+            }
+        };
+    }
+
+
     final void deployModule(Container container, String hostname = "localhost", int port = 6379, String encoding = "UTF-8", boolean binary = false, String auth = null, int instances = 1, Closure handler) {
         def config = [
            hostname: hostname,
            port: port,
            address: redisAddress,
            encoding: encoding,
-           binary: binary,
-           auth: auth
+           binary: binary
         ]
 
-        if (handler != null) {
-            container.deployModule("io.vertx~mod-redis~1.1.2-SNAPSHOT", config, instances, handler)
-        } else {
-            container.deployModule("io.vertx~mod-redis~1.1.2-SNAPSHOT", config, instances)
+        container.deployModule("io.vertx~mod-redis~1.1.2-SNAPSHOT", config) { deploymentResult ->
+            if (auth != null) {
+                send("auth", [auth]) { message ->
+                    if (message.body['status'].equals('ok')) {
+                        if (handler != null) {
+                            handler.call(deploymentResult)
+                        } else {
+                            handler.call(createAsyncResult(false, deploymentResult.result, new RuntimeException((String) message.body['message'])))
+                        }
+                    }
+                }
+            } else {
+                if (handler != null) {
+                    handler.call(deploymentResult)
+                }
+            }
         }
     }
 

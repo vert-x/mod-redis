@@ -34,7 +34,6 @@ public class RedisMod extends BusModBase implements Handler<Message<JsonObject>>
         int port = getOptionalIntConfig("port", 6379);
         String encoding = getOptionalStringConfig("encoding", null);
         boolean binary = getOptionalBooleanConfig("binary", false);
-        String auth = getOptionalStringConfig("auth", null);
 
         if (binary) {
             logger.warn("Binary mode is not implemented yet!!!");
@@ -46,7 +45,7 @@ public class RedisMod extends BusModBase implements Handler<Message<JsonObject>>
             this.encoding = "UTF-8";
         }
 
-        redisClient = new RedisConnection(vertx, logger, host, port, auth, subscriptions, Charset.forName(this.encoding));
+        redisClient = new RedisConnection(vertx, logger, host, port, subscriptions, Charset.forName(this.encoding));
         redisClient.connect(null);
         
         baseAddress = getOptionalStringConfig("address", "io.vertx.mod-redis");

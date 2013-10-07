@@ -1,5 +1,6 @@
 package io.vertx.java.redis;
 
+import org.vertx.java.core.AsyncResult;
 import org.vertx.java.core.AsyncResultHandler;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.eventbus.EventBus;
@@ -43,20 +44,64 @@ abstract class AbstractRedisClient {
         deployModule(container, hostname, port, "UTF-8", false, null, instances, handler);
     }
 
-    public final void deployModule(Container container, String hostname, int port, String encoding, boolean binary, String auth, int instances, AsyncResultHandler<String> handler) {
+    private static AsyncResult<String> createAsyncResult(final boolean succeed, final String result, final Throwable cause) {
+        return new AsyncResult<String>() {
+            @Override
+            public String result() {
+                return result;
+            }
+
+            @Override
+            public Throwable cause() {
+                return cause;
+            }
+
+            @Override
+            public boolean succeeded() {
+                return succeed;
+            }
+
+            @Override
+            public boolean failed() {
+                return !succeed;
+            }
+        };
+    }
+
+    public final void deployModule(Container container, String hostname, int port, String encoding, boolean binary, final String auth, int instances, final AsyncResultHandler<String> handler) {
         JsonObject config = new JsonObject()
                 .putString("hostname", hostname)
                 .putNumber("port", port)
                 .putString("address", redisAddress)
                 .putString("encoding", encoding)
-                .putBoolean("binary", binary)
-                .putString("auth", auth);
+                .putBoolean("binary", binary);
 
-        if (handler != null) {
-            container.deployModule("io.vertx~mod-redis~1.1.2-SNAPSHOT", config, instances, handler);
-        } else {
-            container.deployModule("io.vertx~mod-redis~1.1.2-SNAPSHOT", config, instances);
-        }
+        container.deployModule("io.vertx~mod-redis~1.1.2-SNAPSHOT", config, instances, new Handler<AsyncResult<String>>() {
+            @Override
+            public void handle(final AsyncResult<String> deploymentResult) {
+                if (deploymentResult.succeeded()) {
+                    if (auth != null) {
+                        send("auth", new JsonArray().addString(auth), new Handler<Message<JsonObject>>() {
+                            public void handle(Message<JsonObject> message) {
+                                if ("ok".equals(message.body().getString("status"))) {
+                                    if (handler != null) {
+                                        handler.handle(deploymentResult);
+                                    }
+                                } else {
+                                    if (handler != null) {
+                                        handler.handle(createAsyncResult(false, deploymentResult.result(), new RuntimeException(message.body().getString("message"))));
+                                    }
+                                }
+                            }
+                        });
+                    } else {
+                        if (handler != null) {
+                            handler.handle(deploymentResult);
+                        }
+                    }
+                }
+            }
+        });
     }
 
     @SuppressWarnings("unchecked")
