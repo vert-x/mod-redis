@@ -63,6 +63,22 @@ module.exports.prototype.send = function(command, args) {
     }
   }
 
+  // handle special hash commands
+  if ("MSET" === command || "MSETNX" === command || "HMSET" === command || "ZADD" === command) {
+     if (totalArgs == 2 && args[1] instanceof Object) {
+       // there are only 2 arguments and the last  is a json object, convert the hash into a redis command
+       json.args.push(args[0]);
+       for (var key in args[1]) {
+         if (args[1].hasOwnProperty(key)) {
+           json.args.push(key);
+           json.args.push(args[1][key]);
+         }
+       }
+       // remove these 2 since they are already added to the args array
+       totalArgs = 0;
+     }
+  }
+
   // serialize arguments
   for (var i = 0; i < totalArgs; i++) {
     json.args.push(args[i]);
