@@ -3,6 +3,7 @@ package io.vertx.groovy.redis
 import org.vertx.groovy.core.eventbus.EventBus
 import org.vertx.groovy.platform.Container
 import org.vertx.java.core.AsyncResult
+import org.vertx.java.core.json.JsonObject
 
 class AbstractRedisClient {
     final EventBus eventBus
@@ -89,6 +90,21 @@ class AbstractRedisClient {
 
         // serialize the request
         json.put("command", command)
+
+        // handle special hash commands
+        if ("MSET".equals(command) || "MSETNX".equals(command) || "HMSET".equals(command) || "ZADD".equals(command)) {
+            if (totalArgs == 2 && args[1] instanceof Map) {
+                // there are only 2 arguments and the last  is a json object, convert the hash into a redis command
+                redisArgs.add(args[0])
+                args[1].each() {key, value ->
+                    redisArgs.add(key)
+                    redisArgs.add(value)
+                }
+
+                // remove these 2 since they are already added to the args array
+                totalArgs = 0
+            }
+        }
 
         // serialize arguments
         for (int i = 0; i < totalArgs; i++) {

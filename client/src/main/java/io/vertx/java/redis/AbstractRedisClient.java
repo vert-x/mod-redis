@@ -104,6 +104,30 @@ abstract class AbstractRedisClient {
         });
     }
 
+    private static void serializeArg(JsonArray redisArgs, Object arg) {
+        if (arg == null) {
+            redisArgs.add(null);
+        } else {
+            if (arg instanceof String) {
+                redisArgs.addString((String) arg);
+            } else if (arg instanceof JsonObject) {
+                redisArgs.addObject((JsonObject) arg);
+            } else if (arg instanceof JsonArray) {
+                redisArgs.addArray((JsonArray) arg);
+            } else if (arg instanceof JsonElement) {
+                redisArgs.addElement((JsonElement) arg);
+            } else if (arg instanceof Number) {
+                redisArgs.addNumber((Number) arg);
+            } else if (arg instanceof Boolean) {
+                redisArgs.addBoolean((Boolean) arg);
+            } else if (arg instanceof byte[]) {
+                redisArgs.addBinary((byte[]) arg);
+            } else {
+                throw new RuntimeException("Unsupported type: " + arg.getClass().getName());
+            }
+        }
+    }
+
     @SuppressWarnings("unchecked")
     final void send(String command, Object... args) {
 
@@ -130,29 +154,25 @@ abstract class AbstractRedisClient {
         // serialize the request
         json.putString("command", command);
 
+        // handle special hash commands
+        if ("MSET".equals(command) || "MSETNX".equals(command) || "HMSET".equals(command) || "ZADD".equals(command)) {
+            if (totalArgs == 2 && args[1] instanceof JsonObject) {
+                // there are only 2 arguments and the last  is a json object, convert the hash into a redis command
+                serializeArg(redisArgs, args[0]);
+                JsonObject hash = (JsonObject) args[1];
+                for (String key : hash.getFieldNames()) {
+                    serializeArg(redisArgs, key);
+                    serializeArg(redisArgs, hash.getField(key));
+                }
+
+                // remove these 2 since they are already added to the args array
+                totalArgs = 0;
+            }
+        }
+
         // serialize arguments
         for (int i = 0; i < totalArgs; i++) {
-            if (args[i] == null) {
-                redisArgs.add(null);
-            } else {
-                if (args[i] instanceof String) {
-                    redisArgs.addString((String) args[i]);
-                } else if (args[i] instanceof JsonObject) {
-                    redisArgs.addObject((JsonObject) args[i]);
-                } else if (args[i] instanceof JsonArray) {
-                    redisArgs.addArray((JsonArray) args[i]);
-                } else if (args[i] instanceof JsonElement) {
-                    redisArgs.addElement((JsonElement) args[i]);
-                } else if (args[i] instanceof Number) {
-                    redisArgs.addNumber((Number) args[i]);
-                } else if (args[i] instanceof Boolean) {
-                    redisArgs.addBoolean((Boolean) args[i]);
-                } else if (args[i] instanceof byte[]) {
-                    redisArgs.addBinary((byte[]) args[i]);
-                } else {
-                    throw new RuntimeException("Unsupported type: " + args[i].getClass().getName());
-                }
-            }
+            serializeArg(redisArgs, args[i]);
         }
 
         json.putArray("args", redisArgs);
