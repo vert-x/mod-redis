@@ -66,7 +66,7 @@ public class RedisMod extends BusModBase implements Handler<Message<JsonObject>>
     @Override
     public void handle(final Message<JsonObject> message) {
 
-        final String command = message.body().getString("command");
+        String command = message.body().getString("command");
         final JsonArray args = message.body().getArray("args");
 
         if (command == null) {
