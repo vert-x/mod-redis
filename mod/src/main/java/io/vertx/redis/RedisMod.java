@@ -2,6 +2,8 @@ package io.vertx.redis;
 
 import io.vertx.redis.impl.RedisSubscriptions;
 import org.vertx.java.busmods.BusModBase;
+import org.vertx.java.core.AsyncResult;
+import org.vertx.java.core.AsyncResultHandler;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.json.JsonArray;
@@ -30,10 +32,13 @@ public class RedisMod extends BusModBase implements Handler<Message<JsonObject>>
     public void start() {
         super.start();
 
-        String host = getOptionalStringConfig("host", "localhost");
-        int port = getOptionalIntConfig("port", 6379);
-        String encoding = getOptionalStringConfig("encoding", null);
-        boolean binary = getOptionalBooleanConfig("binary", false);
+        final String host = getOptionalStringConfig("host", "localhost");
+        final int port = getOptionalIntConfig("port", 6379);
+        final String encoding = getOptionalStringConfig("encoding", null);
+        final boolean binary = getOptionalBooleanConfig("binary", false);
+        // extra options that are nice to have
+        final String auth = getOptionalStringConfig("auth", null);
+        final int db = getOptionalIntConfig("db", 0);
 
         if (binary) {
             logger.warn("Binary mode is not implemented yet!!!");
@@ -46,7 +51,54 @@ public class RedisMod extends BusModBase implements Handler<Message<JsonObject>>
         }
 
         redisClient = new RedisConnection(vertx, logger, host, port, subscriptions, Charset.forName(this.encoding));
-        redisClient.connect(null);
+        redisClient.connect(new AsyncResultHandler<Void>() {
+            @Override
+            public void handle(AsyncResult<Void> connect) {
+                if (connect.succeeded()) {
+                    // issue the auth command if required
+                    if (auth != null) {
+                        redisClient.send(new JsonObject().putString("command", "auth").putArray("args", new JsonArray().addString(auth)), 1, new Handler<Reply>() {
+                            @Override
+                            public void handle(Reply reply) {
+                                switch (reply.getType()) {
+                                    case '-':
+                                        throw new RuntimeException(((ErrorReply) reply).data());
+                                    case '+':
+                                        // OK
+                                        // issue select if required
+                                        if (db != 0) {
+                                            redisClient.send(new JsonObject().putString("command", "select").putArray("args", new JsonArray().addNumber(db)), 1, new Handler<Reply>() {
+                                                @Override
+                                                public void handle(Reply reply) {
+                                                    switch (reply.getType()) {
+                                                        case '-':
+                                                            throw new RuntimeException(((ErrorReply) reply).data());
+                                                    }
+                                                }
+                                            });
+                                        }
+                                }
+                            }
+                        });
+
+                    } else {
+                        // issue select if required
+                        if (db != 0) {
+                            redisClient.send(new JsonObject().putString("command", "select").putArray("args", new JsonArray().addNumber(db)), 1, new Handler<Reply>() {
+                                @Override
+                                public void handle(Reply reply) {
+                                    switch (reply.getType()) {
+                                        case '-':
+                                            throw new RuntimeException(((ErrorReply) reply).data());
+                                    }
+                                }
+                            });
+                        }
+                    }
+
+                }
+            }
+        });
         
         baseAddress = getOptionalStringConfig("address", "io.vertx.mod-redis");
         eb.registerHandler(baseAddress, this);

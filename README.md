@@ -22,7 +22,9 @@ The module takes the following configuration:
         "host": <host>,
         "port": <port>,
         "encoding": <charset>,
-        "binary": <boolean>
+        "binary": <boolean>,
+        "auth": <password>,
+        "db": <number>
     }
 
 For example:
@@ -40,6 +42,9 @@ Let's take a look at each field in turn:
 * `port` Port at which the Redis instance is listening. Defaults to `6379`.
 * `encoding` The character encoding for string conversions (e.g.: `UTF-8`, `ISO-8859-1`, `US-ASCII`). Defaults to the platform default.
 * `binary` To be implemented. In this case messages are expected to be in binary format.
+* `auth` Optional password for redis if the server is configured for it.
+* `db` Optionally select the db at connect.
+
 ## Usage
 
 Simple example:

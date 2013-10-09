@@ -39,31 +39,23 @@ class AbstractRedisClient {
     }
 
 
-    final void deployModule(Container container, String hostname = "localhost", int port = 6379, String encoding = "UTF-8", boolean binary = false, String auth = null, int instances = 1, Closure handler) {
+    final void deployModule(Container container, String hostname = "localhost", int port = 6379, String encoding = "UTF-8", boolean binary = false, String auth = null, int db = 0, int instances = 1, Closure handler) {
         def config = [
            hostname: hostname,
            port: port,
            address: redisAddress,
            encoding: encoding,
-           binary: binary
+           binary: binary,
+           auth: auth,
+           db: db
         ]
 
-        container.deployModule("io.vertx~mod-redis~1.1.2-SNAPSHOT", config) { deploymentResult ->
-            if (auth != null) {
-                send("auth", [auth]) { message ->
-                    if (message.body['status'].equals('ok')) {
-                        if (handler != null) {
-                            handler.call(deploymentResult)
-                        } else {
-                            handler.call(createAsyncResult(false, deploymentResult.result, new RuntimeException((String) message.body['message'])))
-                        }
-                    }
-                }
-            } else {
-                if (handler != null) {
-                    handler.call(deploymentResult)
-                }
-            }
+        def mod = "io.vertx~mod-redis~1.1.2-SNAPSHOT";
+
+        if (handler != null) {
+            container.deployModule(mod, config, handler)
+        } else {
+            container.deployModule(mod, config)
         }
     }
 

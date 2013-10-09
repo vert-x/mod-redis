@@ -21,27 +21,27 @@ abstract class AbstractRedisClient {
     }
 
     public final void deployModule(Container container) {
-        deployModule(container, "localhost", 6379, "UTF-8", false, null, 1, null);
+        deployModule(container, "localhost", 6379, "UTF-8", false, null, 0, 1, null);
     }
 
     public final void deployModule(Container container, AsyncResultHandler<String> handler) {
-        deployModule(container, "localhost", 6379, "UTF-8", false, null, 1, handler);
+        deployModule(container, "localhost", 6379, "UTF-8", false, null, 0, 1, handler);
     }
 
     public final void deployModule(Container container, String hostname, int port) {
-        deployModule(container, hostname, port, "UTF-8", false, null, 1, null);
+        deployModule(container, hostname, port, "UTF-8", false, null, 0, 1, null);
     }
 
     public final void deployModule(Container container, String hostname, int port, AsyncResultHandler<String> handler) {
-        deployModule(container, hostname, port, "UTF-8", false, null, 1, handler);
+        deployModule(container, hostname, port, "UTF-8", false, null, 0, 1, handler);
     }
 
     public final void deployModule(Container container, String hostname, int port, int instances) {
-        deployModule(container, hostname, port, "UTF-8", false, null, instances, null);
+        deployModule(container, hostname, port, "UTF-8", false, null, 0, instances, null);
     }
 
     public final void deployModule(Container container, String hostname, int port, int instances, AsyncResultHandler<String> handler) {
-        deployModule(container, hostname, port, "UTF-8", false, null, instances, handler);
+        deployModule(container, hostname, port, "UTF-8", false, null, 0, instances, handler);
     }
 
     private static AsyncResult<String> createAsyncResult(final boolean succeed, final String result, final Throwable cause) {
@@ -68,40 +68,23 @@ abstract class AbstractRedisClient {
         };
     }
 
-    public final void deployModule(Container container, String hostname, int port, String encoding, boolean binary, final String auth, int instances, final AsyncResultHandler<String> handler) {
+    public final void deployModule(Container container, String hostname, int port, String encoding, boolean binary, final String auth, final int db, int instances, final AsyncResultHandler<String> handler) {
         JsonObject config = new JsonObject()
                 .putString("hostname", hostname)
                 .putNumber("port", port)
                 .putString("address", redisAddress)
                 .putString("encoding", encoding)
-                .putBoolean("binary", binary);
+                .putBoolean("binary", binary)
+                .putString("auth", auth)
+                .putNumber("db", db);
 
-        container.deployModule("io.vertx~mod-redis~1.1.2-SNAPSHOT", config, instances, new Handler<AsyncResult<String>>() {
-            @Override
-            public void handle(final AsyncResult<String> deploymentResult) {
-                if (deploymentResult.succeeded()) {
-                    if (auth != null) {
-                        send("auth", new JsonArray().addString(auth), new Handler<Message<JsonObject>>() {
-                            public void handle(Message<JsonObject> message) {
-                                if ("ok".equals(message.body().getString("status"))) {
-                                    if (handler != null) {
-                                        handler.handle(deploymentResult);
-                                    }
-                                } else {
-                                    if (handler != null) {
-                                        handler.handle(createAsyncResult(false, deploymentResult.result(), new RuntimeException(message.body().getString("message"))));
-                                    }
-                                }
-                            }
-                        });
-                    } else {
-                        if (handler != null) {
-                            handler.handle(deploymentResult);
-                        }
-                    }
-                }
-            }
-        });
+        String mod = "io.vertx~mod-redis~1.1.2-SNAPSHOT";
+
+        if (handler != null) {
+            container.deployModule(mod, config, instances, handler);
+        } else {
+            container.deployModule(mod, config, instances);
+        }
     }
 
     private static void serializeArg(JsonArray redisArgs, Object arg) {

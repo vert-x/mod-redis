@@ -11,14 +11,14 @@ module.exports.prototype.init = function (redisAddress) {
 
 module.exports.prototype.deployModule = function (options, instances, handler) {
 
-    var self = this;
-
     var config = {
         hostname: options.hostname || "localhost",
         port: options.port || 6379,
         address: this.redisAddress,
         encoding: options.encoding || "UTF-8",
-        binary: options.binary || false
+        binary: options.binary || false,
+        auth: options.auth || null,
+        db: options.db || 0
     };
 
     if (arguments.length === 2) {
@@ -28,25 +28,13 @@ module.exports.prototype.deployModule = function (options, instances, handler) {
         }
     }
 
-    container.deployModule("io.vertx~mod-redis~1.1.2-SNAPSHOT", config, instances, function(err, deployID) {
-        if (err) {
-            if (handler) {
-                handler(err, deployID);
-            }
-        } else {
-            if (options.auth) {
-                self.send("auth", [options.auth, function (err) {
-                    if (handler) {
-                        handler(err, deployID);
-                    }
-                }]);
-            } else {
-                if (handler) {
-                    handler(err, deployID);
-                }
-            }
-        }
-    });
+    var mod = "io.vertx~mod-redis~1.1.2-SNAPSHOT";
+
+    if (handler) {
+      container.deployModule(mod, config, instances, handler);
+    } else {
+      container.deployModule(mod, config, instances);
+    }
 };
 
 module.exports.prototype.send = function(command, args) {
