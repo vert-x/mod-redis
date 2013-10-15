@@ -21,6 +21,7 @@ class GRedisPubSubTester extends TestVerticle {
     }
 
     void start() {
+        initialize(vertx)
         eb = vertx.eventBus()
         JsonObject pubConfig = new JsonObject()
         pubConfig.putString("address", pubAddress)

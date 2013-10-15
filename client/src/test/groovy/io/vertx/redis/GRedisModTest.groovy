@@ -25,6 +25,7 @@ public class GRedisModTest extends TestVerticle {
     }
 
     public void start() {
+        initialize(vertx)
         final EventBus eb = new EventBus(vertx.eventBus());
         JsonObject config = new JsonObject();
 
