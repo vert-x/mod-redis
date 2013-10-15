@@ -9,6 +9,7 @@ import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 import org.vertx.testtools.TestVerticle;
+import org.vertx.testtools.VertxAssert;
 
 import java.util.List;
 import java.util.UUID;
@@ -26,6 +27,7 @@ public class RedisClientTester extends TestVerticle {
     }
 
     public void start() {
+        VertxAssert.initialize(vertx);
         eb = vertx.eventBus();
         JsonObject config = new JsonObject();
 

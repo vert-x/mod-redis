@@ -30,7 +30,7 @@ public class GRedisModTest extends TestVerticle {
 
         config.putString("address", address);
 
-        container.deployModule("io.vertx~mod-redis~1.1.2-SNAPSHOT", config, 1, new AsyncResultHandler<String>() {
+        container.deployModule("io.vertx~mod-redis~1.1.2", config, 1, new AsyncResultHandler<String>() {
             @Override
             public void handle(AsyncResult<String> event) {
                 if (event.failed()) {

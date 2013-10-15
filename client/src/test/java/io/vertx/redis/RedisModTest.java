@@ -9,6 +9,7 @@ import org.vertx.java.core.eventbus.EventBus;
 import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.json.JsonObject;
 import org.vertx.testtools.TestVerticle;
+import org.vertx.testtools.VertxAssert;
 
 import java.util.UUID;
 
@@ -29,12 +30,13 @@ public class RedisModTest extends TestVerticle {
     }
 
     public void start() {
+        VertxAssert.initialize(vertx);
         eb = vertx.eventBus();
         JsonObject config = new JsonObject();
 
         config.putString("address", address);
 
-        container.deployModule("io.vertx~mod-redis~1.1.2-SNAPSHOT", config, 1, new AsyncResultHandler<String>() {
+        container.deployModule("io.vertx~mod-redis~1.1.2", config, 1, new AsyncResultHandler<String>() {
             @Override
             public void handle(AsyncResult<String> event) {
                 if (event.failed()) {
