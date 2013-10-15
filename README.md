@@ -43,7 +43,7 @@ Let's take a look at each field in turn:
 * `encoding` The character encoding for string conversions (e.g.: `UTF-8`, `ISO-8859-1`, `US-ASCII`). Defaults to the platform default.
 * `binary` To be implemented. In this case messages are expected to be in binary format.
 * `auth` Optional password for redis if the server is configured for it.
-* `db` Optionally select the db at connect.
+* `select` Optionally select the db at connect.
 
 ## Usage
 
