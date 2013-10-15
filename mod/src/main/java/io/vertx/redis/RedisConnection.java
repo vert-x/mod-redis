@@ -1,6 +1,5 @@
 package io.vertx.redis;
 
-import java.nio.charset.Charset;
 import java.util.*;
 
 import io.vertx.redis.impl.RedisAsyncResult;
@@ -12,9 +11,6 @@ import org.vertx.java.core.AsyncResult;
 import org.vertx.java.core.AsyncResultHandler;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.Vertx;
-import org.vertx.java.core.buffer.Buffer;
-import org.vertx.java.core.json.JsonArray;
-import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.core.logging.Logger;
 import org.vertx.java.core.net.NetClient;
 import org.vertx.java.core.net.NetSocket;
@@ -25,61 +21,20 @@ import org.vertx.java.core.net.NetSocket;
  */
 public class RedisConnection {
 
-    private static final byte ARGS_PREFIX = '*';
-    private static final byte[] CRLF = "\r\n".getBytes();
-    private static final byte BYTES_PREFIX = '$';
-
-    private static final byte[] NEG_ONE = convert(-1);
-
-    // Cache 256 number conversions. That should cover a huge
-    // percentage of numbers passed over the wire.
-    private static final int NUM_MAP_LENGTH = 256;
-    private static final byte[][] numMap = new byte[NUM_MAP_LENGTH][];
-
-    static {
-        for (int i = 0; i < NUM_MAP_LENGTH; i++) {
-            numMap[i] = convert(i);
-        }
-    }
-
-    // Optimized for the direct to ASCII bytes case
-    // About 5x faster than using Long.toString.getBytes
-    private static byte[] numToBytes(long value) {
-        if (value >= 0 && value < NUM_MAP_LENGTH) {
-            int index = (int) value;
-            return numMap[index];
-        } else if (value == -1) {
-            return NEG_ONE;
-        }
-        return convert(value);
-    }
-
-    private static byte[] convert(long value) {
-        boolean negative = value < 0;
-        // Checked javadoc: If the argument is equal to 10^n for integer n, then the result is n.
-        // Also, if negative, leave another slot for the sign.
-        long abs = Math.abs(value);
-        int index = (value == 0 ? 0 : (int) Math.log10(abs)) + (negative ? 2 : 1);
-        byte[] bytes = new byte[index];
-        // Put the sign in the slot we saved
-        if (negative) bytes[0] = '-';
-        long next = abs;
-        while ((next /= 10) > 0) {
-            bytes[--index] = (byte) ('0' + (abs % 10));
-            abs = next;
-        }
-        bytes[--index] = (byte) ('0' + abs);
-        return bytes;
-    }
 
     private final Vertx vertx;
     private final Logger logger;
-    private final Queue<Handler<Reply>> replies = new LinkedList<>();
+
+    private final Queue<Handler<Reply>> repliesQueue = new LinkedList<>();
+    private final Queue<Command> connectingQueue = new LinkedList<>();
+
     private final RedisSubscriptions subscriptions;
     private NetSocket netSocket;
+
     private final String host;
     private final int port;
-    private final Charset encoding;
+    private final String auth;
+    private final int select;
 
     private static enum State {
         DISCONNECTED,
@@ -89,49 +44,80 @@ public class RedisConnection {
 
     private State state = State.DISCONNECTED;
 
-    public RedisConnection(Vertx vertx, final Logger logger, String host, int port, RedisSubscriptions subscriptions, Charset encoding) {
+    public RedisConnection(Vertx vertx, final Logger logger, String host, int port, String auth, int select, RedisSubscriptions subscriptions) {
         this.vertx = vertx;
         this.logger = logger;
         this.host = host;
         this.port = port;
+        this.auth = auth;
+        this.select = select;
         this.subscriptions = subscriptions;
-        this.encoding = encoding;
     }
 
-    private void appendToBuffer(final Object value, final Buffer buffer) {
-        buffer.appendByte(BYTES_PREFIX);
-        if (value == null) {
-            buffer.appendByte((byte) '0');
-            buffer.appendBytes(CRLF);
-            buffer.appendBytes(CRLF);
+    private void doAuth(final Handler<Void> next) {
+        if (auth != null) {
+            Command command = new Command("auth", auth).setHandler(new Handler<Reply>() {
+                @Override
+                public void handle(Reply reply) {
+                    switch (reply.getType()) {
+                        case '-':
+                            logger.error(((ErrorReply) reply).data());
+                            netSocket.close();
+                            break;
+                        case '+':
+                            // OK
+                            next.handle(null);
+                            break;
+                        default:
+                            throw new RuntimeException("Unexpected reply: " + reply.getType() + ": " + reply.data());
+                    }
+                }
+            });
+
+            send(command);
         } else {
-            byte[] bytes;
-            // Possible types are: String, JsonObject, JsonArray, JsonElement, Number, Boolean, byte[]
-
-            if (value instanceof byte[]) {
-                bytes = (byte[]) value;
-            } else if (value instanceof Buffer) {
-                bytes = ((Buffer) value).getBytes();
-            } else if (value instanceof String) {
-                bytes = ((String) value).getBytes(encoding);
-            } else if (value instanceof Byte) {
-                bytes = numToBytes((Byte) value);
-            } else if (value instanceof Short) {
-                bytes = numToBytes((Short) value);
-            } else if (value instanceof Integer) {
-                bytes = numToBytes((Integer) value);
-            } else if (value instanceof Long) {
-                bytes = numToBytes((Long) value);
-            } else {
-                bytes = value.toString().getBytes(encoding);
-            }
-
-            buffer.appendBytes(numToBytes(bytes.length));
-
-            buffer.appendBytes(CRLF);
-            buffer.appendBytes(bytes);
-            buffer.appendBytes(CRLF);
+            next.handle(null);
         }
+    }
+
+    private void doSelect(final Handler<Void> next) {
+        if (select != 0) {
+            Command command = new Command("select", select).setHandler(new Handler<Reply>() {
+                @Override
+                public void handle(Reply reply) {
+                    switch (reply.getType()) {
+                        case '-':
+                            logger.error(((ErrorReply) reply).data());
+                            netSocket.close();
+                            break;
+                        case '+':
+                            // OK
+                            next.handle(null);
+                            break;
+                        default:
+                            throw new RuntimeException("Unexpected reply: " + reply.getType() + ": " + reply.data());
+                    }
+                }
+            });
+
+            send(command);
+        } else {
+            next.handle(null);
+        }
+    }
+
+    private void onConnect(final Handler<Void> next) {
+        doAuth(new Handler<Void>() {
+            @Override
+            public void handle(Void event) {
+                doSelect(new Handler<Void>() {
+                    @Override
+                    public void handle(Void event) {
+                        next.handle(null);
+                    }
+                });
+            }
+        });
     }
 
     void connect(final AsyncResultHandler<Void> resultHandler) {
@@ -146,6 +132,14 @@ public class RedisConnection {
                 public void handle(final AsyncResult<NetSocket> asyncResult) {
                     if (asyncResult.failed()) {
                         logger.error("Net client error", asyncResult.cause());
+                        // clean the reply queue
+                        while (!repliesQueue.isEmpty()) {
+                            repliesQueue.poll().handle(new ErrorReply("Connection closed"));
+                        }
+                        // clean waiting for connection queue
+                        while (!connectingQueue.isEmpty()) {
+                            connectingQueue.poll().getHandler().handle(new ErrorReply("Connection closed"));
+                        }
                         if (resultHandler != null) {
                             resultHandler.handle(new RedisAsyncResult<Void>(asyncResult.cause()));
                         }
@@ -164,9 +158,13 @@ public class RedisConnection {
                         netSocket.exceptionHandler(new Handler<Throwable>() {
                             public void handle(Throwable e) {
                                 logger.error("Socket client error", e);
-                                // make sure the socket is closed
-                                if (netSocket != null) {
-                                    netSocket.close();
+                                // clean the reply queue
+                                while (!repliesQueue.isEmpty()) {
+                                    repliesQueue.poll().handle(new ErrorReply("Connection closed"));
+                                }
+                                // clean waiting for connection queue
+                                while (!connectingQueue.isEmpty()) {
+                                    connectingQueue.poll().getHandler().handle(new ErrorReply("Connection closed"));
                                 }
                                 // update state
                                 state = State.DISCONNECTED;
@@ -176,75 +174,49 @@ public class RedisConnection {
                         netSocket.closeHandler(new Handler<Void>() {
                             public void handle(Void arg0) {
                                 logger.info("Socket closed");
-                                // clean the reply pool
-                                while (!replies.isEmpty()) {
-                                    replies.poll().handle(new ErrorReply("Connection closed"));
+                                // clean the reply queue
+                                while (!repliesQueue.isEmpty()) {
+                                    repliesQueue.poll().handle(new ErrorReply("Connection closed"));
+                                }
+                                // clean waiting for connection queue
+                                while (!connectingQueue.isEmpty()) {
+                                    connectingQueue.poll().getHandler().handle(new ErrorReply("Connection closed"));
                                 }
                                 // update state
                                 state = State.DISCONNECTED;
                             }
                         });
-                        if (resultHandler != null) {
-                            resultHandler.handle(new RedisAsyncResult<Void>(null));
-                        }
 
-                        // TODO: process waiting queue (for messages that have been requested while the connection was not totally established
+                        onConnect(new Handler<Void>() {
+                            @Override
+                            public void handle(Void event) {
+                                // process waiting queue (for messages that have been requested while the connection was not totally established)
+                                while (!connectingQueue.isEmpty()) {
+                                    send(connectingQueue.poll());
+                                }
+                                // emit ready!
+                                if (resultHandler != null) {
+                                    resultHandler.handle(new RedisAsyncResult<Void>(null));
+                                }
+                            }
+                        });
                     }
                 }
             });
         }
     }
 
-    // Redis 'subscribe', 'unsubscribe', 'psubscribe' and 'punsubscribe' commands can have multiple (including zero) replies
+    // Redis 'subscribe', 'unsubscribe', 'psubscribe' and 'punsubscribe' commands can have multiple (including zero) repliesQueue
     // See http://redis.io/topics/pubsub
     // In all cases we want to have a handler to report errors
-    void send(final JsonObject request, final int expectedReplies, final Handler<Reply> replyHandler) {
+    void send(final Command command) {
         switch (state) {
             case CONNECTED:
-
-                String command = request.getString("command");
-                JsonArray args = request.getArray("args");
-
-                int totalArgs;
-                if (args == null) {
-                    totalArgs = 0;
-                } else {
-                    totalArgs = args.size();
-                }
-
-                int spc = command.indexOf(' '); // there are commands which are multi word
-                String extraCommand = null;
-
-                if (spc != -1) {
-                    extraCommand = command.substring(spc + 1);
-                    command = command.substring(0, spc);
-                }
-
-                // serialize the request
-                Buffer buffer = new Buffer();
-                buffer.appendByte(ARGS_PREFIX);
-                if (extraCommand == null) {
-                    buffer.appendBytes(numToBytes(totalArgs + 1));
-                } else {
-                    buffer.appendBytes(numToBytes(totalArgs + 2));
-                }
-                buffer.appendBytes(CRLF);
-                // serialize the command
-                appendToBuffer(command.getBytes(encoding), buffer);
-                if (extraCommand != null) {
-                    appendToBuffer(extraCommand.getBytes(encoding), buffer);
-                }
-
-                // serialize arguments
-                for (int i = 0; i < totalArgs; i++) {
-                    appendToBuffer(args.get(i), buffer);
-                }
-
                 // The order read must match the order written, vertx guarantees
                 // that this is only called from a single thread.
-                netSocket.write(buffer);
-                for (int i = 0; i < expectedReplies; ++i) {
-                    replies.offer(replyHandler);
+                command.writeTo(netSocket);
+                for (int i = 0; i < command.getExpectedReplies(); ++i) {
+                    repliesQueue.offer(command.getHandler());
                 }
                 break;
             case DISCONNECTED:
@@ -252,33 +224,28 @@ public class RedisConnection {
                 connect(new AsyncResultHandler<Void>() {
                     public void handle(AsyncResult<Void> connection) {
                         if (connection.succeeded()) {
-                            send(request, expectedReplies, replyHandler);
+                            send(command);
                         } else {
-                            replyHandler.handle(new ErrorReply("Unable to connect"));
+                            command.getHandler().handle(new ErrorReply("Unable to connect"));
                         }
                     }
                 });
                 break;
             case CONNECTING:
                 logger.debug("Got send request while connecting. Will try again in a while.");
-                // TODO: queue this instead of adding timers
-                vertx.setTimer(100, new Handler<Long>() {
-                    public void handle(Long event) {
-                        send(request, expectedReplies, replyHandler);
-                    }
-                });
+                connectingQueue.offer(command);
         }
     }
 
     public void handleReply(Reply reply) {
 
         // Important to have this first - 'message' and 'pmessage' can be pushed at any moment, 
-        // so they must be filtered out before checking replies queue
+        // so they must be filtered out before checking repliesQueue queue
         if (handlePushedPubSubMessage(reply)) {
             return;
         }
         
-        Handler<Reply> handler = replies.poll();
+        Handler<Reply> handler = repliesQueue.poll();
         if (handler != null) {
             // handler waits for this response
             handler.handle(reply);

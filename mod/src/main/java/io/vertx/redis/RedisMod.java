@@ -2,8 +2,6 @@ package io.vertx.redis;
 
 import io.vertx.redis.impl.RedisSubscriptions;
 import org.vertx.java.busmods.BusModBase;
-import org.vertx.java.core.AsyncResult;
-import org.vertx.java.core.AsyncResultHandler;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.json.JsonArray;
@@ -20,6 +18,7 @@ public class RedisMod extends BusModBase implements Handler<Message<JsonObject>>
     private RedisSubscriptions subscriptions = new RedisSubscriptions();
 
     private String encoding;
+    private Charset charset;
     private String baseAddress;
 
     private enum ResponseTransform {
@@ -38,7 +37,7 @@ public class RedisMod extends BusModBase implements Handler<Message<JsonObject>>
         final boolean binary = getOptionalBooleanConfig("binary", false);
         // extra options that are nice to have
         final String auth = getOptionalStringConfig("auth", null);
-        final int db = getOptionalIntConfig("db", 0);
+        final int select = getOptionalIntConfig("select", 0);
 
         if (binary) {
             logger.warn("Binary mode is not implemented yet!!!");
@@ -50,55 +49,10 @@ public class RedisMod extends BusModBase implements Handler<Message<JsonObject>>
             this.encoding = "UTF-8";
         }
 
-        redisClient = new RedisConnection(vertx, logger, host, port, subscriptions, Charset.forName(this.encoding));
-        redisClient.connect(new AsyncResultHandler<Void>() {
-            @Override
-            public void handle(AsyncResult<Void> connect) {
-                if (connect.succeeded()) {
-                    // issue the auth command if required
-                    if (auth != null) {
-                        redisClient.send(new JsonObject().putString("command", "auth").putArray("args", new JsonArray().addString(auth)), 1, new Handler<Reply>() {
-                            @Override
-                            public void handle(Reply reply) {
-                                switch (reply.getType()) {
-                                    case '-':
-                                        throw new RuntimeException(((ErrorReply) reply).data());
-                                    case '+':
-                                        // OK
-                                        // issue select if required
-                                        if (db != 0) {
-                                            redisClient.send(new JsonObject().putString("command", "select").putArray("args", new JsonArray().addNumber(db)), 1, new Handler<Reply>() {
-                                                @Override
-                                                public void handle(Reply reply) {
-                                                    switch (reply.getType()) {
-                                                        case '-':
-                                                            throw new RuntimeException(((ErrorReply) reply).data());
-                                                    }
-                                                }
-                                            });
-                                        }
-                                }
-                            }
-                        });
+        charset = Charset.forName(this.encoding);
 
-                    } else {
-                        // issue select if required
-                        if (db != 0) {
-                            redisClient.send(new JsonObject().putString("command", "select").putArray("args", new JsonArray().addNumber(db)), 1, new Handler<Reply>() {
-                                @Override
-                                public void handle(Reply reply) {
-                                    switch (reply.getType()) {
-                                        case '-':
-                                            throw new RuntimeException(((ErrorReply) reply).data());
-                                    }
-                                }
-                            });
-                        }
-                    }
-
-                }
-            }
-        });
+        redisClient = new RedisConnection(vertx, logger, host, port, auth, select, subscriptions);
+        redisClient.connect(null);
         
         baseAddress = getOptionalStringConfig("address", "io.vertx.mod-redis");
         eb.registerHandler(baseAddress, this);
@@ -219,12 +173,12 @@ public class RedisMod extends BusModBase implements Handler<Message<JsonObject>>
                 break;
         }
 
-        redisClient.send(message.body(), expectedReplies, new Handler<Reply>() {
+        redisClient.send(new Command(message.body(), charset).setExpectedReplies(expectedReplies).setHandler(new Handler<Reply>() {
             @Override
             public void handle(Reply reply) {
                 processReply(message, reply, transform);
             }
-        });
+        }));
     }
 
     private void processReply(Message<JsonObject> message, Reply reply, ResponseTransform transform) {
