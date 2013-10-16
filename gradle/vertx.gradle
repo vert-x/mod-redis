@@ -108,6 +108,12 @@ task copyMod( type:Copy, dependsOn: 'classes', description: 'Assemble the module
   }
 }
 
+task copyMasterMod( type:Copy, description: 'Assemble the master module into the local mods directory' ) {
+    into "build/mods/$modowner~mod-redis~$version"
+    from "../mod/build/classes/main"
+    from "../mod/build/resources/main"
+}
+
 task modZip( type: Zip, dependsOn: 'pullInDeps', description: 'Package the module .zip file') {
   group = 'vert.x'
   classifier = "mod"
@@ -123,6 +129,10 @@ artifacts {
 
 test {
   dependsOn copyMod
+
+  if (!modname.equals("client")) {
+    dependsOn copyMasterMod
+  }
 
   // Make sure tests are always run!
   outputs.upToDateWhen { false }
