@@ -18,7 +18,7 @@ module.exports.prototype.deployModule = function (options, instances, handler) {
         encoding: options.encoding || "UTF-8",
         binary: options.binary || false,
         auth: options.auth || null,
-        db: options.db || 0
+        select: options.select || 0
     };
 
     if (arguments.length === 2) {

@@ -68,7 +68,7 @@ abstract class AbstractRedisClient {
         };
     }
 
-    public final void deployModule(Container container, String hostname, int port, String encoding, boolean binary, final String auth, final int db, int instances, final AsyncResultHandler<String> handler) {
+    public final void deployModule(Container container, String hostname, int port, String encoding, boolean binary, final String auth, final int select, int instances, final AsyncResultHandler<String> handler) {
         JsonObject config = new JsonObject()
                 .putString("hostname", hostname)
                 .putNumber("port", port)
@@ -76,7 +76,7 @@ abstract class AbstractRedisClient {
                 .putString("encoding", encoding)
                 .putBoolean("binary", binary)
                 .putString("auth", auth)
-                .putNumber("db", db);
+                .putNumber("select", select);
 
         String mod = "io.vertx~mod-redis~1.1.2";
 
