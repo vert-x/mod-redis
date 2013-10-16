@@ -60,7 +60,8 @@ dependencies {
   provided project(':mod')
   // If you're creating Groovy compiled verticles you may need the following dependencies
   provided "org.codehaus.groovy:groovy-all:$groovyVersion"
-  provided "io.vertx:lang-groovy:$vertxGroovyVersion@jar"
+  provided "io.vertx:lang-groovy:$groovyLangModVersion@jar"
+
 }
 
 test {
@@ -109,3 +110,5 @@ def configurePom(def pom) {
     }
   }
 }
+
+[compileJava]*.options*.compilerArgs = ['-Xlint:all']

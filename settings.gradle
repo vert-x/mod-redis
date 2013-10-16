@@ -1,2 +1,2 @@
 include 'mod'
-include 'client'
+include 'mod-client'
