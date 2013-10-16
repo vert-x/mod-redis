@@ -3,7 +3,6 @@ package io.vertx.groovy.redis
 import org.vertx.groovy.core.eventbus.EventBus
 import org.vertx.groovy.platform.Container
 import org.vertx.java.core.AsyncResult
-import org.vertx.java.core.json.JsonObject
 
 class AbstractRedisClient {
     final EventBus eventBus
