@@ -130,7 +130,7 @@ artifacts {
 test {
   dependsOn copyMod
 
-  if (!modname.equals("client")) {
+  if (modname.equals("mod-redis-client")) {
     dependsOn copyMasterMod
   }
 
