@@ -86,9 +86,9 @@ module.exports.prototype.deployModule = function (options, instances, handler) {
   };
 
   if (handler) {
-    container.deployModule("io.vertx~mod-redis~1.1.2", config, instances, handler);
+    container.deployModule("io.vertx~mod-redis~1.1.3-SNAPSHOT", config, instances, handler);
   } else {
-      container.deployModule("io.vertx~mod-redis~1.1.2", instances, config);
+      container.deployModule("io.vertx~mod-redis~1.1.3-SNAPSHOT", instances, config);
   }
 };
 

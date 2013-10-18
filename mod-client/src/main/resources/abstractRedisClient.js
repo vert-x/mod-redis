@@ -28,7 +28,7 @@ module.exports.prototype.deployModule = function (options, instances, handler) {
         }
     }
 
-    var mod = "io.vertx~mod-redis~1.1.2";
+    var mod = "io.vertx~mod-redis~1.1.3-SNAPSHOT";
 
     if (handler) {
       container.deployModule(mod, config, instances, handler);
