@@ -205,7 +205,7 @@ Multiple values in a hash can be set by supplying an object. Note however that k
 
 As demonstrated with the source code example above, the module can work in pub/sub mode too. The basic idea behind it is
 that you need to register a new handler for the address: `mod-redis-io-address.your_real_redis_address` At this moment
-all commands to `subscribe`, `psubscribe`, `unsubscribe` and `pusubscribe` will send the received messages to the right
+all commands to `subscribe`, `psubscribe`, `unsubscribe` and `punsubscribe` will send the received messages to the right
 address.
 
 The destination address is defined as a concatenation of the module address plus the redis address. This choice was made
