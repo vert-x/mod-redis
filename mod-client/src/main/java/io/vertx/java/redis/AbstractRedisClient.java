@@ -93,8 +93,10 @@ abstract class AbstractRedisClient {
         } else {
             if (arg instanceof String) {
                 redisArgs.addString((String) arg);
-	    } else if (arg instanceof Object[]) {
-		for (Object o : (Object[]) arg) redisArgs.add(o);
+            } else if (arg instanceof Object[]) {
+                for (Object o : (Object[]) arg) {
+                    redisArgs.add(o);
+                }
             } else if (arg instanceof JsonObject) {
                 redisArgs.addObject((JsonObject) arg);
             } else if (arg instanceof JsonArray) {
