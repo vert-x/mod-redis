@@ -36,7 +36,7 @@ public class RedisModTest extends TestVerticle {
 
         config.putString("address", address);
 
-        container.deployModule("io.vertx~mod-redis~1.1.3-SNAPSHOT", config, 1, new AsyncResultHandler<String>() {
+        container.deployModule("io.vertx~mod-redis~1.1.3", config, 1, new AsyncResultHandler<String>() {
             @Override
             public void handle(AsyncResult<String> event) {
                 if (event.failed()) {

@@ -78,7 +78,7 @@ abstract class AbstractRedisClient {
                 .putString("auth", auth)
                 .putNumber("select", select);
 
-        String mod = "io.vertx~mod-redis~1.1.3-SNAPSHOT";
+        String mod = "io.vertx~mod-redis~1.1.3";
 
         if (handler != null) {
             container.deployModule(mod, config, instances, handler);
