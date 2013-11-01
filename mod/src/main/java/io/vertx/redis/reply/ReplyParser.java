@@ -6,12 +6,6 @@ import org.vertx.java.core.buffer.Buffer;
 
 public class ReplyParser implements Handler<Buffer> {
 
-    private static class IncompleteReadBuffer extends Exception {
-        public IncompleteReadBuffer(String message) {
-            super(message);
-        }
-    }
-
     private Buffer _buffer;
     private int _offset;
     private final String _encoding = "utf-8";
@@ -23,7 +17,7 @@ public class ReplyParser implements Handler<Buffer> {
     }
 
 
-    private Reply parseResult(byte type) throws IncompleteReadBuffer {
+    private Reply parseResult(byte type) throws ArrayIndexOutOfBoundsException {
         int start, end, offset;
         int packetSize;
 
@@ -37,7 +31,7 @@ public class ReplyParser implements Handler<Buffer> {
 
             if (end > _buffer.length()) {
                 _offset = start;
-                throw new IncompleteReadBuffer("Wait for more data.");
+                throw new ArrayIndexOutOfBoundsException("Wait for more data.");
             }
 
             if (type == '+') {
@@ -55,7 +49,7 @@ public class ReplyParser implements Handler<Buffer> {
 
             if (end > _buffer.length()) {
                 _offset = start;
-                throw new IncompleteReadBuffer("Wait for more data.");
+                throw new ArrayIndexOutOfBoundsException("Wait for more data.");
             }
 
             // return the coerced numeric value
@@ -80,7 +74,7 @@ public class ReplyParser implements Handler<Buffer> {
 
             if (end > _buffer.length()) {
                 _offset = offset;
-                throw new IncompleteReadBuffer("Wait for more data.");
+                throw new ArrayIndexOutOfBoundsException("Wait for more data.");
             }
 
             return new BulkReply(_buffer.getBuffer(start, end));
@@ -94,7 +88,7 @@ public class ReplyParser implements Handler<Buffer> {
 
             if (packetSize > bytesRemaining()) {
                 _offset = offset - 1;
-                throw new IncompleteReadBuffer("Wait for more data.");
+                throw new ArrayIndexOutOfBoundsException("Wait for more data.");
             }
 
             MultiBulkReply reply = new MultiBulkReply(packetSize);
@@ -106,7 +100,7 @@ public class ReplyParser implements Handler<Buffer> {
                 ntype = _buffer.getByte(_offset++);
 
                 if (_offset > _buffer.length()) {
-                    throw new IncompleteReadBuffer("Wait for more data.");
+                    throw new ArrayIndexOutOfBoundsException("Wait for more data.");
                 }
                 res = parseResult(ntype);
                 reply.set(i, res);
@@ -153,7 +147,7 @@ public class ReplyParser implements Handler<Buffer> {
                         client.handleReply(ret);
                         break;
                 }
-            } catch (IncompleteReadBuffer err) {
+            } catch (ArrayIndexOutOfBoundsException err) {
                 // catch the error (not enough data), rewind, and wait
                 // for the next packet to appear
                 _offset = offset;
@@ -191,7 +185,7 @@ public class ReplyParser implements Handler<Buffer> {
         _offset = 0;
     }
 
-    private int parsePacketSize() throws IncompleteReadBuffer {
+    private int parsePacketSize() throws ArrayIndexOutOfBoundsException {
         int end = packetEndOffset();
         String value = _buffer.getString(_offset, end - 1, _encoding);
 
@@ -209,14 +203,14 @@ public class ReplyParser implements Handler<Buffer> {
         return (int) size;
     }
 
-    private int packetEndOffset() throws IncompleteReadBuffer {
+    private int packetEndOffset() throws ArrayIndexOutOfBoundsException {
         int offset = _offset;
 
         while (_buffer.getByte(offset) != '\r' && _buffer.getByte(offset + 1) != '\n') {
             offset++;
 
             if (offset >= _buffer.length()) {
-                throw new IncompleteReadBuffer("didn't see LF after NL reading multi bulk count (" + offset + " => " + _buffer.length() + ", " + _offset + ")");
+                throw new ArrayIndexOutOfBoundsException("didn't see LF after NL reading multi bulk count (" + offset + " => " + _buffer.length() + ", " + _offset + ")");
             }
         }
 
