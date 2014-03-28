@@ -36,7 +36,7 @@ public class RedisClient extends AbstractRedisClient {
 <%}%>
 }
 '''
-        engine.createTemplate(text).make([json: commands]).writeTo(new OutputStreamWriter(new FileOutputStream("client/src/main/java/io/vertx/java/redis/RedisClient.java")))
+        engine.createTemplate(text).make([json: commands]).writeTo(new OutputStreamWriter(new FileOutputStream("mod-client/src/main/java/io/vertx/java/redis/RedisClient.java")))
     }
 
     static void generateGroovy(commands) {
@@ -61,7 +61,7 @@ public class RedisClient extends AbstractRedisClient {
 <%}%>
 }
 '''
-        engine.createTemplate(text).make([json: commands]).writeTo(new OutputStreamWriter(new FileOutputStream("client/src/main/groovy/io/vertx/groovy/redis/RedisClient.java")))
+        engine.createTemplate(text).make([json: commands]).writeTo(new OutputStreamWriter(new FileOutputStream("mod-client/src/main/groovy/io/vertx/groovy/redis/RedisClient.java")))
     }
 
     static void generateJS(commands) {
@@ -129,6 +129,6 @@ module.exports.prototype.<% print cmd.key.toLowerCase().replace(' ', '_') %> = f
 
 <%}%>
 '''
-        engine.createTemplate(text).make([json: commands]).writeTo(new OutputStreamWriter(new FileOutputStream("client/src/main/resources/redisClient.js")))
+        engine.createTemplate(text).make([json: commands]).writeTo(new OutputStreamWriter(new FileOutputStream("mod-client/src/main/resources/redisClient.js")))
     }
 }

@@ -9,11 +9,18 @@ hashes, lists, sets and sorted sets. To use this module you must have a Redis se
 
 This module requires a Redis server to be available on the network.
 
-## Name
+## Which module should I use?
 
-The module name is `io.vertx.mod-redis`.
+This project provides 2 modules:
 
-## Configuration
+* `io.vertx~mod-redis~1.1.4-SNAPSHOT` - The runnable module that allows direct access to Redis
+* `io.vertx~mod-redis-client~1.1.4-SNAPSHOT` - The NON runnable that creates a simple API on top of the previous
+
+## mod-redis
+
+The module name is `io.vertx~mod-redis~1.1.4-SNAPSHOT`.
+
+### Configuration
 
 The module takes the following configuration:
 
@@ -45,7 +52,7 @@ Let's take a look at each field in turn:
 * `auth` Optional password for redis if the server is configured for it.
 * `select` Optionally select the db at connect.
 
-## Usage
+### Usage
 
 Simple example:
 
@@ -57,7 +64,7 @@ Simple example:
     config.putString("host", "localhost")
     config.putNumber("port", 6379)
 
-    container.deployModule("io.redis.mod-redis", config, 1)
+    container.deployModule("io.vertx~mod-redis~1.1.4-SNAPSHOT", config, 1)
 
     eb.send(address, [command: 'get', args: ['mykey']]) { reply ->
         if (reply.body.status.equals('ok') {
@@ -77,8 +84,8 @@ Simple example with pub/sub mode:
     def subConfig = new JsonObject()
     subConfig.putString("address", 'redis.sub')
 
-    container.deployModule("io.vertx.mod-redis", pubConfig, 1)
-    container.deployModule("io.vertx.mod-redis", subConfig, 1)
+    container.deployModule(io.vertx~mod-redis~1.1.4-SNAPSHOT", pubConfig, 1)
+    container.deployModule("io.vertx~mod-redis~1.1.4-SNAPSHOT", subConfig, 1)
 
     // register a handler for the incoming message the naming the Redis module will use is base address + '.' + redis channel
     eb.registerHandler("redis.sub.ch1", new Handler<Message<JsonObject>>() {
@@ -103,7 +110,7 @@ Simple example with pub/sub mode:
 ```
 
 
-### Sending Commands
+#### Sending Commands
 
 Each Redis command is exposed as a json document on the `EventBus`. All commands take a field `command` and a JsonArray
  of arguments as described on the main redis documentation site.
@@ -138,17 +145,17 @@ Commands that return a single line reply return `java.lang.String`, integer repl
 "bulk" replies return an array of `java.lang.String` using the specified encoding, and "multi bulk" replies return a
 array of `java.lang.String` again using the specified encoding. `hgetall` is returns a `JsonObject`.
 
-## Friendlier hash commands
+### Friendlier hash commands
 
 Most Redis commands take a single String or an Array of Strings as arguments, and replies are sent back as a single
 String or an Array of Strings. When dealing with hash values, there are a couple of useful exceptions to this.
 
-### command hgetall
+#### command hgetall
 
 The reply from an `hgetall` command will be converted into a JSON Object.  That way you can interact with the responses
 using JSON syntax which is handy for the EventBus communication.
 
-### command mset
+#### command mset
 
 Multiple values in a hash can be set by supplying an object. Note however that key and value will be coerced to strings.
 
@@ -161,7 +168,7 @@ Multiple values in a hash can be set by supplying an object. Note however that k
         }
     }
 
-### command msetnx
+#### command msetnx
 
 Multiple values in a hash can be set by supplying an object. Note however that key and value will be coerced to strings.
 
@@ -174,7 +181,7 @@ Multiple values in a hash can be set by supplying an object. Note however that k
         }
     }
 
-### command hmset
+#### command hmset
 
 Multiple values in a hash can be set by supplying an object. Note however that key and value will be coerced to strings.
 
@@ -187,7 +194,7 @@ Multiple values in a hash can be set by supplying an object. Note however that k
         }
     }
 
-### command zadd
+#### command zadd
 
 Multiple values in a hash can be set by supplying an object. Note however that key and value will be coerced to strings.
 
@@ -201,7 +208,7 @@ Multiple values in a hash can be set by supplying an object. Note however that k
     }
 
 
-## Pub/Sub
+### Pub/Sub
 
 As demonstrated with the source code example above, the module can work in pub/sub mode too. The basic idea behind it is
 that you need to register a new handler for the address: `mod-redis-io-address.your_real_redis_address` At this moment
@@ -269,11 +276,11 @@ The fields `channel` and `message` are always present, however the field `patter
 channel with `psubscribe`.
 
 
-## Monitor
+### Monitor
 
 TODO: The module will do monitoring
 
-## Server info
+### Server info
 
 The module converts the info response to a friendly Json
 
@@ -299,10 +306,72 @@ return it in a easy to understand JSON format. The format is as follows: A JSON 
 properties that belong to that section. If for some reason there is no section the properties will be visible at the top
 level object.
 
-## Binary
+### Binary
 
 TODO: either using putBinary or other alternative...
 
-## Transactions
+### Transactions
 
 TODO: love or hate they must be supported! :)
+
+## mod-redis-client
+
+When using the `mod-redis-client` you get an abstraction on top of the base module. This abstraction allows you to use
+one of the following programming languages:
+
+* java
+* groovy
+* javascript
+
+Since this is a non runnable module you need to include it in your verticle mod.json.
+
+### java
+
+When using java you can deploy the module as:
+
+    // create a new client
+    RedisClient redis = new RedisClient(eventBus(), "my.redis.address");
+    // deploy a mod-redis module with the default config
+    redis.deployModule(container());
+
+    // use the API
+    redis.set("key", "value", new Handler<Message<JsonObject>>() {
+       ...
+       // handle your response
+    });
+
+You have all the redis commands as methods in the RedisClient class.
+
+### groovy
+
+When using java you can deploy the module as:
+
+    // create a new client
+    RedisClient redis = new RedisClient(eventBus, "my.redis.address");
+    // deploy a mod-redis module with the default config
+    redis.deployModule(container);
+
+    // use the API
+    redis.set("key", "value") { message ->
+       ...
+       // handle your response
+    }
+
+You have all the redis commands as methods in the RedisClient class.
+
+### javascript
+
+When using java you can deploy the module as:
+
+    // create a new client
+    var redis = require('redisClient')("my.redis.address");
+    // deploy a mod-redis module with the default config
+    redis.deployModule();
+
+    // use the API
+    redis.set("key", "value", function (message) {
+       ...
+       // handle your response
+    });
+
+You have all the redis commands as methods in the RedisClient object.
