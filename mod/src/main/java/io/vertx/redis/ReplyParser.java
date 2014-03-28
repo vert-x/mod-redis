@@ -1,6 +1,5 @@
-package io.vertx.redis.reply;
+package io.vertx.redis;
 
-import io.vertx.redis.RedisConnection;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.buffer.Buffer;
 
@@ -35,9 +34,9 @@ public class ReplyParser implements Handler<Buffer> {
             }
 
             if (type == '+') {
-                return new StatusReply(_buffer.getString(start, end, _encoding));
+                return new Reply(type, _buffer.getString(start, end, _encoding));
             } else {
-                return new ErrorReply(_buffer.getString(start, end, _encoding));
+                return new Reply(type, _buffer.getString(start, end, _encoding));
             }
         } else if (type == ':') {
             // up to the delimiter
@@ -53,7 +52,7 @@ public class ReplyParser implements Handler<Buffer> {
             }
 
             // return the coerced numeric value
-            return new IntegerReply(Long.parseLong(_buffer.getString(start, end)));
+            return new Reply(type, Long.parseLong(_buffer.getString(start, end)));
         } else if (type == '$') {
             // set a rewind point, as the packet could be larger than the
             // buffer in memory
@@ -63,7 +62,7 @@ public class ReplyParser implements Handler<Buffer> {
 
             // packets with a size of -1 are considered null
             if (packetSize == -1) {
-                return new BulkReply(null);
+                return new Reply(type, null);
             }
 
             end = _offset + packetSize;
@@ -77,7 +76,7 @@ public class ReplyParser implements Handler<Buffer> {
                 throw new ArrayIndexOutOfBoundsException("Wait for more data.");
             }
 
-            return new BulkReply(_buffer.getBuffer(start, end));
+            return new Reply(type, _buffer.getBuffer(start, end));
         } else if (type == '*') {
             offset = _offset;
             packetSize = parsePacketSize();
@@ -91,7 +90,7 @@ public class ReplyParser implements Handler<Buffer> {
                 throw new ArrayIndexOutOfBoundsException("Wait for more data.");
             }
 
-            MultiBulkReply reply = new MultiBulkReply(packetSize);
+            Reply reply = new Reply(type, packetSize);
 
             byte ntype;
             Reply res;

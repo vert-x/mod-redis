@@ -1,6 +1,6 @@
 package io.vertx.redis.impl;
 
-import io.vertx.redis.reply.*;
+import io.vertx.redis.Reply;
 
 /**
  * An interface mainly created to pass 2 parameters to pub/sub message handler (thus avoiding double casts)

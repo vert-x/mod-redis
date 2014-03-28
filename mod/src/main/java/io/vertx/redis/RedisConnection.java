@@ -4,8 +4,6 @@ import java.util.*;
 
 import io.vertx.redis.impl.RedisAsyncResult;
 import io.vertx.redis.impl.RedisSubscriptions;
-import io.vertx.redis.reply.ReplyParser;
-import io.vertx.redis.reply.*;
 import io.vertx.redis.impl.MessageHandler;
 import org.vertx.java.core.AsyncResult;
 import org.vertx.java.core.AsyncResultHandler;
@@ -59,9 +57,9 @@ public class RedisConnection {
             Command command = new Command("auth", auth).setHandler(new Handler<Reply>() {
                 @Override
                 public void handle(Reply reply) {
-                    switch (reply.getType()) {
+                    switch (reply.type()) {
                         case '-':
-                            logger.error(((ErrorReply) reply).data());
+                            logger.error(reply.toString());
                             netSocket.close();
                             break;
                         case '+':
@@ -69,7 +67,7 @@ public class RedisConnection {
                             next.handle(null);
                             break;
                         default:
-                            throw new RuntimeException("Unexpected reply: " + reply.getType() + ": " + reply.data());
+                            throw new RuntimeException("Unexpected reply: " + reply.type() + ": " + reply.data());
                     }
                 }
             });
@@ -85,9 +83,9 @@ public class RedisConnection {
             Command command = new Command("select", select).setHandler(new Handler<Reply>() {
                 @Override
                 public void handle(Reply reply) {
-                    switch (reply.getType()) {
+                    switch (reply.type()) {
                         case '-':
-                            logger.error(((ErrorReply) reply).data());
+                            logger.error(reply.toString());
                             netSocket.close();
                             break;
                         case '+':
@@ -95,7 +93,7 @@ public class RedisConnection {
                             next.handle(null);
                             break;
                         default:
-                            throw new RuntimeException("Unexpected reply: " + reply.getType() + ": " + reply.data());
+                            throw new RuntimeException("Unexpected reply: " + reply.type() + ": " + reply.data());
                     }
                 }
             });
@@ -134,11 +132,11 @@ public class RedisConnection {
                         logger.error("Net client error", asyncResult.cause());
                         // clean the reply queue
                         while (!repliesQueue.isEmpty()) {
-                            repliesQueue.poll().handle(new ErrorReply("Connection closed"));
+                            repliesQueue.poll().handle(new Reply('-', "Connection closed"));
                         }
                         // clean waiting for connection queue
                         while (!connectingQueue.isEmpty()) {
-                            connectingQueue.poll().getHandler().handle(new ErrorReply("Connection closed"));
+                            connectingQueue.poll().getHandler().handle(new Reply('-', "Connection closed"));
                         }
                         if (resultHandler != null) {
                             resultHandler.handle(new RedisAsyncResult<Void>(asyncResult.cause()));
@@ -160,11 +158,11 @@ public class RedisConnection {
                                 logger.error("Socket client error", e);
                                 // clean the reply queue
                                 while (!repliesQueue.isEmpty()) {
-                                    repliesQueue.poll().handle(new ErrorReply("Connection closed"));
+                                    repliesQueue.poll().handle(new Reply('-', "Connection closed"));
                                 }
                                 // clean waiting for connection queue
                                 while (!connectingQueue.isEmpty()) {
-                                    connectingQueue.poll().getHandler().handle(new ErrorReply("Connection closed"));
+                                    connectingQueue.poll().getHandler().handle(new Reply('-', "Connection closed"));
                                 }
                                 // update state
                                 state = State.DISCONNECTED;
@@ -176,11 +174,11 @@ public class RedisConnection {
                                 logger.info("Socket closed");
                                 // clean the reply queue
                                 while (!repliesQueue.isEmpty()) {
-                                    repliesQueue.poll().handle(new ErrorReply("Connection closed"));
+                                    repliesQueue.poll().handle(new Reply('-', "Connection closed"));
                                 }
                                 // clean waiting for connection queue
                                 while (!connectingQueue.isEmpty()) {
-                                    connectingQueue.poll().getHandler().handle(new ErrorReply("Connection closed"));
+                                    connectingQueue.poll().getHandler().handle(new Reply('-', "Connection closed"));
                                 }
                                 // update state
                                 state = State.DISCONNECTED;
@@ -226,7 +224,7 @@ public class RedisConnection {
                         if (connection.succeeded()) {
                             send(command);
                         } else {
-                            command.getHandler().handle(new ErrorReply("Unable to connect"));
+                            command.getHandler().handle(new Reply('-', "Unable to connect"));
                         }
                     }
                 });
@@ -260,15 +258,13 @@ public class RedisConnection {
     // See http://redis.io/topics/pubsub
     boolean handlePushedPubSubMessage(Reply reply) {
         // Pub/sub messages are always multi-bulk
-        if (reply instanceof MultiBulkReply) {
-            MultiBulkReply mbReply = (MultiBulkReply) reply;
-
-            Reply[] data = mbReply.data();
+        if (reply.is('*')) {
+            Reply[] data = (Reply[]) reply.data();
             if (data != null) {
                 // message
                 if (data.length == 3) {
-                    if (data[0] instanceof BulkReply && "message".equals(((BulkReply) data[0]).asString("UTF-8"))) {
-                        String channel = ((BulkReply) data[1]).asString("UTF-8");
+                    if (data[0].is('$') && "message".equals(data[0].toString("UTF-8"))) {
+                        String channel = data[1].toString("UTF-8");
                         MessageHandler handler = subscriptions.getChannelHandler(channel);
                         if (handler != null)
                         {
@@ -281,8 +277,8 @@ public class RedisConnection {
                 } 
                 // pmessage
                 else if (data.length == 4) {
-                    if (data[0] instanceof BulkReply && "pmessage".equals(((BulkReply) data[0]).asString("UTF-8"))) {
-                        String pattern = ((BulkReply) data[1]).asString("UTF-8");
+                    if (data[0].is('$') && "pmessage".equals(data[0].toString("UTF-8"))) {
+                        String pattern = data[1].toString("UTF-8");
                         MessageHandler handler = subscriptions.getPatternHandler(pattern);
                         if (handler != null)
                         {

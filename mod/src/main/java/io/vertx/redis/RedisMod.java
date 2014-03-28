@@ -6,7 +6,6 @@ import org.vertx.java.core.Handler;
 import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
-import io.vertx.redis.reply.*;
 import io.vertx.redis.impl.MessageHandler;
 
 import java.nio.charset.Charset;
@@ -107,8 +106,8 @@ public class RedisMod extends BusModBase implements Handler<Message<JsonObject>>
                                 replyMessage.putString("status", "ok");
                                 JsonObject message = new JsonObject();
                                 message.putString("pattern", pattern);
-                                message.putString("channel", ((BulkReply) replyData[2]).asString(encoding));
-                                message.putString("message", ((BulkReply) replyData[3]).asString(encoding));
+                                message.putString("channel", replyData[2].toString(encoding));
+                                message.putString("message", replyData[3].toString(encoding));
                                 replyMessage.putObject("value", message);
                                 eb.send(vertxChannel, replyMessage);
                             }
@@ -134,7 +133,7 @@ public class RedisMod extends BusModBase implements Handler<Message<JsonObject>>
                                 replyMessage.putString("status", "ok");
                                 JsonObject message = new JsonObject();
                                 message.putString("channel", channel);
-                                message.putString("message", ((BulkReply) replyData[2]).asString(encoding));
+                                message.putString("message", replyData[2].toString(encoding));
                                 replyMessage.putObject("value", message);
                                 eb.send(vertxChannel, replyMessage);
                         }
@@ -183,19 +182,19 @@ public class RedisMod extends BusModBase implements Handler<Message<JsonObject>>
 
     private void processReply(Message<JsonObject> message, Reply reply, ResponseTransform transform) {
         JsonObject replyMessage;
-        switch (reply.getType()) {
+        switch (reply.type()) {
             case '-': // Error
-                sendError(message, ((ErrorReply) reply).data());
+                sendError(message, reply.toString());
                 return;
             case '+':   // Status
                 replyMessage = new JsonObject();
-                replyMessage.putString("value", ((StatusReply) reply).data());
+                replyMessage.putString("value", reply.toString());
                 sendOK(message, replyMessage);
                 return;
             case '$':  // Bulk
                 replyMessage = new JsonObject();
                 if (transform == ResponseTransform.INFO) {
-                    String info = ((BulkReply) reply).asString(encoding);
+                    String info = reply.toString(encoding);
                     String lines[] = info.split("\\r?\\n");
                     JsonObject value = new JsonObject();
                     JsonObject section = null;
@@ -223,33 +222,32 @@ public class RedisMod extends BusModBase implements Handler<Message<JsonObject>>
                     }
                     replyMessage.putObject("value", value);
                 } else {
-                    replyMessage.putString("value", ((BulkReply) reply).asString(encoding));
+                    replyMessage.putString("value", reply.toString(encoding));
                 }
                 sendOK(message, replyMessage);
                 return;
             case '*': // MultiBulk
                 replyMessage = new JsonObject();
-                MultiBulkReply mbreply = (MultiBulkReply) reply;
                 if (transform == ResponseTransform.ARRAY_TO_OBJECT) {
                     JsonObject bulk = new JsonObject();
-                    Reply[] mbreplyData = mbreply.data();
+                    Reply[] mbreplyData = (Reply[]) reply.data();
 
                     for (int i = 0; i < mbreplyData.length; i+=2) {
-                        if (mbreplyData[i].getType() != '$') {
-                            sendError(message, "Expected String as key type in multibulk: " + mbreplyData[i].getType());
+                        if (mbreplyData[i].type() != '$') {
+                            sendError(message, "Expected String as key type in multibulk: " + mbreplyData[i].type());
                             return;
                         }
-                        BulkReply brKey = (BulkReply) mbreplyData[i];
+                        Reply brKey = mbreplyData[i];
                         Reply brValue = mbreplyData[i+1];
-                        switch (brValue.getType()) {
+                        switch (brValue.type()) {
                             case '$':   // Bulk
-                                bulk.putString(brKey.asString(encoding), ((BulkReply) brValue).asString(encoding));
+                                bulk.putString(brKey.toString(encoding), brValue.toString(encoding));
                                 break;
                             case ':':   // Integer
-                                bulk.putNumber(brKey.asString(encoding), ((IntegerReply) brValue).data());
+                                bulk.putNumber(brKey.toString(encoding), brValue.toNumber());
                                 break;
                             default:
-                                sendError(message, "Unknown sub message type in multibulk: " + mbreplyData[i+1].getType());
+                                sendError(message, "Unknown sub message type in multibulk: " + mbreplyData[i+1].type());
                                 return;
                         }
 
@@ -257,16 +255,16 @@ public class RedisMod extends BusModBase implements Handler<Message<JsonObject>>
                     replyMessage.putObject("value", bulk);
                 } else {
                     JsonArray bulk = new JsonArray();
-                    for (Reply r : mbreply.data()) {
-                        switch (r.getType()) {
+                    for (Reply r : (Reply[]) reply.data()) {
+                        switch (r.type()) {
                             case '$':   // Bulk
-                                bulk.addString(((BulkReply) r).asString(encoding));
+                                bulk.addString(r.toString(encoding));
                                 break;
                             case ':':   // Integer
-                                bulk.addNumber(((IntegerReply) r).data());
+                                bulk.addNumber(r.toNumber());
                                 break;
                             default:
-                                sendError(message, "Unknown sub message type in multibulk: " + r.getType());
+                                sendError(message, "Unknown sub message type in multibulk: " + r.type());
                                 return;
                         }
                     }
@@ -276,7 +274,7 @@ public class RedisMod extends BusModBase implements Handler<Message<JsonObject>>
                 return;
             case ':':   // Integer
                 replyMessage = new JsonObject();
-                replyMessage.putNumber("value", ((IntegerReply) reply).data());
+                replyMessage.putNumber("value", reply.toNumber());
                 sendOK(message, replyMessage);
                 return;
             default:

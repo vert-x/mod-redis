@@ -1,10 +1,10 @@
 package io.vertx.redis;
 
-import io.vertx.redis.reply.Reply;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.buffer.Buffer;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
+import org.vertx.java.core.net.NetSocket;
 import org.vertx.java.core.streams.WriteStream;
 
 import java.nio.charset.Charset;
@@ -191,7 +191,7 @@ public class Command {
         return this;
     }
 
-    public void writeTo(WriteStream writeStream) {
+    public void writeTo(WriteStream<NetSocket> writeStream) {
         writeStream.write(buffer);
     }
 
