@@ -11,7 +11,7 @@ function testClient() {
 
   redis.deployModule({}, 1, function (err) {
     if (err) {
-      return vassert.testFail(err);
+      return vassert.fail(err);
     }
     redis.set("key", "value", function (reply) {
 
