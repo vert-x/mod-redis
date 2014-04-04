@@ -68,6 +68,17 @@ abstract class AbstractRedisClient {
         };
     }
 
+    public final void deployModule(Container container, JsonObject config, final AsyncResultHandler<String> handler) {
+      String mod = "io.vertx~mod-redis~1.1.3";
+      int instances = config.getInteger("instances", 1);
+      
+      if (handler != null) {
+          container.deployModule(mod, config, instances, handler);
+      } else {
+          container.deployModule(mod, config, instances);
+      }
+    }
+    
     public final void deployModule(Container container, String hostname, int port, String encoding, boolean binary, final String auth, final int select, int instances, final AsyncResultHandler<String> handler) {
         JsonObject config = new JsonObject()
                 .putString("host", hostname)
@@ -76,15 +87,10 @@ abstract class AbstractRedisClient {
                 .putString("encoding", encoding)
                 .putBoolean("binary", binary)
                 .putString("auth", auth)
-                .putNumber("select", select);
+                .putNumber("select", select)
+                .putNumber("instances", instances);
 
-        String mod = "io.vertx~mod-redis~1.1.3";
-
-        if (handler != null) {
-            container.deployModule(mod, config, instances, handler);
-        } else {
-            container.deployModule(mod, config, instances);
-        }
+        deployModule(container, config, handler);
     }
 
     private static void serializeArg(JsonArray redisArgs, Object arg) {
