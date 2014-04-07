@@ -31,7 +31,7 @@ The module takes the following configuration:
         "encoding": <charset>,
         "binary": <boolean>,
         "auth": <password>,
-        "db": <number>
+        "select": <number>
     }
 
 For example:
