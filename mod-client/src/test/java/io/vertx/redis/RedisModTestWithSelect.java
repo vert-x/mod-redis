@@ -51,17 +51,17 @@ public class RedisModTestWithSelect extends TestVerticle {
     @Test
     public void testSetGet() {
         final String key = makeKey();
-        client.set(key, "value1", new Handler<Message<JsonObject>>() {
+        client.set(key, "value1", new Handler<JsonObject>() {
             @Override
-            public void handle(Message<JsonObject> reply) {
-                assertEquals("ok", reply.body().getString("status"));
+            public void handle(JsonObject reply) {
+                assertEquals("ok", reply.getString("status"));
 
-                client.get(key, new Handler<Message<JsonObject>>() {
+                client.get(key, new Handler<JsonObject>() {
 
                     @Override
-                    public void handle(Message<JsonObject> reply) {
-                        assertEquals("ok", reply.body().getString("status"));
-                        assertEquals("value1", reply.body().getString("value"));
+                    public void handle(JsonObject reply) {
+                        assertEquals("ok", reply.getString("status"));
+                        assertEquals("value1", reply.getString("value"));
                         testComplete();
                     }
                 });
