@@ -97,7 +97,7 @@ public final class Reply {
                     multi.addArray(r.toJsonArray());
                     break;
                 default:
-                    throw new RuntimeException("Unknown sub message type in multibulk: " + r.type());
+                    throw new RuntimeException("Unknown sub message type in multi: " + r.type());
             }
         }
 
@@ -113,7 +113,7 @@ public final class Reply {
 
         for (int i = 0; i < ((Reply[]) data).length; i+=2) {
             if (((Reply[]) data)[i].type() != '$') {
-                throw new RuntimeException("Expected String as key type in multibulk: " + ((Reply[]) data)[i].type());
+                throw new RuntimeException("Expected String as key type in multi: " + ((Reply[]) data)[i].type());
             }
 
             Reply brKey = ((Reply[]) data)[i];
@@ -130,7 +130,7 @@ public final class Reply {
                     multi.putArray(brKey.toString(encoding), brValue.toJsonArray());
                     break;
                 default:
-                    throw new RuntimeException("Unknown sub message type in multibulk: " + ((Reply[]) data)[i+1].type());
+                    throw new RuntimeException("Unknown sub message type in multi: " + ((Reply[]) data)[i+1].type());
             }
 
         }

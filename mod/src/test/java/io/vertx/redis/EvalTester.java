@@ -82,4 +82,18 @@ public class EvalTester extends TestVerticle {
             }
         });
     }
+
+    @Test
+    public void testEval3() {
+
+        String script = "\"local items = {} for i = 1, #KEYS do items[#items + 1] = redis.call('hvals', KEYS[i]) end return items\"";
+
+        redis("{\"command\": \"eval\", \"args\": [" + script + ", 2, \"a:1\", \"a:2\"]}", false, new Handler<Message<JsonObject>>() {
+            @Override
+            public void handle(Message<JsonObject> reply) {
+                System.out.println(reply.body().encodePrettily());
+                testComplete();
+            }
+        });
+    }
 }
