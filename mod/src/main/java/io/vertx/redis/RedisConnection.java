@@ -5,6 +5,7 @@ import java.util.*;
 import io.vertx.redis.impl.RedisAsyncResult;
 import io.vertx.redis.impl.RedisSubscriptions;
 import io.vertx.redis.impl.MessageHandler;
+import io.vertx.redis.impl.ReplyHandler;
 import org.vertx.java.core.AsyncResult;
 import org.vertx.java.core.AsyncResultHandler;
 import org.vertx.java.core.Handler;
@@ -17,7 +18,7 @@ import org.vertx.java.core.net.NetSocket;
  * Base class for Redis Vertx client. Generated client would use the facilties
  * in this class to implement typed commands.
  */
-public class RedisConnection {
+public class RedisConnection implements ReplyHandler {
 
 
     private final Vertx vertx;
@@ -235,6 +236,7 @@ public class RedisConnection {
         }
     }
 
+    @Override
     public void handleReply(Reply reply) {
 
         // Important to have this first - 'message' and 'pmessage' can be pushed at any moment, 

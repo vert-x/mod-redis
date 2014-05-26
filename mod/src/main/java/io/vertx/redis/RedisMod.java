@@ -226,49 +226,12 @@ public class RedisMod extends BusModBase implements Handler<Message<JsonObject>>
                 }
                 sendOK(message, replyMessage);
                 return;
-            case '*': // MultiBulk
+            case '*': // Multi
                 replyMessage = new JsonObject();
                 if (transform == ResponseTransform.ARRAY_TO_OBJECT) {
-                    JsonObject bulk = new JsonObject();
-                    Reply[] mbreplyData = (Reply[]) reply.data();
-
-                    for (int i = 0; i < mbreplyData.length; i+=2) {
-                        if (mbreplyData[i].type() != '$') {
-                            sendError(message, "Expected String as key type in multibulk: " + mbreplyData[i].type());
-                            return;
-                        }
-                        Reply brKey = mbreplyData[i];
-                        Reply brValue = mbreplyData[i+1];
-                        switch (brValue.type()) {
-                            case '$':   // Bulk
-                                bulk.putString(brKey.toString(encoding), brValue.toString(encoding));
-                                break;
-                            case ':':   // Integer
-                                bulk.putNumber(brKey.toString(encoding), brValue.toNumber());
-                                break;
-                            default:
-                                sendError(message, "Unknown sub message type in multibulk: " + mbreplyData[i+1].type());
-                                return;
-                        }
-
-                    }
-                    replyMessage.putObject("value", bulk);
+                    replyMessage.putObject("value", reply.toJsonObject(encoding));
                 } else {
-                    JsonArray bulk = new JsonArray();
-                    for (Reply r : (Reply[]) reply.data()) {
-                        switch (r.type()) {
-                            case '$':   // Bulk
-                                bulk.addString(r.toString(encoding));
-                                break;
-                            case ':':   // Integer
-                                bulk.addNumber(r.toNumber());
-                                break;
-                            default:
-                                sendError(message, "Unknown sub message type in multibulk: " + r.type());
-                                return;
-                        }
-                    }
-                    replyMessage.putArray("value", bulk);
+                    replyMessage.putArray("value", reply.toJsonArray(encoding));
                 }
                 sendOK(message, replyMessage);
                 return;
