@@ -72,7 +72,18 @@ public class RedisMod extends BusModBase implements Handler<Message<JsonObject>>
     public void handle(final Message<JsonObject> message) {
 
         String command = message.body().getString("command");
-        final JsonArray args = message.body().getArray("args");
+        final Object o = message.body().getField("args");
+        final JsonArray args;
+
+        if (o != null) {
+            if (o instanceof JsonArray) {
+                args = (JsonArray) o;
+            } else {
+                args = new JsonArray().add(o);
+            }
+        } else {
+            args = null;
+        }
 
         if (command == null) {
             sendError(message, "command must be specified");
