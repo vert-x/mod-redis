@@ -213,9 +213,16 @@ public class RedisConnection implements ReplyHandler {
             case CONNECTED:
                 // The order read must match the order written, vertx guarantees
                 // that this is only called from a single thread.
-                command.writeTo(netSocket);
-                for (int i = 0; i < command.getExpectedReplies(); ++i) {
-                    repliesQueue.offer(command.getHandler());
+                try {
+                    command.writeTo(netSocket);
+                    for (int i = 0; i < command.getExpectedReplies(); ++i) {
+                        repliesQueue.offer(command.getHandler());
+                    }
+                } catch (RuntimeException e) {
+                    // usually this means that the underlying socket is broken
+                    state = State.DISCONNECTED;
+                    // do not keep the client on hold forever, send an error back
+                    command.getHandler().handle(new Reply('-', e.getMessage()));
                 }
                 break;
             case DISCONNECTED:
