@@ -69,7 +69,7 @@ abstract class AbstractRedisClient {
     }
 
     public final void deployModule(Container container, JsonObject config, final AsyncResultHandler<String> handler) {
-      String mod = "io.vertx~mod-redis~1.1.3";
+      String mod = "io.vertx~mod-redis~1.1.4";
       int instances = config.getInteger("instances", 1);
       
       if (handler != null) {

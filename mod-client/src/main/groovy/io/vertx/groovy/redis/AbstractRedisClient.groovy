@@ -49,7 +49,7 @@ class AbstractRedisClient {
            select: select
         ]
 
-        def mod = "io.vertx~mod-redis~1.1.3";
+        def mod = "io.vertx~mod-redis~1.1.4";
 
         if (handler != null) {
             container.deployModule(mod, config, instances, handler)
