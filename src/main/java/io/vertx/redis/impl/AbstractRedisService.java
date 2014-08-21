@@ -83,9 +83,27 @@ public abstract class AbstractRedisService implements RedisService {
         return ResponseTransform.NONE;
     }
 
+    final void sendString(final String command, final JsonArray args, final Handler<AsyncResult<String>> resultHandler) {
+        send(command, args, String.class, resultHandler);
+    }
 
-    @SuppressWarnings("unchecked")
-    final void send(final String command, final JsonElement args, Handler<AsyncResult<?>> resultHandler) {
+    final void sendLong(final String command, final JsonArray args, final Handler<AsyncResult<Long>> resultHandler) {
+        send(command, args, Long.class, resultHandler);
+    }
+
+    final void sendVoid(final String command, final JsonArray args, final Handler<AsyncResult<Void>> resultHandler) {
+        send(command, args, Void.class, resultHandler);
+    }
+
+    final void sendJsonArray(final String command, final JsonArray args, final Handler<AsyncResult<JsonArray>> resultHandler) {
+        send(command, args, JsonArray.class, resultHandler);
+    }
+
+    final void sendJsonObject(final String command, final JsonArray args, final Handler<AsyncResult<JsonObject>> resultHandler) {
+        send(command, args, JsonObject.class, resultHandler);
+    }
+
+    final <T> void send(final String command, final JsonElement args, final Class<T> type, final Handler<AsyncResult<T>> resultHandler) {
 
         final ResponseTransform transform = getResponseTransformFor(command);
         JsonArray redisArgs = null;
@@ -121,18 +139,15 @@ public abstract class AbstractRedisService implements RedisService {
                     String pattern = (String) obj;
                     // compose the listening address as base + . + pattern
                     final String vertxChannel = baseAddress + "." + pattern;
-                    subscriptions.registerPatternSubscribeHandler(pattern, new MessageHandler() {
-                        @Override
-                        public void handle(String pattern, Reply[] replyData) {
-                            JsonObject replyMessage = new JsonObject();
-                            replyMessage.putString("status", "ok");
-                            JsonObject message = new JsonObject();
-                            message.putString("pattern", pattern);
-                            message.putString("channel", replyData[2].toString(encoding));
-                            message.putString("message", replyData[3].toString(encoding));
-                            replyMessage.putObject("value", message);
-                            eb.send(vertxChannel, replyMessage);
-                        }
+                    subscriptions.registerPatternSubscribeHandler(pattern, (pattern1, replyData) -> {
+                        JsonObject replyMessage = new JsonObject();
+                        replyMessage.putString("status", "ok");
+                        JsonObject message = new JsonObject();
+                        message.putString("pattern", pattern1);
+                        message.putString("channel", replyData[2].toString(encoding));
+                        message.putString("message", replyData[3].toString(encoding));
+                        replyMessage.putObject("value", message);
+                        eb.send(vertxChannel, replyMessage);
                     });
                 }
                 break;
@@ -148,17 +163,14 @@ public abstract class AbstractRedisService implements RedisService {
                     String channel = (String) obj;
                     // compose the listening address as base + . + channel
                     final String vertxChannel = baseAddress + "." + channel;
-                    subscriptions.registerChannelSubscribeHandler(channel, new MessageHandler() {
-                        @Override
-                        public void handle(String channel, Reply[] replyData) {
-                            JsonObject replyMessage = new JsonObject();
-                            replyMessage.putString("status", "ok");
-                            JsonObject message = new JsonObject();
-                            message.putString("channel", channel);
-                            message.putString("message", replyData[2].toString(encoding));
-                            replyMessage.putObject("value", message);
-                            eb.send(vertxChannel, replyMessage);
-                        }
+                    subscriptions.registerChannelSubscribeHandler(channel, (channel1, replyData) -> {
+                        JsonObject replyMessage = new JsonObject();
+                        replyMessage.putString("status", "ok");
+                        JsonObject message = new JsonObject();
+                        message.putString("channel", channel1);
+                        message.putString("message", replyData[2].toString(encoding));
+                        replyMessage.putObject("value", message);
+                        eb.send(vertxChannel, replyMessage);
                     });
                 }
                 break;
@@ -197,10 +209,10 @@ public abstract class AbstractRedisService implements RedisService {
         redisClient.send(new Command(command, redisArgs, charset).setExpectedReplies(expectedReplies).setHandler(reply -> {
             switch (reply.type()) {
                 case '-': // Error
-                    resultHandler.handle(new RedisAsyncResult<>(reply.toString()));
+                    resultHandler.handle(new RedisAsyncResult<>(reply.asType(String.class)));
                     return;
                 case '+':   // Status
-                    resultHandler.handle(new RedisAsyncResult<>(null, reply.toString()));
+                    resultHandler.handle(new RedisAsyncResult<>(null, reply.asType(type)));
                     return;
                 case '$':  // Bulk
                     if (transform == ResponseTransform.INFO) {
@@ -230,20 +242,20 @@ public abstract class AbstractRedisService implements RedisService {
                                 }
                             }
                         }
-                        resultHandler.handle(new RedisAsyncResult<>(null, value));
+                        resultHandler.handle(new RedisAsyncResult<>(null, (T) value));
                     } else {
-                        resultHandler.handle(new RedisAsyncResult<>(null, reply.toString(encoding)));
+                        resultHandler.handle(new RedisAsyncResult<>(null, reply.asType(type, encoding)));
                     }
                     return;
                 case '*': // Multi
                     if (transform == ResponseTransform.ARRAY_TO_OBJECT) {
-                        resultHandler.handle(new RedisAsyncResult<>(null, reply.toJsonObject(encoding)));
+                        resultHandler.handle(new RedisAsyncResult<>(null, (T) reply.toJsonObject(encoding)));
                     } else {
-                        resultHandler.handle(new RedisAsyncResult<>(null, reply.toJsonArray(encoding)));
+                        resultHandler.handle(new RedisAsyncResult<>(null, (T) reply.toJsonArray(encoding)));
                     }
                     return;
                 case ':':   // Integer
-                    resultHandler.handle(new RedisAsyncResult<>(null, reply.toNumber()));
+                    resultHandler.handle(new RedisAsyncResult<>(null, reply.asType(type)));
                     return;
                 default:
                     resultHandler.handle(new RedisAsyncResult<>("Unknown message type"));

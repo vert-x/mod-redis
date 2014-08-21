@@ -136,4 +136,28 @@ public final class Reply {
         }
         return multi;
     }
+
+    public <T> T asType(Class<T> type, String encoding) {
+        if (type == String.class) {
+            return (T) toString(encoding);
+        }
+        if (type == Long.class) {
+
+        }
+        if (type == Void.class) {
+
+        }
+        if (type == JsonArray.class) {
+
+        }
+        if (type == JsonObject.class) {
+
+        }
+
+        return null;
+    }
+
+    public <T> T asType(Class<T> type) {
+        return asType(type, "UTF-8");
+    }
 }

@@ -1,0 +1,168 @@
+append.md:@integer-reply: the length of the string after the append operation.
+auth.md:@simple-string-reply
+bgrewriteaof.md:@simple-string-reply: always `OK`.
+bgsave.md:@simple-string-reply
+bitcount.md:@integer-reply
+bitop.md:@integer-reply
+bitpos.md:@integer-reply
+blpop.md:@array-reply: specifically:
+brpoplpush.md:@bulk-string-reply: the element being popped from `source` and pushed to `destination`.
+brpoplpush.md:If `timeout` is reached, a @nil-reply is returned.
+brpop.md:@array-reply: specifically:
+client getname.md:@bulk-string-reply: The connection name, or a null bulk reply if no name is set.
+client kill.md:@simple-string-reply: `OK` if the connection exists and has been closed
+client kill.md:@integer-reply: the number of clients killed.
+client list.md:@bulk-string-reply: a unique string, formatted as follows:
+client pause.md:@simple-string-reply: The command returns OK or an error if the timeout is invalid.
+client setname.md:@simple-string-reply: `OK` if the connection name was successfully set.
+cluster slots.md:Returns @array-reply of current cluster state.
+cluster slots.md:@array-reply: nested list of slot ranges with IP/Port mappings.
+command count.md:Returns @integer-reply of number of total commands in this Redis server.
+command count.md:@integer-reply: number of commands returned by `COMMAND`
+command getkeys.md:Returns @array-reply of keys from a full Redis command.
+command getkeys.md:@array-reply: list of keys from your command.
+command info.md:Returns @array-reply of details about multiple Redis commands.
+command info.md:@array-reply: nested list of command details.
+command.md:Returns @array-reply of details about all Redis commands.
+command.md:  - nested @array-reply of command flags
+command.md:Command flags is @array-reply containing one or more status replies:
+command.md:flag `movablekeys` is added to the command flags @array-reply.  Your Redis
+command.md:@array-reply: nested list of command details.  Commands are returned
+config get.md:The return type of the command is a @bulk-string-reply.
+config resetstat.md:@simple-string-reply: always `OK`.
+config rewrite.md:@simple-string-reply: `OK` when the configuration was rewritten properly.
+config set.md:@simple-string-reply: `OK` when the configuration was set properly.
+dbsize.md:@integer-reply
+debug object.md:@simple-string-reply
+debug segfault.md:@simple-string-reply
+decrby.md:@integer-reply: the value of `key` after the decrement
+decr.md:@integer-reply: the value of `key` after the decrement
+del.md:@integer-reply: The number of keys that were removed.
+discard.md:@simple-string-reply: always `OK`.
+dump.md:@bulk-string-reply: the serialized value.
+echo.md:@bulk-string-reply
+exec.md:@array-reply: each element being the reply to each of the commands in the
+exec.md:When using `WATCH`, `EXEC` can return a @nil-reply if the execution was aborted.
+exists.md:@integer-reply, specifically:
+expireat.md:@integer-reply, specifically:
+expire.md:@integer-reply, specifically:
+flushall.md:@simple-string-reply
+flushdb.md:@simple-string-reply
+getbit.md:@integer-reply: the bit value stored at _offset_.
+get.md:@bulk-string-reply: the value of `key`, or `nil` when `key` does not exist.
+getrange.md:@bulk-string-reply
+getset.md:@bulk-string-reply: the old value stored at `key`, or `nil` when `key` did not exist.
+hdel.md:@integer-reply: the number of fields that were removed from the hash, not
+hexists.md:@integer-reply, specifically:
+hgetall.md:@array-reply: list of fields and their values stored in the hash, or an
+hget.md:@bulk-string-reply: the value associated with `field`, or `nil` when `field` is not
+hincrbyfloat.md:@bulk-string-reply: the value of `field` after the increment.
+hincrby.md:@integer-reply: the value at `field` after the increment operation.
+hkeys.md:@array-reply: list of fields in the hash, or an empty list when `key` does
+hlen.md:@integer-reply: number of fields in the hash, or `0` when `key` does not exist.
+hmget.md:@array-reply: list of values associated with the given fields, in the same
+hmset.md:@simple-string-reply
+hset.md:@integer-reply, specifically:
+hsetnx.md:@integer-reply, specifically:
+hvals.md:@array-reply: list of values in the hash, or an empty list when `key` does
+incrbyfloat.md:@bulk-string-reply: the value of `key` after the increment.
+incrby.md:@integer-reply: the value of `key` after the increment
+incr.md:@integer-reply: the value of `key` after the increment
+info.md:@bulk-string-reply: as a collection of text lines.
+keys.md:@array-reply: list of keys matching `pattern`.
+lastsave.md:@integer-reply: an UNIX time stamp.
+lindex.md:@bulk-string-reply: the requested element, or `nil` when `index` is out of range.
+linsert.md:@integer-reply: the length of the list after the insert operation, or `-1` when
+llen.md:@integer-reply: the length of the list at `key`.
+lpop.md:@bulk-string-reply: the value of the first element, or `nil` when `key` does not exist.
+lpush.md:@integer-reply: the length of the list after the push operations.
+lpushx.md:@integer-reply: the length of the list after the push operation.
+lrange.md:@array-reply: list of elements in the specified range.
+lrem.md:@integer-reply: the number of removed elements.
+lset.md:@simple-string-reply
+ltrim.md:@simple-string-reply
+mget.md:@array-reply: list of values at the specified keys.
+migrate.md:@simple-string-reply: The command returns OK on success.
+move.md:@integer-reply, specifically:
+mset.md:@simple-string-reply: always `OK` since `MSET` can't fail.
+msetnx.md:@integer-reply, specifically:
+multi.md:@simple-string-reply: always `OK`.
+persist.md:@integer-reply, specifically:
+pexpireat.md:@integer-reply, specifically:
+pexpire.md:@integer-reply, specifically:
+pfadd.md:@integer-reply, specifically:
+pfcount.md:@integer-reply, specifically:
+pfmerge.md:@simple-string-reply: The command just returns `OK`.
+ping.md:@simple-string-reply
+pttl.md:@integer-reply: TTL in milliseconds, or a negative value in order to signal an error (see the description above).
+publish.md:@integer-reply: the number of clients that received the message.
+pubsub.md:@array-reply: a list of active channels, optionally matching the specified pattern.
+pubsub.md:@array-reply: a list of channels and number of subscribers for every channel. The format is channel, count, channel, count, ..., so the list is flat.
+pubsub.md:@integer-reply: the number of patterns all the clients are subscribed to.
+quit.md:@simple-string-reply: always OK.
+randomkey.md:@bulk-string-reply: the random key, or `nil` when the database is empty.
+rename.md:@simple-string-reply
+renamenx.md:@integer-reply, specifically:
+restore.md:@simple-string-reply: The command returns OK on success.
+role.md:@array-reply: where the first element is one of `master`, `slave`, `sentinel` and the additional elements are role-specific as illustrated above.
+rpoplpush.md:@bulk-string-reply: the element being popped and pushed.
+rpop.md:@bulk-string-reply: the value of the last element, or `nil` when `key` does not exist.
+rpush.md:@integer-reply: the length of the list after the push operation.
+rpushx.md:@integer-reply: the length of the list after the push operation.
+sadd.md:@integer-reply: the number of elements that were added to the set, not including
+save.md:@simple-string-reply: The commands returns OK on success.
+scard.md:@integer-reply: the cardinality (number of elements) of the set, or `0` if `key`
+script exists.md:@array-reply The command returns an array of integers that correspond to
+script flush.md:@simple-string-reply
+script kill.md:@simple-string-reply
+script load.md:@bulk-string-reply This command returns the SHA1 digest of the script added into the
+sdiff.md:@array-reply: list with members of the resulting set.
+sdiffstore.md:@integer-reply: the number of elements in the resulting set.
+select.md:@simple-string-reply
+setbit.md:@integer-reply: the original bit value stored at _offset_.
+setex.md:@simple-string-reply
+set.md:@simple-string-reply: `OK` if `SET` was executed correctly.
+set.md:@nil-reply: a Null Bulk Reply is returned if the `SET` operation was not performed becase the user specified the `NX` or `XX` option but the condition was not met.
+setnx.md:@integer-reply, specifically:
+setrange.md:@integer-reply: the length of the string after it was modified by the command.
+shutdown.md:@simple-string-reply on error.
+sinter.md:@array-reply: list with members of the resulting set.
+sinterstore.md:@integer-reply: the number of elements in the resulting set.
+sismember.md:@integer-reply, specifically:
+slaveof.md:@simple-string-reply
+smembers.md:@array-reply: all elements of the set.
+smove.md:@integer-reply, specifically:
+sort.md:@array-reply: list of sorted elements.
+spop.md:@bulk-string-reply: the removed element, or `nil` when `key` does not exist.
+srandmember.md:@bulk-string-reply: without the additional `count` argument the command returns a Bulk Reply with the randomly selected element, or `nil` when `key` does not exist.
+srandmember.md:@array-reply: when the additional `count` argument is passed the command returns an array of elements, or an empty array when `key` does not exist.
+srem.md:@integer-reply: the number of members that were removed from the set, not
+strlen.md:@integer-reply: the length of the string at `key`, or `0` when `key` does not
+sunion.md:@array-reply: list with members of the resulting set.
+sunionstore.md:@integer-reply: the number of elements in the resulting set.
+time.md:@array-reply, specifically:
+ttl.md:@integer-reply: TTL in seconds, or a negative value in order to signal an error (see the description above).
+type.md:@simple-string-reply: type of `key`, or `none` when `key` does not exist.
+unwatch.md:@simple-string-reply: always `OK`.
+watch.md:@simple-string-reply: always `OK`.
+zadd.md:@integer-reply, specifically:
+zcard.md:@integer-reply: the cardinality (number of elements) of the sorted set, or `0`
+zcount.md:@integer-reply: the number of elements in the specified score range.
+zincrby.md:@bulk-string-reply: the new score of `member` (a double precision floating point
+zinterstore.md:@integer-reply: the number of elements in the resulting sorted set at
+zlexcount.md:@integer-reply: the number of elements in the specified score range.
+zrangebylex.md:@array-reply: list of elements in the specified score range.
+zrangebyscore.md:@array-reply: list of elements in the specified score range (optionally
+zrange.md:@array-reply: list of elements in the specified range (optionally with
+zrank.md:* If `member` exists in the sorted set, @integer-reply: the rank of `member`.
+zrank.md:  @bulk-string-reply: `nil`.
+zrem.md:@integer-reply, specifically:
+zremrangebylex.md:@integer-reply: the number of elements removed.
+zremrangebyrank.md:@integer-reply: the number of elements removed.
+zremrangebyscore.md:@integer-reply: the number of elements removed.
+zrevrangebyscore.md:@array-reply: list of elements in the specified score range (optionally
+zrevrange.md:@array-reply: list of elements in the specified range (optionally with
+zrevrank.md:* If `member` exists in the sorted set, @integer-reply: the rank of `member`.
+zrevrank.md:  @bulk-string-reply: `nil`.
+zscore.md:@bulk-string-reply: the score of `member` (a double precision floating point number),
+zunionstore.md:@integer-reply: the number of elements in the resulting sorted set at

@@ -1,23 +1,51 @@
-var http = require('http');
 var fs = require('fs');
 
 var prefix = '../main/java/io/vertx/redis/';
 
-//http.get('http://redis.io/commands.json', function (res) {
-//    var body = '';
-//
-//    res.on('data', function (chunk) {
-//        body += chunk;
-//    });
-//
-//    res.on('end', function () {
-//        //var api = JSON.parse(body);
-//        write('RedisService', body);
-//    });
-//}).on('error', function (e) {
-//    write('RedisService', "Got error: ", e);
-//});
+var retTypes = {
+    EVAL: 'Void',
+    EVALSHA: 'Void',
+    MONITOR: 'Void',
+    OBJECT: 'Void',
+    PSETEX: 'Void',
+    PSUBSCRIBE: 'Void',
+    PUNSUBSCRIBE: 'Void',
+    SLOWLOG: 'Void',
+    SUBSCRIBE: 'Void',
+    SYNC: 'Void',
+    UNSUBSCRIBE: 'Void',
+    SCAN: 'Void',
+    SSCAN: 'Void',
+    HSCAN: 'Void',
+    ZSCAN: 'Void'
+};
 
+function loadReturns() {
+    var lines = fs.readFileSync('returns.txt');
+    lines = lines.toString().split(/\n/);
+
+    var conv = {
+        'integer': 'Long',
+        'simple-string': 'String',
+        'bulk-string': 'String',
+        'array': 'JsonArray',
+        'nil': 'Void'
+    };
+
+    for (var i = 0; i < lines.length; i++) {
+        var l = lines[i];
+        var command = l.substring(0, l.indexOf('.'));
+
+        var retregex = /@(.*)-reply/g;
+        var match = retregex.exec(l);
+
+        if (!match) {
+            console.error(l);
+        } else {
+            retTypes[command.toUpperCase()] = conv[match[1]];
+        }
+    }
+}
 
 function generateAPI(json) {
     fs.truncateSync(prefix + 'RedisService.java');
@@ -87,6 +115,11 @@ function generateAPICall(name, json) {
     var fnName = niceFnName(name);
 
     var hasOptions = json.arguments && json.arguments.length > 0;
+    var returnType = retTypes[name];
+
+    if (returnType === undefined) {
+        returnType = '?'
+    }
 
     var code = [
         '  /**',
@@ -101,12 +134,13 @@ function generateAPICall(name, json) {
         code.push('   * @param args JsonArray ' + JSON.stringify(json.arguments));
     }
 
-    code.push('   * @param handler Handler for the result of this call.');
-    code.push('   */');
     if (hasOptions) {
-        code.push('  void ' + fnName + '(JsonArray args, Handler<AsyncResult<?>> handler);');
+        code.push('   * @param handler Handler for the result of this call.');
+        code.push('   */');
+        code.push('  void ' + fnName + '(JsonArray args, Handler<AsyncResult<' + returnType + '>> handler);');
     } else {
-        code.push('  void ' + fnName + '(Handler<AsyncResult<?>> handler);');
+        code.push('   */');
+        code.push('  void ' + fnName + '(Handler<AsyncResult<' + returnType + '>> handler);');
     }
 
     code.push('');
@@ -128,13 +162,18 @@ function generateApiCallImpl(name, json) {
     var fnName = niceFnName(name);
 
     var hasOptions = json.arguments && json.arguments.length > 0;
+    var returnType = retTypes[name];
+
+    if (returnType === undefined) {
+        returnType = '?'
+    }
 
     var code = [];
 
     if (hasOptions) {
-        code.push('  public void ' + fnName + '(JsonArray args, Handler<AsyncResult<?>> handler) { send("' + name + '", args, handler); }');
+        code.push('  public void ' + fnName + '(JsonArray args, Handler<AsyncResult<' + returnType + '>> handler) { send' + returnType + '("' + name + '", args, handler); }');
     } else {
-        code.push('  public void ' + fnName + '(Handler<AsyncResult<?>> handler) { send("' + name + '",null, handler); }');
+        code.push('  public void ' + fnName + '(Handler<AsyncResult<' + returnType + '>> handler) { send' + returnType + '("' + name + '",null, handler); }');
     }
 
     code.push('');
@@ -143,5 +182,8 @@ function generateApiCallImpl(name, json) {
 }
 
 var api = require('./api.json');
+
+loadReturns();
+
 generateAPI(api);
 generateAPIImpl(api);
