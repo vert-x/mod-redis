@@ -1,11 +1,10 @@
-package io.vertx.redis;
+package io.vertx.redis.impl;
 
-import org.vertx.java.core.Handler;
-import org.vertx.java.core.buffer.Buffer;
-import org.vertx.java.core.json.JsonArray;
-import org.vertx.java.core.json.JsonObject;
-import org.vertx.java.core.net.NetSocket;
-import org.vertx.java.core.streams.WriteStream;
+import io.vertx.core.Handler;
+import io.vertx.core.buffer.Buffer;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.net.NetSocket;
+import io.vertx.core.streams.WriteStream;
 
 import java.nio.charset.Charset;
 
@@ -98,10 +97,7 @@ public class Command {
     private int expectedReplies = 1;
     private Handler<Reply> handler;
 
-    public Command(JsonObject json, Charset encoding) {
-
-        String command = json.getString("command");
-        JsonArray args = json.getArray("args");
+    public Command(String command, final JsonArray args, Charset encoding) {
 
         int totalArgs;
         if (args == null) {
@@ -119,7 +115,7 @@ public class Command {
         }
 
         // serialize the request
-        buffer = new Buffer();
+        buffer = Buffer.buffer();
         buffer.appendByte(ARGS_PREFIX);
         if (extraCommand == null) {
             buffer.appendBytes(numToBytes(totalArgs + 1));
@@ -139,48 +135,6 @@ public class Command {
         }
     }
 
-    public Command(String command, Object... args) {
-
-        this.expectedReplies = 1;
-        this.handler = null;
-
-        int totalArgs;
-        if (args == null) {
-            totalArgs = 0;
-        } else {
-            totalArgs = args.length;
-        }
-
-        int spc = command.indexOf(' '); // there are commands which are multi word
-        String extraCommand = null;
-
-        if (spc != -1) {
-            extraCommand = command.substring(spc + 1);
-            command = command.substring(0, spc);
-        }
-
-        // serialize the request
-        buffer = new Buffer();
-        buffer.appendByte(ARGS_PREFIX);
-        if (extraCommand == null) {
-            buffer.appendBytes(numToBytes(totalArgs + 1));
-        } else {
-            buffer.appendBytes(numToBytes(totalArgs + 2));
-        }
-        buffer.appendBytes(CRLF);
-        // serialize the command
-        Charset defaultCharset = Charset.defaultCharset();
-        appendToBuffer(command.getBytes(defaultCharset), defaultCharset, buffer);
-        if (extraCommand != null) {
-            appendToBuffer(extraCommand.getBytes(defaultCharset), defaultCharset, buffer);
-        }
-
-        // serialize arguments
-        for (int i = 0; i < totalArgs; i++) {
-            appendToBuffer(args[i], defaultCharset, buffer);
-        }
-    }
-
     public Command setExpectedReplies(int expectedReplies) {
         this.expectedReplies = expectedReplies;
         return this;
@@ -192,7 +146,7 @@ public class Command {
     }
 
     public void writeTo(WriteStream<NetSocket> writeStream) {
-        writeStream.write(buffer);
+        writeStream.writeBuffer(buffer);
     }
 
     public int getExpectedReplies() {

@@ -1,8 +1,7 @@
-package io.vertx.redis;
+package io.vertx.redis.impl;
 
-import io.vertx.redis.impl.ReplyHandler;
-import org.vertx.java.core.Handler;
-import org.vertx.java.core.buffer.Buffer;
+import io.vertx.core.Handler;
+import io.vertx.core.buffer.Buffer;
 
 public class ReplyParser implements Handler<Buffer> {
 

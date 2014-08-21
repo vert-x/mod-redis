@@ -1,11 +1,15 @@
 package io.vertx.redis.impl;
 
-import org.vertx.java.core.AsyncResult;
+import io.vertx.core.AsyncResult;
 
 public class RedisAsyncResult<T> implements AsyncResult<T> {
 
     private final Throwable cause;
     private final T result;
+
+    public RedisAsyncResult(String cause) {
+        this(new RuntimeException(cause), null);
+    }
 
     public RedisAsyncResult(Throwable cause) {
         this(cause, null);

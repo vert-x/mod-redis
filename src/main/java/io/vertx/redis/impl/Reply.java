@@ -1,8 +1,8 @@
-package io.vertx.redis;
+package io.vertx.redis.impl;
 
-import org.vertx.java.core.buffer.Buffer;
-import org.vertx.java.core.json.JsonArray;
-import org.vertx.java.core.json.JsonObject;
+import io.vertx.core.buffer.Buffer;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 
 public final class Reply {
 
