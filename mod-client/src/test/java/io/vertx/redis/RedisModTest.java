@@ -68,4 +68,9 @@ public class RedisModTest extends TestVerticle {
             }
         });
     }
+    @Test
+    public void testArgumentlessPing() {
+		client.ping();
+		testComplete();
+	}
 }
