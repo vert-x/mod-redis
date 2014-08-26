@@ -262,8 +262,8 @@ public class RedisConnection implements ReplyHandler {
             if (data != null) {
                 // message
                 if (data.length == 3) {
-                    if (data[0].is('$') && "message".equals(data[0].toString("UTF-8"))) {
-                        String channel = data[1].toString("UTF-8");
+                    if (data[0].is('$') && "message".equals(data[0].asType(String.class))) {
+                        String channel = data[1].asType(String.class);
                         MessageHandler handler = subscriptions.getChannelHandler(channel);
                         if (handler != null)
                         {
@@ -276,8 +276,8 @@ public class RedisConnection implements ReplyHandler {
                 } 
                 // pmessage
                 else if (data.length == 4) {
-                    if (data[0].is('$') && "pmessage".equals(data[0].toString("UTF-8"))) {
-                        String pattern = data[1].toString("UTF-8");
+                    if (data[0].is('$') && "pmessage".equals(data[0].asType(String.class))) {
+                        String pattern = data[1].asType(String.class);
                         MessageHandler handler = subscriptions.getPatternHandler(pattern);
                         if (handler != null)
                         {

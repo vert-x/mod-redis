@@ -6,6 +6,7 @@ import io.vertx.redis.RedisService;
 import io.vertx.test.core.VertxTestBase;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.UUID;
@@ -16,6 +17,7 @@ public class RedisServiceTest extends VertxTestBase {
 
     @Before
     public void before() throws Exception {
+        setUp();
         JsonObject config = new JsonObject();
         redis = RedisService.create(vertx, config);
         redis.start();
@@ -57,4 +59,53 @@ public class RedisServiceTest extends VertxTestBase {
         });
         await();
     }
+
+    @Test
+    public void testAppend() {
+        final String key = makeKey();
+
+        redis.del(p(key), reply0 -> {
+            assertTrue(reply0.succeeded());
+
+            redis.append(p(key, "Hello"), reply1 -> {
+                assertTrue(reply1.succeeded());
+                assertEquals(5l, reply1.result().longValue());
+
+                redis.append(p(key, " World"), reply2 -> {
+                    assertTrue(reply2.succeeded());
+                    assertEquals(11l, reply2.result().longValue());
+
+                    redis.get(p(key), reply3 -> {
+                        assertTrue(reply3.succeeded());
+                        assertEquals("Hello World", reply3.result());
+                        testComplete();
+                    });
+                });
+            });
+        });
+
+        await();
+    }
+
+    @Test
+    @Ignore
+    public void testAuth() {
+        await();
+        testComplete();
+    }
+
+    @Test
+    @Ignore
+    public void testBgrewriteaof() {
+        await();
+        testComplete();
+    }
+
+    @Test
+    @Ignore
+    public void testBgsave() {
+        await();
+        testComplete();
+    }
+
 }

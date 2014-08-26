@@ -53,111 +53,82 @@ public final class Reply {
         return data;
     }
 
-    public String toString(String encoding) {
-        if (data == null) return null;
-        if (data instanceof String) {
-            return (String) data;
-        }
-        if (data instanceof Buffer) {
-            return ((Buffer) data).toString(encoding);
-        }
-        return data.toString();
-    }
-
-    @Override
-    public String toString() {
-        if (data == null) return null;
-        if (data instanceof String) {
-            return (String) data;
-        }
-        return data.toString();
-    }
-
-    public Number toNumber() {
-        if (data == null) return null;
-        return (Number) data;
-    }
-
-    public JsonArray toJsonArray() {
-        return toJsonArray("UTF-8");
-    }
-
-    public JsonArray toJsonArray(String encoding) {
-        final JsonArray multi = new JsonArray();
-
-        for (Reply r : (Reply[]) data) {
-            switch (r.type()) {
-                case '$':   // Bulk
-                    multi.addString(r.toString(encoding));
-                    break;
-                case ':':   // Integer
-                    multi.addNumber(r.toNumber());
-                    break;
-                case '*':   // Multi
-                    multi.addArray(r.toJsonArray());
-                    break;
-                default:
-                    throw new RuntimeException("Unknown sub message type in multi: " + r.type());
-            }
-        }
-
-        return multi;
-    }
-
-    public JsonObject toJsonObject() {
-        return toJsonObject("UTF-8");
-    }
-
-    public JsonObject toJsonObject(String encoding) {
-        final JsonObject multi = new JsonObject();
-
-        for (int i = 0; i < ((Reply[]) data).length; i+=2) {
-            if (((Reply[]) data)[i].type() != '$') {
-                throw new RuntimeException("Expected String as key type in multi: " + ((Reply[]) data)[i].type());
-            }
-
-            Reply brKey = ((Reply[]) data)[i];
-            Reply brValue = ((Reply[]) data)[i+1];
-
-            switch (brValue.type()) {
-                case '$':   // Bulk
-                    multi.putString(brKey.toString(encoding), brValue.toString(encoding));
-                    break;
-                case ':':   // Integer
-                    multi.putNumber(brKey.toString(encoding), brValue.toNumber());
-                    break;
-                case '*':   // Multi
-                    multi.putArray(brKey.toString(encoding), brValue.toJsonArray());
-                    break;
-                default:
-                    throw new RuntimeException("Unknown sub message type in multi: " + ((Reply[]) data)[i+1].type());
-            }
-
-        }
-        return multi;
-    }
-
-    public <T> T asType(Class<T> type, String encoding) {
+    @SuppressWarnings("unchecked")
+    public <T> T asType(final Class<T> type, final String encoding) throws ClassCastException {
         if (type == String.class) {
-            return (T) toString(encoding);
+            if (data == null) return null;
+            if (data instanceof String) {
+                return (T) data;
+            }
+            if (data instanceof Buffer) {
+                return (T) ((Buffer) data).toString(encoding);
+            }
+            return (T) data.toString();
         }
         if (type == Long.class) {
-
+            if (data == null) {
+                return null;
+            }
+            return (T) data;
         }
         if (type == Void.class) {
-
+            return null;
         }
         if (type == JsonArray.class) {
+            final JsonArray multi = new JsonArray();
+
+            for (Reply r : (Reply[]) data) {
+                switch (r.type()) {
+                    case '$':   // Bulk
+                        multi.addString(r.asType(String.class, encoding));
+                        break;
+                    case ':':   // Integer
+                        multi.addNumber(r.asType(Long.class, encoding));
+                        break;
+                    case '*':   // Multi
+                        multi.addArray(r.asType(JsonArray.class, encoding));
+                        break;
+                    default:
+                        throw new RuntimeException("Unknown sub message type in multi: " + r.type());
+                }
+            }
+
+            return (T) multi;
 
         }
         if (type == JsonObject.class) {
+            final JsonObject multi = new JsonObject();
 
+            for (int i = 0; i < ((Reply[]) data).length; i+=2) {
+                if (((Reply[]) data)[i].type() != '$') {
+                    throw new RuntimeException("Expected String as key type in multi: " + ((Reply[]) data)[i].type());
+                }
+
+                Reply brKey = ((Reply[]) data)[i];
+                Reply brValue = ((Reply[]) data)[i+1];
+
+                switch (brValue.type()) {
+                    case '$':   // Bulk
+                        multi.putString(brKey.asType(String.class, encoding), brValue.asType(String.class, encoding));
+                        break;
+                    case ':':   // Integer
+                        multi.putNumber(brKey.asType(String.class, encoding), brValue.asType(Long.class, encoding));
+                        break;
+                    case '*':   // Multi
+                        multi.putArray(brKey.asType(String.class, encoding), brValue.asType(JsonArray.class, encoding));
+                        break;
+                    default:
+                        throw new RuntimeException("Unknown sub message type in multi: " + ((Reply[]) data)[i+1].type());
+                }
+
+            }
+            return (T) multi;
         }
 
         return null;
     }
 
-    public <T> T asType(Class<T> type) {
+    public <T> T asType(Class<T> type) throws ClassCastException {
         return asType(type, "UTF-8");
     }
 }

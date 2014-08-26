@@ -7,13 +7,13 @@ import io.vertx.redis.RedisServiceFactory;
 
 public class RedisServiceFactoryImpl implements RedisServiceFactory {
 
-  @Override
-  public RedisService create(Vertx vertx, JsonObject config) {
-    return new RedisServiceImpl(vertx, config);
-  }
+    @Override
+    public RedisService create(Vertx vertx, JsonObject config) {
+        return new RedisServiceImpl(vertx, config);
+    }
 
-  @Override
-  public RedisService createEventBusProxy(Vertx vertx, String address) {
-    return vertx.eventBus().createProxy(RedisService.class, address);
-  }
+    @Override
+    public RedisService createEventBusProxy(Vertx vertx, String address) {
+        return vertx.eventBus().createProxy(RedisService.class, address);
+    }
 }

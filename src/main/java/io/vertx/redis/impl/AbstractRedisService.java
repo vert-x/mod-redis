@@ -144,8 +144,8 @@ public abstract class AbstractRedisService implements RedisService {
                         replyMessage.putString("status", "ok");
                         JsonObject message = new JsonObject();
                         message.putString("pattern", pattern1);
-                        message.putString("channel", replyData[2].toString(encoding));
-                        message.putString("message", replyData[3].toString(encoding));
+                        message.putString("channel", replyData[2].asType(String.class, encoding));
+                        message.putString("message", replyData[3].asType(String.class, encoding));
                         replyMessage.putObject("value", message);
                         eb.send(vertxChannel, replyMessage);
                     });
@@ -168,7 +168,7 @@ public abstract class AbstractRedisService implements RedisService {
                         replyMessage.putString("status", "ok");
                         JsonObject message = new JsonObject();
                         message.putString("channel", channel1);
-                        message.putString("message", replyData[2].toString(encoding));
+                        message.putString("message", replyData[2].asType(String.class, encoding));
                         replyMessage.putObject("value", message);
                         eb.send(vertxChannel, replyMessage);
                     });
@@ -216,7 +216,7 @@ public abstract class AbstractRedisService implements RedisService {
                     return;
                 case '$':  // Bulk
                     if (transform == ResponseTransform.INFO) {
-                        String info = reply.toString(encoding);
+                        String info = reply.asType(String.class, encoding);
                         String lines[] = info.split("\\r?\\n");
                         JsonObject value = new JsonObject();
                         JsonObject section = null;
@@ -249,9 +249,9 @@ public abstract class AbstractRedisService implements RedisService {
                     return;
                 case '*': // Multi
                     if (transform == ResponseTransform.ARRAY_TO_OBJECT) {
-                        resultHandler.handle(new RedisAsyncResult<>(null, (T) reply.toJsonObject(encoding)));
+                        resultHandler.handle(new RedisAsyncResult<>(null, (T) reply.asType(JsonObject.class, encoding)));
                     } else {
-                        resultHandler.handle(new RedisAsyncResult<>(null, (T) reply.toJsonArray(encoding)));
+                        resultHandler.handle(new RedisAsyncResult<>(null, (T) reply.asType(JsonArray.class, encoding)));
                     }
                     return;
                 case ':':   // Integer
