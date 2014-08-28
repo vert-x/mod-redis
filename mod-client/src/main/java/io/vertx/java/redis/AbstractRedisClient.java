@@ -132,7 +132,7 @@ abstract class AbstractRedisClient {
         Handler<Message<JsonObject>> messageHandler = null;
 
         // verify if there are args
-        if (args != null) {
+        if (args != null && args.length > 0) {
             // verify if the last one is a Handler
             Object last = args[args.length - 1];
             totalArgs = args.length;
