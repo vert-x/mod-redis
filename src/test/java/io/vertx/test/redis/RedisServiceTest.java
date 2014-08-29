@@ -77,20 +77,20 @@ public class RedisServiceTest extends VertxTestBase {
         await();
     }
 
-    @Test
-    @Ignore
-    public void testAuth() {
-    }
+//    @Test
+//    @Ignore
+//    public void testAuth() {
+//    }
 
-    @Test
-    @Ignore
-    public void testBgrewriteaof() {
-    }
+//    @Test
+//    @Ignore
+//    public void testBgrewriteaof() {
+//    }
 
-    @Test
-    @Ignore
-    public void testBgsave() {
-    }
+//    @Test
+//    @Ignore
+//    public void testBgsave() {
+//    }
 
     @Test
     public void testBitcount() {
@@ -184,30 +184,30 @@ public class RedisServiceTest extends VertxTestBase {
         await();
     }
 
-    @Test
-    @Ignore
-    public void testBrpoplpush() {
-    }
+//    @Test
+//    @Ignore
+//    public void testBrpoplpush() {
+//    }
 
-    @Test
-    @Ignore
-    public void testClientKill() {
-    }
+//    @Test
+//    @Ignore
+//    public void testClientKill() {
+//    }
 
-    @Test
-    @Ignore
-    public void testClientList() {
-    }
+//    @Test
+//    @Ignore
+//    public void testClientList() {
+//    }
 
-    @Test
-    @Ignore
-    public void testClientGetname() {
-    }
+//    @Test
+//    @Ignore
+//    public void testClientGetname() {
+//    }
 
-    @Test
-    @Ignore
-    public void testClientSetname() {
-    }
+//    @Test
+//    @Ignore
+//    public void testClientSetname() {
+//    }
 
 //    @Test
 //    public void testConfigGet() {
@@ -224,30 +224,30 @@ public class RedisServiceTest extends VertxTestBase {
 //        await();
 //    }
 
-    @Test
-    @Ignore
-    public void testConfigSet() {
-    }
+//    @Test
+//    @Ignore
+//    public void testConfigSet() {
+//    }
 
-    @Test
-    @Ignore
-    public void testConfigResetstat() {
-    }
+//    @Test
+//    @Ignore
+//    public void testConfigResetstat() {
+//    }
 
-    @Test
-    @Ignore
-    public void testDbsize() {
-    }
+//    @Test
+//    @Ignore
+//    public void testDbsize() {
+//    }
 
-    @Test
-    @Ignore
-    public void testDebugObject() {
-    }
+//    @Test
+//    @Ignore
+//    public void testDebugObject() {
+//    }
 
-    @Test
-    @Ignore
-    public void testDebugSegfault() {
-    }
+//    @Test
+//    @Ignore
+//    public void testDebugSegfault() {
+//    }
 
     @Test
     public void testDecr() {
@@ -299,9 +299,10 @@ public class RedisServiceTest extends VertxTestBase {
         await();
     }
 
-    @Test
-    public void testDiscard() {
-    }
+//    @Test
+//    @Ignore
+//    public void testDiscard() {
+//    }
 
 //    @Test
 //    public void testDump() {
@@ -356,13 +357,15 @@ public class RedisServiceTest extends VertxTestBase {
 //        await();
 //    }
 
-    @Test
-    public void testEvalsha() {
-    }
+//    @Test
+//    @Ignore
+//    public void testEvalsha() {
+//    }
 
-    @Test
-    public void testExec() {
-    }
+//    @Test
+//    @Ignore
+//    public void testExec() {
+//    }
 
     @Test
     public void testExists() {
@@ -438,15 +441,15 @@ public class RedisServiceTest extends VertxTestBase {
         await();
     }
 
-    @Test
-    @Ignore
-    public void testFlushall() {
-    }
+//    @Test
+//    @Ignore
+//    public void testFlushall() {
+//    }
 
-    @Test
-    @Ignore
-    public void testFlushdb() {
-    }
+//    @Test
+//    @Ignore
+//    public void testFlushdb() {
+//    }
 
     @Test
     public void testGet() {
@@ -1163,35 +1166,38 @@ public class RedisServiceTest extends VertxTestBase {
 //        await();
 //    }
 
+    @Test
+    public void testMget() {
+        final String mykey1 = makeKey();
+        final String mykey2 = makeKey();
+        redis.set(j(mykey1, "Hello"), reply0 -> {
+            assertTrue(reply0.succeeded());
+            redis.set(j(mykey2, "World"), reply1 -> {
+                assertTrue(reply1.succeeded());
+                redis.mget(j(mykey1, mykey2, "nonexisting"), reply2 -> {
+                    assertTrue(reply2.succeeded());
+                    assertArrayEquals(a("Hello", "World", null), reply2.result().toArray());
+                    testComplete();
+                });
+            });
+        });
+        await();
+    }
+
 //    @Test
-//    public void testMget() {
-//        final String mykey1 = makeKey();
-//        final String mykey2 = makeKey();
-//        redis.set(j(mykey1, "Hello"), reply0 -> { assertTrue(reply0.succeeded());
-//            redis.set(j(mykey2, "World"), reply1 -> { assertTrue(reply1.succeeded());
-//                redis.mget(j(mykey1, mykey2, "nonexisting"), reply2 -> { assertTrue(reply2.succeeded());
-//                    assertArrayEquals(a("Hello", "World", null), reply2.result().toArray());
-//                    testComplete();
-//                });
-//            });
-//        });
-//        await();
+//    @Ignore
+//    public void testMigrate() {
 //    }
 
-    @Test
-    @Ignore
-    public void testMigrate() {
-    }
+//    @Test
+//    @Ignore
+//    public void testMonitor() {
+//    }
 
-    @Test
-    @Ignore
-    public void testMonitor() {
-    }
-
-    @Test
-    @Ignore
-    public void testMove() {
-    }
+//    @Test
+//    @Ignore
+//    public void testMove() {
+//    }
 
     @Test
     public void testMset() {
@@ -1231,15 +1237,15 @@ public class RedisServiceTest extends VertxTestBase {
 //        await();
 //    }
 
-    @Test
-    @Ignore
-    public void testMulti() {
-    }
+//    @Test
+//    @Ignore
+//    public void testMulti() {
+//    }
 
-    @Test
-    @Ignore
-    public void testObject() {
-    }
+//    @Test
+//    @Ignore
+//    public void testObject() {
+//    }
 
     @Test
     public void testPersist() {
@@ -1328,10 +1334,10 @@ public class RedisServiceTest extends VertxTestBase {
 //        await();
 //    }
 
-    @Test
-    @Ignore
-    public void testPsubscribe() {
-    }
+//    @Test
+//    @Ignore
+//    public void testPsubscribe() {
+//    }
 
 //    @Test
 //    public void testPttl() {
@@ -1348,25 +1354,25 @@ public class RedisServiceTest extends VertxTestBase {
 //        await();
 //    }
 
-    @Test
-    @Ignore
-    public void testPublish() {
-    }
+//    @Test
+//    @Ignore
+//    public void testPublish() {
+//    }
 
-    @Test
-    @Ignore
-    public void testPunsubscribe() {
-    }
+//    @Test
+//    @Ignore
+//    public void testPunsubscribe() {
+//    }
 
-    @Test
-    @Ignore
-    public void testQuit() {
-    }
+//    @Test
+//    @Ignore
+//    public void testQuit() {
+//    }
 
-    @Test
-    @Ignore
-    public void testRandomkey() {
-    }
+//    @Test
+//    @Ignore
+//    public void testRandomkey() {
+//    }
 
     @Test
     public void testRename() {
@@ -1410,10 +1416,10 @@ public class RedisServiceTest extends VertxTestBase {
         await();
     }
 
-    @Test
-    @Ignore
-    public void testRestore() {
-    }
+//    @Test
+//    @Ignore
+//    public void testRestore() {
+//    }
 
 //    @Test
 //    public void testRpop() {
@@ -1523,10 +1529,10 @@ public class RedisServiceTest extends VertxTestBase {
 //        await();
 //    }
 
-    @Test
-    @Ignore
-    public void testSave() {
-    }
+//    @Test
+//    @Ignore
+//    public void testSave() {
+//    }
 
     @Test
     public void testScard() {
@@ -1547,25 +1553,25 @@ public class RedisServiceTest extends VertxTestBase {
         await();
     }
 
-    @Test
-    @Ignore
-    public void testScriptexists() {
-    }
+//    @Test
+//    @Ignore
+//    public void testScriptexists() {
+//    }
 
-    @Test
-    @Ignore
-    public void testScriptflush() {
-    }
+//    @Test
+//    @Ignore
+//    public void testScriptflush() {
+//    }
 
-    @Test
-    @Ignore
-    public void testScriptkill() {
-    }
+//    @Test
+//    @Ignore
+//    public void testScriptkill() {
+//    }
 
-    @Test
-    @Ignore
-    public void testScriptload() {
-    }
+//    @Test
+//    @Ignore
+//    public void testScriptload() {
+//    }
 
 //    @Test
 //    public void testSdiff() {
@@ -1597,15 +1603,15 @@ public class RedisServiceTest extends VertxTestBase {
 //        await();
 //    }
 
-    @Test
-    @Ignore
-    public void testSdiffstore() {
-    }
+//    @Test
+//    @Ignore
+//    public void testSdiffstore() {
+//    }
 
-    @Test
-    @Ignore
-    public void testSelect() {
-    }
+//    @Test
+//    @Ignore
+//    public void testSelect() {
+//    }
 
     @Test
     public void testSet() {
@@ -1695,10 +1701,10 @@ public class RedisServiceTest extends VertxTestBase {
         await();
     }
 
-    @Test
-    @Ignore
-    public void testShutdown() {
-    }
+//    @Test
+//    @Ignore
+//    public void testShutdown() {
+//    }
 
 //    @Test
 //    public void testSinter() {
@@ -1730,10 +1736,10 @@ public class RedisServiceTest extends VertxTestBase {
 //        await();
 //    }
 
-    @Test
-    @Ignore
-    public void testSinterstore() {
-    }
+//    @Test
+//    @Ignore
+//    public void testSinterstore() {
+//    }
 
     @Test
     public void testSismember() {
@@ -1753,15 +1759,15 @@ public class RedisServiceTest extends VertxTestBase {
         await();
     }
 
-    @Test
-    @Ignore
-    public void testSlaveof() {
-    }
+//    @Test
+//    @Ignore
+//    public void testSlaveof() {
+//    }
 
-    @Test
-    @Ignore
-    public void testSlowlog() {
-    }
+//    @Test
+//    @Ignore
+//    public void testSlowlog() {
+//    }
 
 //    @Test
 //    public void testSmembers() {
@@ -1923,10 +1929,10 @@ public class RedisServiceTest extends VertxTestBase {
         await();
     }
 
-    @Test
-    @Ignore
-    public void testSubscribe() {
-    }
+//    @Test
+//    @Ignore
+//    public void testSubscribe() {
+//    }
 
 //    @Test
 //    public void testSunion() {
@@ -1960,25 +1966,25 @@ public class RedisServiceTest extends VertxTestBase {
 //        await();
 //    }
 
-    @Test
-    @Ignore
-    public void testSunionstore() {
-    }
-
-    @Test
-    @Ignore
-    public void testSync() {
-    }
+//    @Test
+//    @Ignore
+//    public void testSunionstore() {
+//    }
 
 //    @Test
-//    public void testTime() {
-//        redis([command:"time"]){
-//            reply0 ->
-//                    assertTrue(reply0.body.getArray("value").size() == 2)
-//            testComplete();
-//        });
-//        await();
+//    @Ignore
+//    public void testSync() {
 //    }
+
+    @Test
+    public void testTime() {
+        redis.time(reply0 -> {
+            assertTrue(reply0.succeeded());
+            assertTrue(reply0.result().size() == 2);
+            testComplete();
+        });
+        await();
+    }
 
     @Test
     public void testTtl() {
@@ -2031,42 +2037,47 @@ public class RedisServiceTest extends VertxTestBase {
         await();
     }
 
-    @Test
-    @Ignore
-    public void testUnsubscribe() {
-    }
-
-    @Test
-    @Ignore
-    public void testUnwatch() {
-    }
-
-    @Test
-    @Ignore
-    public void testWatch() {
-    }
+//    @Test
+//    @Ignore
+//    public void testUnsubscribe() {
+//    }
 
 //    @Test
-//    public void testZadd() {
-//        final String key = makeKey();
-//        redis.zadd(j(key, 1, "one"), reply0 -> { assertTrue(reply0.succeeded());
-//            assertEquals(1, reply0.result().longValue());
-//            redis.zadd(j(key, 1, "uno"), reply1 -> { assertTrue(reply1.succeeded());
-//                assertEquals(1, reply1.result().longValue());
-//                redis.zadd(j(key, 2, "two"), reply2 -> { assertTrue(reply2.succeeded());
-//                    assertEquals(1, reply2.result().longValue());
-//                    redis.zadd(j(key, 3, "two"), reply3 -> { assertTrue(reply3.succeeded());
-//                        assertEquals(0, reply3.result().longValue());
-//                        redis.zrange(j(key, 0, -1, "withscores"), reply4 -> { assertTrue(reply4.succeeded());
-//                            assertArrayEquals(a("one", "1", "uno", "1", "two", "3"), reply4.result().toArray());
-//                            testComplete();
-//                        });
-//                    });
-//                });
-//            });
-//        });
-//        await();
+//    @Ignore
+//    public void testUnwatch() {
 //    }
+
+//    @Test
+//    @Ignore
+//    public void testWatch() {
+//    }
+
+    @Test
+    public void testZadd() {
+        final String key = makeKey();
+        redis.zadd(j(key, 1, "one"), reply0 -> {
+            assertTrue(reply0.succeeded());
+            assertEquals(1, reply0.result().longValue());
+            redis.zadd(j(key, 1, "uno"), reply1 -> {
+                assertTrue(reply1.succeeded());
+                assertEquals(1, reply1.result().longValue());
+                redis.zadd(j(key, 2, "two"), reply2 -> {
+                    assertTrue(reply2.succeeded());
+                    assertEquals(1, reply2.result().longValue());
+                    redis.zadd(j(key, 3, "two"), reply3 -> {
+                        assertTrue(reply3.succeeded());
+                        assertEquals(0, reply3.result().longValue());
+                        redis.zrange(j(key, 0, -1, "withscores"), reply4 -> {
+                            assertTrue(reply4.succeeded());
+                            assertArrayEquals(a("one", "1", "uno", "1", "two", "3"), reply4.result().toArray());
+                            testComplete();
+                        });
+                    });
+                });
+            });
+        });
+        await();
+    }
 
     @Test
     public void testZcard() {
@@ -2163,43 +2174,51 @@ public class RedisServiceTest extends VertxTestBase {
         await();
     }
 
-//    @Test
-//    public void testZrange() {
-//        final String key = makeKey();
-//        redis.zadd(j(key, 1, "one"), reply0 -> { assertTrue(reply0.succeeded());
-//            assertEquals(1, reply0.result().longValue());
-//            redis.zadd(j(key, 2, "two"), reply1 -> { assertTrue(reply1.succeeded());
-//                assertEquals(1, reply1.result().longValue());
-//                redis.zadd(j(key, 3, "three"), reply2 -> { assertTrue(reply2.succeeded());
-//                    assertEquals(1, reply2.result().longValue());
-//                    redis.zrange(j(key, 0, -1), reply3 -> { assertTrue(reply3.succeeded());
-//                        assertArrayEquals(a("one", "two", "three"), reply3.result().toArray());
-//                        testComplete();
-//                    });
-//                });
-//            });
-//        });
-//        await();
-//    }
+    @Test
+    public void testZrange() {
+        final String key = makeKey();
+        redis.zadd(j(key, 1, "one"), reply0 -> {
+            assertTrue(reply0.succeeded());
+            assertEquals(1, reply0.result().longValue());
+            redis.zadd(j(key, 2, "two"), reply1 -> {
+                assertTrue(reply1.succeeded());
+                assertEquals(1, reply1.result().longValue());
+                redis.zadd(j(key, 3, "three"), reply2 -> {
+                    assertTrue(reply2.succeeded());
+                    assertEquals(1, reply2.result().longValue());
+                    redis.zrange(j(key, 0, -1), reply3 -> {
+                        assertTrue(reply3.succeeded());
+                        assertArrayEquals(a("one", "two", "three"), reply3.result().toArray());
+                        testComplete();
+                    });
+                });
+            });
+        });
+        await();
+    }
 
-//    @Test
-//    public void testZrangebyscore() {
-//        final String key = makeKey();
-//        redis.zadd(j(key, 1, "one"), reply0 -> { assertTrue(reply0.succeeded());
-//            assertEquals(1, reply0.result().longValue());
-//            redis.zadd(j(key, 2, "two"), reply1 -> { assertTrue(reply1.succeeded());
-//                assertEquals(1, reply1.result().longValue());
-//                redis.zadd(j(key, 3, "three"), reply2 -> { assertTrue(reply2.succeeded());
-//                    assertEquals(1, reply2.result().longValue());
-//                    redis.zrangebyscore(j(key, "-inf", "+inf"), reply3 -> { assertTrue(reply3.succeeded());
-//                        assertArrayEquals(a("one", "two", "three"), reply3.result().toArray());
-//                        testComplete();
-//                    });
-//                });
-//            });
-//        });
-//        await();
-//    }
+    @Test
+    public void testZrangebyscore() {
+        final String key = makeKey();
+        redis.zadd(j(key, 1, "one"), reply0 -> {
+            assertTrue(reply0.succeeded());
+            assertEquals(1, reply0.result().longValue());
+            redis.zadd(j(key, 2, "two"), reply1 -> {
+                assertTrue(reply1.succeeded());
+                assertEquals(1, reply1.result().longValue());
+                redis.zadd(j(key, 3, "three"), reply2 -> {
+                    assertTrue(reply2.succeeded());
+                    assertEquals(1, reply2.result().longValue());
+                    redis.zrangebyscore(j(key, "-inf", "+inf"), reply3 -> {
+                        assertTrue(reply3.succeeded());
+                        assertArrayEquals(a("one", "two", "three"), reply3.result().toArray());
+                        testComplete();
+                    });
+                });
+            });
+        });
+        await();
+    }
 
 //    @Test
 //    public void testZrank() {
