@@ -103,7 +103,7 @@ public final class RedisServiceImpl extends AbstractRedisService {
 
   public void hget(JsonArray args, Handler<AsyncResult<String>> handler) { sendString("HGET", args, handler); }
 
-  public void hgetall(JsonArray args, Handler<AsyncResult<JsonArray>> handler) { sendJsonArray("HGETALL", args, handler); }
+  public void hgetall(JsonArray args, Handler<AsyncResult<JsonObject>> handler) { sendJsonObject("HGETALL", args, handler); }
 
   public void hincrby(JsonArray args, Handler<AsyncResult<Long>> handler) { sendLong("HINCRBY", args, handler); }
 

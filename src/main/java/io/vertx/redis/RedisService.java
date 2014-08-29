@@ -476,7 +476,7 @@ public interface RedisService {
    * @param args JsonArray [{"name":"key","type":"key"}]
    * @param handler Handler for the result of this call.
    */
-  void hgetall(JsonArray args, Handler<AsyncResult<JsonArray>> handler);
+  void hgetall(JsonArray args, Handler<AsyncResult<JsonObject>> handler);
 
   /**
    * Increment the integer value of a hash field by the given number
