@@ -84,7 +84,7 @@ Simple example with pub/sub mode:
     def subConfig = new JsonObject()
     subConfig.putString("address", 'redis.sub')
 
-    container.deployModule(io.vertx~mod-redis~1.1.4-SNAPSHOT", pubConfig, 1)
+    container.deployModule("io.vertx~mod-redis~1.1.4-SNAPSHOT", pubConfig, 1)
     container.deployModule("io.vertx~mod-redis~1.1.4-SNAPSHOT", subConfig, 1)
 
     // register a handler for the incoming message the naming the Redis module will use is base address + '.' + redis channel
