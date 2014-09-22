@@ -15,8 +15,8 @@ public interface RedisService {
     return factory.createEventBusProxy(vertx, address);
   }
 
-  void start();
-  void stop();
+  void start(Handler<AsyncResult<Void>> handler);
+  void stop(Handler<AsyncResult<Void>> handler);
 
   static final RedisServiceFactory factory = ServiceHelper.loadFactory(RedisServiceFactory.class);
 

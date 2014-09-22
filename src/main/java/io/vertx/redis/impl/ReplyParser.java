@@ -15,6 +15,11 @@ public class ReplyParser implements Handler<Buffer> {
         this.client = client;
     }
 
+    public void reset() {
+        _buffer = null;
+        _offset = 0;
+    }
+
 
     private Reply parseResult(byte type) throws ArrayIndexOutOfBoundsException {
         int start, end, offset;

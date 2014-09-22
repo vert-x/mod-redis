@@ -9,7 +9,9 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import java.io.UnsupportedEncodingException;
 import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
 
 public class RedisServiceTest extends VertxTestBase {
 
@@ -17,15 +19,32 @@ public class RedisServiceTest extends VertxTestBase {
 
     @Before
     public void before() throws Exception {
-        setUp();
+        super.setUp();
         JsonObject config = new JsonObject();
         redis = RedisService.create(vertx, config);
-        redis.start();
+        CountDownLatch latch = new CountDownLatch(1);
+        redis.start(asyncResult -> {
+            if (asyncResult.succeeded()) {
+                latch.countDown();
+            } else {
+                throw new RuntimeException("failed to setup", asyncResult.cause());
+            }
+        });
+        awaitLatch(latch);
     }
 
     @After
-    public void after() {
-        redis.stop();
+    public void after() throws Exception {
+        CountDownLatch latch = new CountDownLatch(1);
+        redis.stop(asyncResult -> {
+            if (asyncResult.succeeded()) {
+                latch.countDown();
+            } else {
+                throw new RuntimeException("failed to setup", asyncResult.cause());
+            }
+        });
+        awaitLatch(latch);
+        super.tearDown();
     }
 
     private static JsonArray j(final Object... params) {
@@ -77,20 +96,20 @@ public class RedisServiceTest extends VertxTestBase {
         await();
     }
 
-//    @Test
-//    @Ignore
-//    public void testAuth() {
-//    }
+    @Test
+    @Ignore
+    public void testAuth() {
+    }
 
-//    @Test
-//    @Ignore
-//    public void testBgrewriteaof() {
-//    }
+    @Test
+    @Ignore
+    public void testBgrewriteaof() {
+    }
 
-//    @Test
-//    @Ignore
-//    public void testBgsave() {
-//    }
+    @Test
+    @Ignore
+    public void testBgsave() {
+    }
 
     @Test
     public void testBitcount() {
@@ -184,30 +203,30 @@ public class RedisServiceTest extends VertxTestBase {
         await();
     }
 
-//    @Test
-//    @Ignore
-//    public void testBrpoplpush() {
-//    }
+    @Test
+    @Ignore
+    public void testBrpoplpush() {
+    }
 
-//    @Test
-//    @Ignore
-//    public void testClientKill() {
-//    }
+    @Test
+    @Ignore
+    public void testClientKill() {
+    }
 
-//    @Test
-//    @Ignore
-//    public void testClientList() {
-//    }
+    @Test
+    @Ignore
+    public void testClientList() {
+    }
 
-//    @Test
-//    @Ignore
-//    public void testClientGetname() {
-//    }
+    @Test
+    @Ignore
+    public void testClientGetname() {
+    }
 
-//    @Test
-//    @Ignore
-//    public void testClientSetname() {
-//    }
+    @Test
+    @Ignore
+    public void testClientSetname() {
+    }
 
     @Test
     public void testConfigGet() {
@@ -223,30 +242,30 @@ public class RedisServiceTest extends VertxTestBase {
         await();
     }
 
-//    @Test
-//    @Ignore
-//    public void testConfigSet() {
-//    }
+    @Test
+    @Ignore
+    public void testConfigSet() {
+    }
 
-//    @Test
-//    @Ignore
-//    public void testConfigResetstat() {
-//    }
+    @Test
+    @Ignore
+    public void testConfigResetstat() {
+    }
 
-//    @Test
-//    @Ignore
-//    public void testDbsize() {
-//    }
+    @Test
+    @Ignore
+    public void testDbsize() {
+    }
 
-//    @Test
-//    @Ignore
-//    public void testDebugObject() {
-//    }
+    @Test
+    @Ignore
+    public void testDebugObject() {
+    }
 
-//    @Test
-//    @Ignore
-//    public void testDebugSegfault() {
-//    }
+    @Test
+    @Ignore
+    public void testDebugSegfault() {
+    }
 
     @Test
     public void testDecr() {
@@ -298,33 +317,35 @@ public class RedisServiceTest extends VertxTestBase {
         await();
     }
 
-//    @Test
-//    @Ignore
-//    public void testDiscard() {
-//    }
+    @Test
+    @Ignore
+    public void testDiscard() {
+    }
 
 //    @Test
 //    public void testDump() {
 //        final String mykey = makeKey();
 //
-//        redis.set(j(mykey, 10), reply0 -> { assertTrue(reply0.succeeded());
-//            redis.dump(j(mykey), reply1 -> { assertTrue(reply1.succeeded());
+//        redis.set(j(mykey, 10), reply0 -> {
+//            assertTrue(reply0.succeeded());
+//            redis.dump(j(mykey), reply1 -> {
+//                assertTrue(reply1.succeeded());
 //                try {
 //                    byte[] data = reply1.result().getBytes("ISO-8859-1");
 //
-//                    assertEquals((byte) data[0], (byte) 0);
-//                    assertEquals((byte) data[1], (byte) 0xc0);
-//                    assertEquals((byte) data[2], (byte) '\n');
-//                    assertEquals((byte) data[3], (byte) 6);
-//                    assertEquals((byte) data[4], (byte) 0);
-//                    assertEquals((byte) data[5], (byte) 0xf8);
-//                    assertEquals((byte) data[6], (byte) 'r');
-//                    assertEquals((byte) data[7], (byte) '?');
-//                    assertEquals((byte) data[8], (byte) 0xc5);
-//                    assertEquals((byte) data[9], (byte) 0xfb);
-//                    assertEquals((byte) data[10], (byte) 0xfb);
-//                    assertEquals((byte) data[11], (byte) '_');
-//                    assertEquals((byte) data[12], (byte) '(');
+//                    assertEquals(data[0], (byte) 0);
+//                    assertEquals(data[1], (byte) 0xc0);
+//                    assertEquals(data[2], (byte) '\n');
+//                    assertEquals(data[3], (byte) 6);
+//                    assertEquals(data[4], (byte) 0);
+//                    assertEquals(data[5], (byte) 0xf8);
+//                    assertEquals(data[6], (byte) 'r');
+//                    assertEquals(data[7], (byte) '?');
+//                    assertEquals(data[8], (byte) 0xc5);
+//                    assertEquals(data[9], (byte) 0xfb);
+//                    assertEquals(data[10], (byte) 0xfb);
+//                    assertEquals(data[11], (byte) '_');
+//                    assertEquals(data[12], (byte) '(');
 //                    testComplete();
 //                } catch (UnsupportedEncodingException e) {
 //                    fail(e.getMessage());
@@ -356,15 +377,15 @@ public class RedisServiceTest extends VertxTestBase {
 //        await();
 //    }
 
-//    @Test
-//    @Ignore
-//    public void testEvalsha() {
-//    }
+    @Test
+    @Ignore
+    public void testEvalsha() {
+    }
 
-//    @Test
-//    @Ignore
-//    public void testExec() {
-//    }
+    @Test
+    @Ignore
+    public void testExec() {
+    }
 
     @Test
     public void testExists() {
@@ -440,15 +461,15 @@ public class RedisServiceTest extends VertxTestBase {
         await();
     }
 
-//    @Test
-//    @Ignore
-//    public void testFlushall() {
-//    }
+    @Test
+    @Ignore
+    public void testFlushall() {
+    }
 
-//    @Test
-//    @Ignore
-//    public void testFlushdb() {
-//    }
+    @Test
+    @Ignore
+    public void testFlushdb() {
+    }
 
     @Test
     public void testGet() {
@@ -1214,20 +1235,20 @@ public class RedisServiceTest extends VertxTestBase {
         await();
     }
 
-//    @Test
-//    @Ignore
-//    public void testMigrate() {
-//    }
+    @Test
+    @Ignore
+    public void testMigrate() {
+    }
 
-//    @Test
-//    @Ignore
-//    public void testMonitor() {
-//    }
+    @Test
+    @Ignore
+    public void testMonitor() {
+    }
 
-//    @Test
-//    @Ignore
-//    public void testMove() {
-//    }
+    @Test
+    @Ignore
+    public void testMove() {
+    }
 
     @Test
     public void testMset() {
@@ -1270,15 +1291,15 @@ public class RedisServiceTest extends VertxTestBase {
         await();
     }
 
-//    @Test
-//    @Ignore
-//    public void testMulti() {
-//    }
+    @Test
+    @Ignore
+    public void testMulti() {
+    }
 
-//    @Test
-//    @Ignore
-//    public void testObject() {
-//    }
+    @Test
+    @Ignore
+    public void testObject() {
+    }
 
     @Test
     public void testPersist() {
@@ -1329,23 +1350,27 @@ public class RedisServiceTest extends VertxTestBase {
         await();
     }
 
-//    @Test
-//    public void testPexpireat() {
-//        final String mykey = makeKey();
-//        redis.set(j(mykey, "Hello"), reply0 -> { assertTrue(reply0.succeeded());
-//            redis.pexpireat(j(mykey, 1555555555005), reply1 -> { assertTrue(reply1.succeeded());
-//                assertEquals(1, reply1.result().longValue());
-//                redis.ttl(j(mykey), reply2 -> { assertTrue(reply2.succeeded());
-//                    assertTrue(200000000 > reply2.body.getNumber("value") && reply2.body.getNumber("value") > 0)
-//                    redis.pttl(j(mykey), reply3 -> { assertTrue(reply3.succeeded());
-//                        assertTrue(1555555555005 > reply3.body.getNumber("value") && reply3.body.getNumber("value") > 0)
-//                        testComplete();
-//                    });
-//                });
-//            });
-//        });
-//        await();
-//    }
+    @Test
+    public void testPexpireat() {
+        final String mykey = makeKey();
+        redis.set(j(mykey, "Hello"), reply0 -> {
+            assertTrue(reply0.succeeded());
+            redis.pexpireat(j(mykey, 1555555555005l), reply1 -> {
+                assertTrue(reply1.succeeded());
+                assertEquals(1, reply1.result().longValue());
+                redis.ttl(j(mykey), reply2 -> {
+                    assertTrue(reply2.succeeded());
+                    assertTrue(200000000 > reply2.result() && reply2.result() > 0);
+                    redis.pttl(j(mykey), reply3 -> {
+                        assertTrue(reply3.succeeded());
+                        assertTrue(1555555555005l > reply3.result() && reply3.result() > 0);
+                        testComplete();
+                    });
+                });
+            });
+        });
+        await();
+    }
 
     @Test
     public void testPing() {
@@ -1371,10 +1396,10 @@ public class RedisServiceTest extends VertxTestBase {
 //        await();
 //    }
 
-//    @Test
-//    @Ignore
-//    public void testPsubscribe() {
-//    }
+    @Test
+    @Ignore
+    public void testPsubscribe() {
+    }
 
 //    @Test
 //    public void testPttl() {
@@ -1391,25 +1416,25 @@ public class RedisServiceTest extends VertxTestBase {
 //        await();
 //    }
 
-//    @Test
-//    @Ignore
-//    public void testPublish() {
-//    }
+    @Test
+    @Ignore
+    public void testPublish() {
+    }
 
-//    @Test
-//    @Ignore
-//    public void testPunsubscribe() {
-//    }
+    @Test
+    @Ignore
+    public void testPunsubscribe() {
+    }
 
-//    @Test
-//    @Ignore
-//    public void testQuit() {
-//    }
+    @Test
+    @Ignore
+    public void testQuit() {
+    }
 
-//    @Test
-//    @Ignore
-//    public void testRandomkey() {
-//    }
+    @Test
+    @Ignore
+    public void testRandomkey() {
+    }
 
     @Test
     public void testRename() {
@@ -1453,10 +1478,10 @@ public class RedisServiceTest extends VertxTestBase {
         await();
     }
 
-//    @Test
-//    @Ignore
-//    public void testRestore() {
-//    }
+    @Test
+    @Ignore
+    public void testRestore() {
+    }
 
 //    @Test
 //    public void testRpop() {
@@ -1566,10 +1591,10 @@ public class RedisServiceTest extends VertxTestBase {
 //        await();
 //    }
 
-//    @Test
-//    @Ignore
-//    public void testSave() {
-//    }
+    @Test
+    @Ignore
+    public void testSave() {
+    }
 
     @Test
     public void testScard() {
@@ -1590,25 +1615,25 @@ public class RedisServiceTest extends VertxTestBase {
         await();
     }
 
-//    @Test
-//    @Ignore
-//    public void testScriptexists() {
-//    }
+    @Test
+    @Ignore
+    public void testScriptexists() {
+    }
 
-//    @Test
-//    @Ignore
-//    public void testScriptflush() {
-//    }
+    @Test
+    @Ignore
+    public void testScriptflush() {
+    }
 
-//    @Test
-//    @Ignore
-//    public void testScriptkill() {
-//    }
+    @Test
+    @Ignore
+    public void testScriptkill() {
+    }
 
-//    @Test
-//    @Ignore
-//    public void testScriptload() {
-//    }
+    @Test
+    @Ignore
+    public void testScriptload() {
+    }
 
 //    @Test
 //    public void testSdiff() {
@@ -1640,15 +1665,15 @@ public class RedisServiceTest extends VertxTestBase {
 //        await();
 //    }
 
-//    @Test
-//    @Ignore
-//    public void testSdiffstore() {
-//    }
+    @Test
+    @Ignore
+    public void testSdiffstore() {
+    }
 
-//    @Test
-//    @Ignore
-//    public void testSelect() {
-//    }
+    @Test
+    @Ignore
+    public void testSelect() {
+    }
 
     @Test
     public void testSet() {
@@ -1738,10 +1763,10 @@ public class RedisServiceTest extends VertxTestBase {
         await();
     }
 
-//    @Test
-//    @Ignore
-//    public void testShutdown() {
-//    }
+    @Test
+    @Ignore
+    public void testShutdown() {
+    }
 
 //    @Test
 //    public void testSinter() {
@@ -1773,10 +1798,10 @@ public class RedisServiceTest extends VertxTestBase {
 //        await();
 //    }
 
-//    @Test
-//    @Ignore
-//    public void testSinterstore() {
-//    }
+    @Test
+    @Ignore
+    public void testSinterstore() {
+    }
 
     @Test
     public void testSismember() {
@@ -1796,15 +1821,15 @@ public class RedisServiceTest extends VertxTestBase {
         await();
     }
 
-//    @Test
-//    @Ignore
-//    public void testSlaveof() {
-//    }
+    @Test
+    @Ignore
+    public void testSlaveof() {
+    }
 
-//    @Test
-//    @Ignore
-//    public void testSlowlog() {
-//    }
+    @Test
+    @Ignore
+    public void testSlowlog() {
+    }
 
 //    @Test
 //    public void testSmembers() {
@@ -1966,10 +1991,10 @@ public class RedisServiceTest extends VertxTestBase {
         await();
     }
 
-//    @Test
-//    @Ignore
-//    public void testSubscribe() {
-//    }
+    @Test
+    @Ignore
+    public void testSubscribe() {
+    }
 
 //    @Test
 //    public void testSunion() {
@@ -2003,15 +2028,15 @@ public class RedisServiceTest extends VertxTestBase {
 //        await();
 //    }
 
-//    @Test
-//    @Ignore
-//    public void testSunionstore() {
-//    }
+    @Test
+    @Ignore
+    public void testSunionstore() {
+    }
 
-//    @Test
-//    @Ignore
-//    public void testSync() {
-//    }
+    @Test
+    @Ignore
+    public void testSync() {
+    }
 
     @Test
     public void testTime() {
@@ -2074,20 +2099,20 @@ public class RedisServiceTest extends VertxTestBase {
         await();
     }
 
-//    @Test
-//    @Ignore
-//    public void testUnsubscribe() {
-//    }
+    @Test
+    @Ignore
+    public void testUnsubscribe() {
+    }
 
-//    @Test
-//    @Ignore
-//    public void testUnwatch() {
-//    }
+    @Test
+    @Ignore
+    public void testUnwatch() {
+    }
 
-//    @Test
-//    @Ignore
-//    public void testWatch() {
-//    }
+    @Test
+    @Ignore
+    public void testWatch() {
+    }
 
     @Test
     public void testZadd() {

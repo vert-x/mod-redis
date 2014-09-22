@@ -1,17 +1,14 @@
 package io.vertx.redis.impl;
 
 import io.vertx.core.AsyncResult;
-import io.vertx.core.AsyncResultHandler;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
-import io.vertx.core.json.JsonArray;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.impl.LoggerFactory;
 import io.vertx.core.net.NetClient;
 import io.vertx.core.net.NetClientOptions;
 import io.vertx.core.net.NetSocket;
 
-import java.nio.charset.Charset;
 import java.util.*;
 
 /**
@@ -22,19 +19,18 @@ public class RedisConnection implements ReplyHandler {
 
     private static final Logger log = LoggerFactory.getLogger(RedisConnection.class);
 
-    private final Vertx vertx;
-
     private final Queue<Handler<Reply>> repliesQueue = new LinkedList<>();
     private final Queue<Command> connectingQueue = new LinkedList<>();
+
+    // instantiate a parser for the connection
+    private final ReplyParser replyParser = new ReplyParser(this);
+    private final NetClient client;
 
     private final RedisSubscriptions subscriptions;
     private NetSocket netSocket;
 
-    private final Charset charset;
     private final String host;
     private final int port;
-    private final String auth;
-    private final int select;
 
     private static enum State {
         DISCONNECTED,
@@ -44,86 +40,20 @@ public class RedisConnection implements ReplyHandler {
 
     private State state = State.DISCONNECTED;
 
-    public RedisConnection(Vertx vertx, Charset charset, String host, int port, String auth, int select, RedisSubscriptions subscriptions) {
-        this.vertx = vertx;
-        this.charset = charset;
+    public RedisConnection(Vertx vertx, String host, int port, RedisSubscriptions subscriptions) {
         this.host = host;
         this.port = port;
-        this.auth = auth;
-        this.select = select;
         this.subscriptions = subscriptions;
+        this.client = vertx.createNetClient(NetClientOptions.options());
     }
 
-    private void doAuth(final Handler<Void> next) {
-        if (auth != null) {
-            Command command = new Command("auth", new JsonArray().addString(auth), charset).setHandler(new Handler<Reply>() {
-                @Override
-                public void handle(Reply reply) {
-                    switch (reply.type()) {
-                        case '-':
-                            log.error(reply.toString());
-                            netSocket.close();
-                            break;
-                        case '+':
-                            // OK
-                            next.handle(null);
-                            break;
-                        default:
-                            throw new RuntimeException("Unexpected reply: " + reply.type() + ": " + reply.data());
-                    }
-                }
-            });
-
-            send(command);
-        } else {
-            next.handle(null);
-        }
-    }
-
-    private void doSelect(final Handler<Void> next) {
-        if (select != 0) {
-            Command command = new Command("select", new JsonArray().addNumber(select), charset).setHandler(new Handler<Reply>() {
-                @Override
-                public void handle(Reply reply) {
-                    switch (reply.type()) {
-                        case '-':
-                            log.error(reply.toString());
-                            netSocket.close();
-                            break;
-                        case '+':
-                            // OK
-                            next.handle(null);
-                            break;
-                        default:
-                            throw new RuntimeException("Unexpected reply: " + reply.type() + ": " + reply.data());
-                    }
-                }
-            });
-
-            send(command);
-        } else {
-            next.handle(null);
-        }
-    }
-
-    private void onConnect(final Handler<Void> next) {
-        doAuth(new Handler<Void>() {
-            @Override
-            public void handle(Void event) {
-                doSelect(event1 -> next.handle(null));
-            }
-        });
-    }
-
-    void connect(final AsyncResultHandler<Void> resultHandler) {
+    void connect(final Handler<AsyncResult<Void>> resultHandler) {
         if (state == State.DISCONNECTED) {
             state = State.CONNECTING;
-            // instantiate a parser for the connection
-            final ReplyParser replyParser = new ReplyParser(this);
+            // reset the connection parser
+            replyParser.reset();
 
-            NetClient client = vertx.createNetClient(NetClientOptions.options());
-
-            client.connect(port, host, new AsyncResultHandler<NetSocket>() {
+            client.connect(port, host, new Handler<AsyncResult<NetSocket>>() {
                 @Override
                 public void handle(final AsyncResult<NetSocket> asyncResult) {
                     if (asyncResult.failed()) {
@@ -149,7 +79,7 @@ public class RedisConnection implements ReplyHandler {
                         state = State.CONNECTED;
                         netSocket = asyncResult.result();
                         // set the data handler (the reply parser)
-                        netSocket.dataHandler(replyParser);
+                        netSocket.handler(replyParser);
                         // set the exception handler
                         netSocket.exceptionHandler(e -> {
                             log.error("Socket client error", e);
@@ -179,20 +109,24 @@ public class RedisConnection implements ReplyHandler {
                             state = State.DISCONNECTED;
                         });
 
-                        onConnect(event -> {
-                            // process waiting queue (for messages that have been requested while the connection was not totally established)
-                            while (!connectingQueue.isEmpty()) {
-                                send(connectingQueue.poll());
-                            }
-                            // emit ready!
-                            if (resultHandler != null) {
-                                resultHandler.handle(new RedisAsyncResult<>(null, null));
-                            }
-                        });
+                        // process waiting queue (for messages that have been requested while the connection was not totally established)
+                        while (!connectingQueue.isEmpty()) {
+                            send(connectingQueue.poll());
+                        }
+                        // emit ready!
+                        if (resultHandler != null) {
+                            resultHandler.handle(new RedisAsyncResult<>(null, null));
+                        }
                     }
                 }
             });
         }
+    }
+
+    void disconnect(Handler<AsyncResult<Void>> handler) {
+        netSocket.close();
+        client.close();
+        handler.handle(new RedisAsyncResult<>(null, null));
     }
 
     // Redis 'subscribe', 'unsubscribe', 'psubscribe' and 'punsubscribe' commands can have multiple (including zero) repliesQueue
@@ -217,7 +151,7 @@ public class RedisConnection implements ReplyHandler {
                 break;
             case DISCONNECTED:
                 log.info("Got request when disconnected. Trying to connect.");
-                connect(new AsyncResultHandler<Void>() {
+                connect(new Handler<AsyncResult<Void>>() {
                     public void handle(AsyncResult<Void> connection) {
                         if (connection.succeeded()) {
                             send(command);

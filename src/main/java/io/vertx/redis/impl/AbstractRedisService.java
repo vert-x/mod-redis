@@ -41,14 +41,11 @@ public abstract class AbstractRedisService implements RedisService {
     }
 
     @Override
-    public void start() {
+    public void start(final Handler<AsyncResult<Void>> handler) {
         final String host = config.getString("host", "localhost");
         final int port = config.getInteger("port", 6379);
         final String encoding = config.getString("encoding");
         final boolean binary = config.getBoolean("binary", false);
-        // extra options that are nice to have
-        final String auth = config.getString("auth");
-        final int select = config.getInteger("select", 0);
 
         if (binary) {
             log.warn("Binary mode is not implemented yet!!!");
@@ -63,13 +60,13 @@ public abstract class AbstractRedisService implements RedisService {
         charset = Charset.forName(this.encoding);
         baseAddress = config.getString("address", "io.vertx.mod-redis");
 
-        redisClient = new RedisConnection(vertx, charset, host, port, auth, select, subscriptions);
-        redisClient.connect(null);
+        redisClient = new RedisConnection(vertx, host, port, subscriptions);
+        redisClient.connect(handler);
     }
 
     @Override
-    public void stop() {
-        //redisClient.disconnect();
+    public void stop(final Handler<AsyncResult<Void>> handler) {
+        redisClient.disconnect(handler);
     }
 
     private ResponseTransform getResponseTransformFor(String command) {

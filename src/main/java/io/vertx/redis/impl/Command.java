@@ -145,8 +145,8 @@ public class Command {
         return this;
     }
 
-    public void writeTo(WriteStream<NetSocket> writeStream) {
-        writeStream.writeBuffer(buffer);
+    public void writeTo(WriteStream<NetSocket, Buffer> writeStream) {
+        writeStream.write(buffer);
     }
 
     public int getExpectedReplies() {
