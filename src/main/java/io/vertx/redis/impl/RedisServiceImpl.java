@@ -311,7 +311,7 @@ public final class RedisServiceImpl extends AbstractRedisService {
 
   public void zrangebyscore(JsonArray args, Handler<AsyncResult<JsonArray>> handler) { sendJsonArray("ZRANGEBYSCORE", args, handler); }
 
-  public void zrank(JsonArray args, Handler<AsyncResult<String>> handler) { sendString("ZRANK", args, handler); }
+  public void zrank(JsonArray args, Handler<AsyncResult<Long>> handler) { sendLong("ZRANK", args, handler); }
 
   public void zrem(JsonArray args, Handler<AsyncResult<Long>> handler) { sendLong("ZREM", args, handler); }
 
@@ -325,7 +325,7 @@ public final class RedisServiceImpl extends AbstractRedisService {
 
   public void zrevrangebyscore(JsonArray args, Handler<AsyncResult<JsonArray>> handler) { sendJsonArray("ZREVRANGEBYSCORE", args, handler); }
 
-  public void zrevrank(JsonArray args, Handler<AsyncResult<String>> handler) { sendString("ZREVRANK", args, handler); }
+  public void zrevrank(JsonArray args, Handler<AsyncResult<Long>> handler) { sendLong("ZREVRANK", args, handler); }
 
   public void zscore(JsonArray args, Handler<AsyncResult<String>> handler) { sendString("ZSCORE", args, handler); }
 

@@ -1490,7 +1490,7 @@ public interface RedisService {
    * @param args JsonArray [{"name":"key","type":"key"},{"name":"member","type":"string"}]
    * @param handler Handler for the result of this call.
    */
-  void zrank(JsonArray args, Handler<AsyncResult<String>> handler);
+  void zrank(JsonArray args, Handler<AsyncResult<Long>> handler);
 
   /**
    * Remove one or more members from a sorted set
@@ -1560,7 +1560,7 @@ public interface RedisService {
    * @param args JsonArray [{"name":"key","type":"key"},{"name":"member","type":"string"}]
    * @param handler Handler for the result of this call.
    */
-  void zrevrank(JsonArray args, Handler<AsyncResult<String>> handler);
+  void zrevrank(JsonArray args, Handler<AsyncResult<Long>> handler);
 
   /**
    * Get the score associated with the given member in a sorted set
