@@ -145,7 +145,7 @@ public class Command {
         return this;
     }
 
-    public void writeTo(WriteStream<NetSocket, Buffer> writeStream) {
+    public void writeTo(WriteStream<Buffer> writeStream) {
         writeStream.write(buffer);
     }
 

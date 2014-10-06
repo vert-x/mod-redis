@@ -44,7 +44,7 @@ public class RedisConnection implements ReplyHandler {
         this.host = host;
         this.port = port;
         this.subscriptions = subscriptions;
-        this.client = vertx.createNetClient(NetClientOptions.options());
+        this.client = vertx.createNetClient(new NetClientOptions());
     }
 
     void connect(final Handler<AsyncResult<Void>> resultHandler) {
