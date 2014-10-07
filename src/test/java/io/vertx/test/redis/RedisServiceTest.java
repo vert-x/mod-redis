@@ -1435,11 +1435,11 @@ public class RedisServiceTest extends VertxTestBase {
     @Test
     public void testPsetex() {
         final String mykey = makeKey();
-        redis.psetex(j(mykey, 1000, "Hello"), reply0 -> {
+        redis.psetex(j(mykey, 2000, "Hello"), reply0 -> {
             assertTrue(reply0.succeeded());
             redis.pttl(j(mykey), reply1 -> {
                 assertTrue(reply1.succeeded());
-                assertTrue(1500 > reply1.result() && reply1.result() > 0);
+                assertTrue(3000 > reply1.result() && reply1.result() > 0);
                 redis.get(j(mykey), reply2 -> {
                     assertTrue(reply2.succeeded());
                     assertEquals("Hello", reply2.result());
@@ -1460,12 +1460,12 @@ public class RedisServiceTest extends VertxTestBase {
         final String mykey = makeKey();
         redis.set(j(mykey, "Hello"), reply0 -> {
             assertTrue(reply0.succeeded());
-            redis.expire(j(mykey, 1), reply1 -> {
+            redis.expire(j(mykey, 3), reply1 -> {
                 assertTrue(reply1.succeeded());
                 assertEquals(1, reply1.result().longValue());
                 redis.pttl(j(mykey), reply2 -> {
                     assertTrue(reply2.succeeded());
-                    assertTrue(1000 > reply2.result() && reply2.result() > 0);
+                    assertTrue(3000 > reply2.result() && reply2.result() > 0);
                     testComplete();
                 });
             });
