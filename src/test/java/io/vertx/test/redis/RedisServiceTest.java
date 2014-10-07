@@ -5,22 +5,73 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.redis.RedisService;
 import io.vertx.test.core.VertxTestBase;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
+import redis.embedded.RedisServer;
 
 import java.util.Arrays;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 
+/**
+ * This test relies on a Redis server, by default it will start and stop a Redis server unless
+ * the <code>host</code> or <code>port</code> system property is specified. In this case the
+ * test assumes an external database will be used.
+ */
 public class RedisServiceTest extends VertxTestBase {
 
-    RedisService redis;
+    private static String getProperty(String name) {
+        String s = System.getProperty(name);
+        if (s != null) {
+            s = s.trim();
+            if (s.length() > 0) {
+                return s;
+            }
+        }
+        return null;
+    }
+
+    private static String getHost() {
+        return getProperty("host");
+    }
+
+    private static String getPort() {
+        return getProperty("port");
+    }
+
+    static RedisService redis;
+    static RedisServer redisServer;
+
+    @BeforeClass
+    static public void startRedis() throws Exception {
+        if (getHost() == null && getPort() == null) {
+            redisServer = new RedisServer("2.8.9", 6379);
+            redisServer.start();
+        }
+    }
+
+    @AfterClass
+    static public void stopRedis() throws Exception {
+        if (redisServer != null) {
+            redisServer.stop();
+        }
+    }
 
     @Before
     public void before() throws Exception {
         super.setUp();
         JsonObject config = new JsonObject();
+        String host = getHost();
+        String port = getPort();
+        if (host != null) {
+            config.putString("host", host);
+        }
+        if (port != null) {
+            config.putNumber("port", Integer.parseInt(port));
+        }
         redis = RedisService.create(vertx, config);
         CountDownLatch latch = new CountDownLatch(1);
         redis.start(asyncResult -> {
