@@ -122,7 +122,7 @@ abstract class AbstractRedisClient {
     }
 
     @SuppressWarnings("unchecked")
-    final void send(String command, Object... args) {
+    final void send(RedisCommand command, Object... args) {
 
         JsonObject json = new JsonObject();
         JsonArray redisArgs = new JsonArray();
@@ -145,22 +145,28 @@ abstract class AbstractRedisClient {
         }
 
         // serialize the request
-        json.putString("command", command);
+        json.putString("command", command.getCommand());
 
         // handle special hash commands
-        if ("MSET".equals(command) || "MSETNX".equals(command) || "HMSET".equals(command) || "ZADD".equals(command)) {
-            if (totalArgs == 2 && args[1] instanceof JsonObject) {
-                // there are only 2 arguments and the last  is a json object, convert the hash into a redis command
-                serializeArg(redisArgs, args[0]);
-                JsonObject hash = (JsonObject) args[1];
-                for (String key : hash.getFieldNames()) {
-                    serializeArg(redisArgs, key);
-                    serializeArg(redisArgs, hash.getField(key));
-                }
+        switch (command)
+        {
+            case MSET:
+            case MSETNX:
+            case HMSET:
+            case ZADD:
+                if (totalArgs == 2 && args[1] instanceof JsonObject) {
+                    // there are only 2 arguments and the last  is a json object, convert the hash into a redis command
+                    serializeArg(redisArgs, args[0]);
+                    JsonObject hash = (JsonObject) args[1];
+                    for (String key : hash.getFieldNames()) {
+                        serializeArg(redisArgs, key);
+                        serializeArg(redisArgs, hash.getField(key));
+                    }
 
-                // remove these 2 since they are already added to the args array
-                totalArgs = 0;
-            }
+                    // remove these 2 since they are already added to the args array
+                    totalArgs = 0;
+                }
+                break;
         }
 
         // serialize arguments
