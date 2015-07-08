@@ -65,7 +65,7 @@ public class RedisInfoTester extends TestVerticle {
                 if (server == null) {
                     server = reply.body().getObject("value");
                 }
-                assertTrue(server.getString("redis_version").startsWith("2."));
+                assertTrue(server.getString("redis_version").startsWith("2.") || server.getString("redis_version").startsWith("3."));
                 testComplete();
             }
         });
