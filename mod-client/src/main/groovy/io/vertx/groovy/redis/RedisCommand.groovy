@@ -160,8 +160,7 @@ public enum RedisCommand {
     PUBLISH("PUBLISH"),
     ZREMRANGEBYLEX("ZREMRANGEBYLEX"),
     SCRIPT_FLUSH("SCRIPT FLUSH"),
-    DEBUG_OBJECT("DEBUG OBJECT"),
-    ;
+    DEBUG_OBJECT("DEBUG OBJECT");
 
     private final String command;
 
