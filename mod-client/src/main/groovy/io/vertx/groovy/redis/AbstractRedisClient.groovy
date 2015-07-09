@@ -59,7 +59,7 @@ class AbstractRedisClient {
     }
 
     @SuppressWarnings("unchecked")
-    final void send(String command, Object... args) {
+    final void send(RedisCommand command, Object... args) {
 
         Map<String, Object> json = new HashMap<>()
         List<Object> redisArgs = new ArrayList<>()
@@ -80,21 +80,23 @@ class AbstractRedisClient {
         }
 
         // serialize the request
-        json.put("command", command)
+        json.put("command", command.getCommand())
 
         // handle special hash commands
-        if ("MSET".equals(command) || "MSETNX".equals(command) || "HMSET".equals(command) || "ZADD".equals(command)) {
-            if (totalArgs == 2 && args[1] instanceof Map) {
-                // there are only 2 arguments and the last  is a json object, convert the hash into a redis command
-                redisArgs.add(args[0])
-                args[1].each() {key, value ->
-                    redisArgs.add(key)
-                    redisArgs.add(value)
-                }
+        switch (command){
+            case [RedisCommand.MSET, RedisCommand.MSETNX, RedisCommand.HMSET, RedisCommand.ZADD]:
+                if (totalArgs == 2 && args[1] instanceof Map) {
+                    // there are only 2 arguments and the last  is a json object, convert the hash into a redis command
+                    redisArgs.add(args[0])
+                    args[1].each() {key, value ->
+                        redisArgs.add(key)
+                        redisArgs.add(value)
+                    }
 
-                // remove these 2 since they are already added to the args array
-                totalArgs = 0
-            }
+                    // remove these 2 since they are already added to the args array
+                    totalArgs = 0
+                }
+                break;
         }
 
         // serialize arguments
