@@ -13,12 +13,12 @@ This module requires a Redis server to be available on the network.
 
 This project provides 2 modules:
 
-* `io.vertx~mod-redis~1.1.4-SNAPSHOT` - The runnable module that allows direct access to Redis
-* `io.vertx~mod-redis-client~1.1.4-SNAPSHOT` - The NON runnable that creates a simple API on top of the previous
+* `io.vertx~mod-redis~1.1.5` - The runnable module that allows direct access to Redis
+* `io.vertx~mod-redis-client~1.1.5` - The NON runnable that creates a simple API on top of the previous
 
 ## mod-redis
 
-The module name is `io.vertx~mod-redis~1.1.4-SNAPSHOT`.
+The module name is `io.vertx~mod-redis~1.1.5`.
 
 ### Configuration
 
@@ -64,7 +64,7 @@ Simple example:
     config.putString("host", "localhost")
     config.putNumber("port", 6379)
 
-    container.deployModule("io.vertx~mod-redis~1.1.4-SNAPSHOT", config, 1)
+    container.deployModule("io.vertx~mod-redis~1.1.5", config, 1)
 
     eb.send(address, [command: 'get', args: ['mykey']]) { reply ->
         if (reply.body.status.equals('ok') {
@@ -84,8 +84,8 @@ Simple example with pub/sub mode:
     def subConfig = new JsonObject()
     subConfig.putString("address", 'redis.sub')
 
-    container.deployModule("io.vertx~mod-redis~1.1.4-SNAPSHOT", pubConfig, 1)
-    container.deployModule("io.vertx~mod-redis~1.1.4-SNAPSHOT", subConfig, 1)
+    container.deployModule("io.vertx~mod-redis~1.1.5", pubConfig, 1)
+    container.deployModule("io.vertx~mod-redis~1.1.5", subConfig, 1)
 
     // register a handler for the incoming message the naming the Redis module will use is base address + '.' + redis channel
     eb.registerHandler("redis.sub.ch1", new Handler<Message<JsonObject>>() {
