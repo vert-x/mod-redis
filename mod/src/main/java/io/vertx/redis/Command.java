@@ -15,7 +15,7 @@ public class Command {
     private static final byte[] CRLF = "\r\n".getBytes();
     private static final byte BYTES_PREFIX = '$';
 
-    private static final byte[] NEG_ONE = convert(-1);
+    private static final byte[] NEG_ONE = convert(1);
 
     // Cache 256 number conversions. That should cover a huge
     // percentage of numbers passed over the wire.
