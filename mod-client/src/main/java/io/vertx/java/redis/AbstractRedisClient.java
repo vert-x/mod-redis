@@ -129,7 +129,7 @@ abstract class AbstractRedisClient {
 
         int totalArgs = 0;
         boolean expectResult = false;
-        Handler<Message<JsonObject>> messageHandler = null;
+        final Handler<JsonObject>[] messageHandler = new Handler[1];
 
         // verify if there are args
         if (args != null && args.length > 0) {
@@ -140,7 +140,7 @@ abstract class AbstractRedisClient {
                 // the caller expects a result
                 expectResult = true;
                 totalArgs--;
-                messageHandler = (Handler<Message<JsonObject>>) last;
+                messageHandler[0] = (Handler<JsonObject>) last;
             }
         }
 
@@ -177,7 +177,12 @@ abstract class AbstractRedisClient {
         json.putArray("args", redisArgs);
 
         if (expectResult) {
-            eventBus.send(redisAddress, json, messageHandler);
+            eventBus.send(redisAddress, json, new Handler<Message<JsonObject>>() {
+              @Override
+              public void handle(Message<JsonObject> reply) {
+                messageHandler[0].handle(reply.body());
+              }
+            });
         } else {
             eventBus.send(redisAddress, json);
         }
